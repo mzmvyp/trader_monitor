@@ -84,7 +84,7 @@ def get_dashboard_data():
         bitcoin_stats = current_app.bitcoin_streamer.get_stream_statistics()
         
         # Get trading analysis
-        trading_analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        trading_analysis = current_app.trading_analyzer.get_current_analysis()
         
         # Get system health
         trading_health = current_app.trading_analyzer.get_system_status()

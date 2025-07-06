@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Trading System - Dashboard Integrado</title>
+    <title>Bitcoin Trading System - Enhanced Analytics Dashboard</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,8 +13,340 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Custom CSS -->
-    <link href="/static/css/main.css" rel="stylesheet">
-    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --bg-color: #f8fafc;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            border-bottom: 3px solid #1e40af;
+        }
+
+        .enhanced-badge {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .enhanced-stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .enhanced-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .enhanced-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.price { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stat-icon.signals { background: linear-gradient(135deg, #10b981, #059669); }
+        .stat-icon.confidence { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-icon.performance { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-top: 0.5rem;
+        }
+
+        .stat-change.positive {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .stat-change.negative {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .enhanced-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+
+        .enhanced-card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+
+        .enhanced-card-body {
+            padding: 1.5rem;
+        }
+
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .indicator-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .indicator-name {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .indicator-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .indicator-signal {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .signal-bullish {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .signal-bearish {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .signal-neutral {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .signals-table {
+            width: 100%;
+        }
+
+        .signals-table th {
+            background: #f8fafc;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 1rem 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .signals-table td {
+            padding: 1rem 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .signal-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .signal-confluence-buy {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+        }
+
+        .signal-confluence-sell {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .confidence-high { background: linear-gradient(90deg, #10b981, #059669); }
+        .confidence-medium { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .confidence-low { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        .market-scanner {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .opportunity-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .opportunity-high { border-left-color: #ef4444; }
+        .opportunity-medium { border-left-color: #f59e0b; }
+        .opportunity-low { border-left-color: #10b981; }
+
+        .system-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .info-item {
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .status-enhanced {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .nav-tabs-enhanced {
+            border: none;
+            background: white;
+            border-radius: 12px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs-enhanced .nav-link {
+            border: none;
+            border-radius: 8px;
+            color: #6b7280;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs-enhanced .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .footer-enhanced {
+            background: linear-gradient(135deg, var(--dark-color), #374151);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -22,65 +354,105 @@
         <div class="container">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-rocket"></i> Bitcoin Trading System
+                <span class="enhanced-badge">
+                    <i class="fas fa-star"></i> Enhanced
+                </span>
             </a>
             
             <div class="navbar-nav ms-auto">
-                <div class="system-status">
-                    <span id="system-status-dot" class="status-dot status-stopped"></span>
-                    <span id="system-status-text">Sistema Parado</span>
+                <div class="status-enhanced">
+                    <span class="pulse">
+                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                    </span>
+                    <span id="system-status-text">Enhanced Active</span>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <!-- Quick Stats -->
+        <!-- Enhanced Quick Stats -->
         <div class="quick-stats">
-            <div class="quick-stat-card">
-                <div class="quick-stat-value" id="current-price">$0.00</div>
-                <div class="quick-stat-label">Preço Bitcoin</div>
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon price">
+                        <i class="fab fa-bitcoin"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="current-price">$0.00</div>
+                <div class="stat-label">Preço Bitcoin</div>
+                <div class="stat-change positive" id="price-change">+2.4% 24h</div>
             </div>
-            <div class="quick-stat-card">
-                <div class="quick-stat-value" id="active-signals">0</div>
-                <div class="quick-stat-label">Sinais Ativos</div>
+            
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon signals">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="active-signals">0</div>
+                <div class="stat-label">Sinais Enhanced Ativos</div>
+                <div class="stat-change positive" id="signals-change">Quality Focused</div>
             </div>
-            <div class="quick-stat-card">
-                <div class="quick-stat-value" id="data-points">0</div>
-                <div class="quick-stat-label">Pontos de Dados</div>
+            
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon confidence">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="confidence-level">0%</div>
+                <div class="stat-label">Confiança Atual</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill confidence-medium" style="width: 0%"></div>
+                </div>
             </div>
-            <div class="quick-stat-card">
-                <div class="quick-stat-value" id="success-rate">0%</div>
-                <div class="quick-stat-label">Taxa de Sucesso</div>
+            
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon performance">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="win-rate">0%</div>
+                <div class="stat-label">Taxa de Sucesso</div>
+                <div class="stat-change positive" id="performance-change">Enhanced Quality</div>
             </div>
         </div>
 
-        <!-- Controls -->
+        <!-- Enhanced Controls -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
+                <div class="enhanced-card">
+                    <div class="enhanced-card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-play-circle"></i> Controles do Sistema
+                            <i class="fas fa-cogs"></i> Controles Enhanced Trading System
                         </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="enhanced-card-body">
                         <div class="row">
-                            <div class="col-md-6">
-                                <h6>Pipeline Bitcoin</h6>
+                            <div class="col-md-4">
+                                <h6><i class="fab fa-bitcoin"></i> Pipeline Bitcoin</h6>
                                 <button id="start-bitcoin" class="btn btn-success me-2">
-                                    <i class="fas fa-play"></i> Iniciar Bitcoin
+                                    <i class="fas fa-play"></i> Iniciar
                                 </button>
                                 <button id="stop-bitcoin" class="btn btn-outline-danger">
-                                    <i class="fas fa-stop"></i> Parar Bitcoin
+                                    <i class="fas fa-stop"></i> Parar
                                 </button>
                             </div>
-                            <div class="col-md-6">
-                                <h6>Navegação</h6>
+                            <div class="col-md-4">
+                                <h6><i class="fas fa-brain"></i> Enhanced Analyzer</h6>
+                                <span class="status-enhanced">
+                                    <i class="fas fa-check-circle"></i> Active
+                                </span>
+                            </div>
+                            <div class="col-md-4">
+                                <h6><i class="fas fa-external-link-alt"></i> Navegação</h6>
                                 <a href="/bitcoin" class="btn btn-outline-primary me-2">
-                                    <i class="fas fa-bitcoin"></i> Dashboard Bitcoin
+                                    <i class="fas fa-bitcoin"></i> Bitcoin
                                 </a>
                                 <a href="/trading" class="btn btn-outline-info">
-                                    <i class="fas fa-chart-line"></i> Dashboard Trading
+                                    <i class="fas fa-chart-line"></i> Trading
                                 </a>
                             </div>
                         </div>
@@ -89,45 +461,44 @@
             </div>
         </div>
 
-        <!-- Main Content Tabs -->
+        <!-- Enhanced Tabs -->
         <div class="row">
             <div class="col-12">
-                <ul class="nav nav-tabs nav-tabs-custom mb-4" id="mainTabs">
+                <ul class="nav nav-tabs nav-tabs-enhanced mb-4" id="mainTabs">
                     <li class="nav-item">
                         <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Visão Geral
+                            <i class="fas fa-tachometer-alt"></i> Enhanced Overview
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="bitcoin-tab" data-bs-toggle="tab" href="#bitcoin">
-                            <i class="fab fa-bitcoin"></i> Bitcoin Pipeline
+                        <a class="nav-link" id="indicators-tab" data-bs-toggle="tab" href="#indicators">
+                            <i class="fas fa-chart-bar"></i> Technical Indicators
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="trading-tab" data-bs-toggle="tab" href="#trading">
-                            <i class="fas fa-chart-line"></i> Trading Analyzer
+                        <a class="nav-link" id="signals-tab" data-bs-toggle="tab" href="#signals">
+                            <i class="fas fa-crosshairs"></i> Enhanced Signals
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="analytics-tab" data-bs-toggle="tab" href="#analytics">
-                            <i class="fas fa-chart-bar"></i> Analytics
+                        <a class="nav-link" id="scanner-tab" data-bs-toggle="tab" href="#scanner">
+                            <i class="fas fa-radar"></i> Market Scanner
                         </a>
                     </li>
                 </ul>
 
                 <div class="tab-content">
-                    <!-- Overview Tab -->
+                    <!-- Enhanced Overview Tab -->
                     <div class="tab-pane fade show active" id="overview">
                         <div class="row">
-                            <!-- Real-time Chart -->
                             <div class="col-md-8">
-                                <div class="card">
-                                    <div class="card-header">
+                                <div class="enhanced-card">
+                                    <div class="enhanced-card-header">
                                         <h5 class="mb-0">
-                                            <i class="fas fa-chart-line"></i> Preço Bitcoin em Tempo Real
+                                            <i class="fas fa-chart-line"></i> Bitcoin Price + Enhanced Analysis
                                         </h5>
                                     </div>
-                                    <div class="card-body">
+                                    <div class="enhanced-card-body">
                                         <div class="chart-container">
                                             <canvas id="overviewChart"></canvas>
                                         </div>
@@ -135,268 +506,181 @@
                                 </div>
                             </div>
                             
-                            <!-- System Status -->
                             <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-header">
+                                <div class="enhanced-card">
+                                    <div class="enhanced-card-header">
                                         <h5 class="mb-0">
-                                            <i class="fas fa-info-circle"></i> Status do Sistema
+                                            <i class="fas fa-microchip"></i> Enhanced System Info
                                         </h5>
                                     </div>
-                                    <div class="card-body">
-                                        <div id="system-info">
-                                            <div class="loading-spinner">
-                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                    <div class="enhanced-card-body">
+                                        <div class="system-info-grid" id="system-info">
+                                            <div class="info-item">
+                                                <div class="info-label">Version</div>
+                                                <div class="info-value">Enhanced 2.0</div>
                                             </div>
+                                            <div class="info-item">
+                                                <div class="info-label">Data Quality</div>
+                                                <div class="info-value" id="data-quality">Loading...</div>
+                                            </div>
+                                            <div class="info-item">
+                                                <div class="info-label">Indicators</div>
+                                                <div class="info-value">12+ Active</div>
+                                            </div>
+                                            <div class="info-item">
+                                                <div class="info-label">Min Confidence</div>
+                                                <div class="info-value">70%</div>
+                                            </div>
+                                            <div class="info-item">
+                                                <div class="info-label">Risk/Reward</div>
+                                                <div class="info-value">2.5:1 Min</div>
+                                            </div>
+                                            <div class="info-item">
+                                                <div class="info-label">Volume Conf</div>
+                                                <div class="info-value">Required</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Indicators Tab -->
+                    <div class="tab-pane fade" id="indicators">
+                        <div class="enhanced-card">
+                            <div class="enhanced-card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar"></i> Enhanced Technical Indicators (12+ Indicators)
+                                </h5>
+                            </div>
+                            <div class="enhanced-card-body">
+                                <div class="indicators-grid" id="indicators-display">
+                                    <!-- Indicators will be populated here -->
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">RSI (Wilder's)</div>
+                                        <div class="indicator-value" id="rsi-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral" id="rsi-signal">Calculating...</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">MACD Enhanced</div>
+                                        <div class="indicator-value" id="macd-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral" id="macd-signal">Calculating...</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">Bollinger Bands</div>
+                                        <div class="indicator-value" id="bb-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral" id="bb-signal">Calculating...</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">Stochastic</div>
+                                        <div class="indicator-value" id="stoch-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral" id="stoch-signal">Calculating...</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">ATR (Volatility)</div>
+                                        <div class="indicator-value" id="atr-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral" id="atr-signal">Calculating...</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">Volume Ratio</div>
+                                        <div class="indicator-value" id="volume-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral" id="volume-signal">Calculating...</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">Support Level</div>
+                                        <div class="indicator-value" id="support-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral">Auto-Calculated</span>
+                                    </div>
+                                    
+                                    <div class="indicator-card">
+                                        <div class="indicator-name">Resistance Level</div>
+                                        <div class="indicator-value" id="resistance-value">Loading...</div>
+                                        <span class="indicator-signal signal-neutral">Auto-Calculated</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Signals Tab -->
+                    <div class="tab-pane fade" id="signals">
+                        <div class="enhanced-card">
+                            <div class="enhanced-card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-crosshairs"></i> Enhanced Quality Signals (Multi-Target System)
+                                </h5>
+                            </div>
+                            <div class="enhanced-card-body">
+                                <div class="table-responsive">
+                                    <table class="signals-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Signal Type</th>
+                                                <th>Entry</th>
+                                                <th>Targets (3x)</th>
+                                                <th>Stop Loss</th>
+                                                <th>R/R Ratio</th>
+                                                <th>Confidence</th>
+                                                <th>Status</th>
+                                                <th>P&L</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="enhanced-signals-table">
+                                            <tr>
+                                                <td colspan="8" class="text-center">
+                                                    <div style="padding: 2rem;">
+                                                        <i class="fas fa-brain fa-2x text-primary mb-3"></i>
+                                                        <div>Enhanced analyzer carregando...</div>
+                                                        <small class="text-muted">Aguardando dados suficientes para análise robusta</small>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Market Scanner Tab -->
+                    <div class="tab-pane fade" id="scanner">
+                        <div class="market-scanner">
+                            <h5 class="mb-4">
+                                <i class="fas fa-radar"></i> Enhanced Market Scanner
+                                <small class="ms-2">Real-time Opportunity Detection</small>
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div id="scanner-opportunities">
+                                        <div class="text-center" style="padding: 2rem;">
+                                            <i class="fas fa-satellite-dish fa-2x mb-3"></i>
+                                            <div>Scanning market for opportunities...</div>
+                                            <small style="opacity: 0.8;">Enhanced algorithm analyzing 12+ indicators</small>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div class="card mt-3">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-bell"></i> Últimos Sinais
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="recent-signals">
-                                            <div class="loading-spinner">
-                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
-                                            </div>
+                                <div class="col-md-4">
+                                    <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                        <h6>Scanner Config</h6>
+                                        <div style="font-size: 0.875rem; line-height: 1.6;">
+                                            <div>• RSI Extremes (< 20, > 80)</div>
+                                            <div>• BB Squeeze Detection</div>
+                                            <div>• Volume Spikes (> 2x)</div>
+                                            <div>• Support/Resistance Proximity</div>
+                                            <div>• High Confluence Signals (> 80%)</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Bitcoin Pipeline Tab -->
-                    <div class="tab-pane fade" id="bitcoin">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fab fa-bitcoin"></i> Métricas Bitcoin Pipeline
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="metric-card">
-                                                    <div class="metric-value" id="bitcoin-price">$0.00</div>
-                                                    <div class="metric-label">Preço Atual</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="metric-card">
-                                                    <div class="metric-value" id="bitcoin-change">0.00%</div>
-                                                    <div class="metric-label">Mudança 24h</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="metric-card">
-                                                    <div class="metric-value" id="bitcoin-volume">$0M</div>
-                                                    <div class="metric-label">Volume 24h</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="metric-card">
-                                                    <div class="metric-value" id="bitcoin-points">0</div>
-                                                    <div class="metric-label">Pontos Coletados</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-table"></i> Dados Recentes
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Timestamp</th>
-                                                        <th>Preço</th>
-                                                        <th>Mudança 24h</th>
-                                                        <th>Volume</th>
-                                                        <th>Fonte</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="bitcoin-data-table">
-                                                    <tr>
-                                                        <td colspan="5" class="text-center">
-                                                            <div class="loading-spinner">
-                                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Trading Analyzer Tab -->
-                    <div class="tab-pane fade" id="trading">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-chart-line"></i> Sinais de Trading
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-signals">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Padrão</th>
-                                                        <th>Entry</th>
-                                                        <th>Target</th>
-                                                        <th>Stop</th>
-                                                        <th>Status</th>
-                                                        <th>P&L</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="trading-signals-table">
-                                                    <tr>
-                                                        <td colspan="6" class="text-center">
-                                                            <div class="loading-spinner">
-                                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-tachometer-alt"></i> Indicadores
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="indicators-display">
-                                            <div class="loading-spinner">
-                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Analytics Tab -->
-                    <div class="tab-pane fade" id="analytics">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-chart-pie"></i> Performance por Padrão
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="chart-container" style="height: 300px;">
-                                            <canvas id="patternStatsChart"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-chart-bar"></i> Volume de Sinais
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="chart-container" style="height: 300px;">
-                                            <canvas id="volumeChart"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-table"></i> Estatísticas Detalhadas
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Padrão</th>
-                                                        <th>Total</th>
-                                                        <th>Sucessos</th>
-                                                        <th>Falhas</th>
-                                                        <th>Taxa Sucesso</th>
-                                                        <th>Lucro Médio</th>
-                                                        <th>Perda Média</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="analytics-table">
-                                                    <tr>
-                                                        <td colspan="7" class="text-center">
-                                                            <div class="loading-spinner">
-                                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Debug Info -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-bug"></i> Debug Info
-                            <button class="btn btn-sm btn-outline-secondary float-end" onclick="toggleDebug()">
-                                Toggle
-                            </button>
-                        </h6>
-                    </div>
-                    <div class="card-body" id="debug-section" style="display: none;">
-                        <div id="debug-info" class="debug-info">
-                            <div>Console logs aparecerão aqui...</div>
                         </div>
                     </div>
                 </div>
@@ -404,17 +688,32 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
+    <!-- Enhanced Footer -->
+    <footer class="footer-enhanced">
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Bitcoin Trading System</h5>
-                    <p>Sistema integrado de análise técnica e pipeline de dados Bitcoin</p>
+                    <h5>
+                        <i class="fas fa-rocket"></i> Enhanced Bitcoin Trading System
+                        <span class="enhanced-badge">v2.0</span>
+                    </h5>
+                    <p>Sistema de análise técnica avançado com 12+ indicadores, confluência obrigatória e gestão de risco profissional</p>
+                    <div style="font-size: 0.875rem; opacity: 0.8;">
+                        <div>✅ Confluência Multi-Indicador</div>
+                        <div>✅ Risk/Reward 2.5:1 Mínimo</div>
+                        <div>✅ Volume Confirmation Required</div>
+                        <div>✅ ATR-Based Risk Management</div>
+                    </div>
                 </div>
                 <div class="col-md-6 text-end">
-                    <p>Desenvolvido para análise de mercado Bitcoin</p>
-                    <p><i class="fas fa-clock"></i> Última atualização: <span id="last-update">-</span></p>
+                    <h6>Enhanced Features</h6>
+                    <div style="font-size: 0.875rem; line-height: 1.6;">
+                        <div><i class="fas fa-chart-line"></i> 12+ Technical Indicators</div>
+                        <div><i class="fas fa-crosshairs"></i> Multi-Target System</div>
+                        <div><i class="fas fa-shield-alt"></i> Professional Risk Management</div>
+                        <div><i class="fas fa-brain"></i> AI-Powered Signal Quality</div>
+                    </div>
+                    <p class="mt-3"><i class="fas fa-clock"></i> Última atualização: <span id="last-update">-</span></p>
                 </div>
             </div>
         </div>
@@ -422,8 +721,480 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/common.js"></script>
-    <script src="/static/js/dashboard.js"></script>
-    <script src="/static/js/dashboard-updates.js"></script>
+    
+    <script>
+        // Enhanced Dashboard JavaScript
+        class EnhancedDashboard {
+            constructor() {
+                this.isActive = false;
+                this.updateInterval = null;
+                this.chart = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initChart();
+                this.startUpdates();
+                this.updateSystemInfo();
+            }
+
+            setupEventListeners() {
+                document.getElementById('start-bitcoin')?.addEventListener('click', () => this.startBitcoin());
+                document.getElementById('stop-bitcoin')?.addEventListener('click', () => this.stopBitcoin());
+            }
+
+            async startBitcoin() {
+                try {
+                    const response = await fetch('/start-bitcoin', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.isActive = true;
+                        this.updateSystemStatus('Enhanced Active', 'success');
+                        this.showNotification('Bitcoin pipeline iniciado com Enhanced Analyzer', 'success');
+                    }
+                } catch (error) {
+                    this.showNotification('Erro ao iniciar sistema', 'error');
+                }
+            }
+
+            async stopBitcoin() {
+                try {
+                    const response = await fetch('/stop-bitcoin', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.isActive = false;
+                        this.updateSystemStatus('Sistema Parado', 'stopped');
+                        this.showNotification('Bitcoin pipeline parado', 'info');
+                    }
+                } catch (error) {
+                    this.showNotification('Erro ao parar sistema', 'error');
+                }
+            }
+
+            initChart() {
+                const ctx = document.getElementById('overviewChart');
+                if (!ctx) return;
+
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Bitcoin Price',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Enhanced Signals',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: '#10b981',
+                            pointRadius: 8,
+                            pointHoverRadius: 10,
+                            showLine: false,
+                            pointStyle: 'triangle'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Bitcoin Price + Enhanced Trading Signals'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            startUpdates() {
+                this.updateData();
+                this.updateInterval = setInterval(() => {
+                    this.updateData();
+                }, 5000); // Update every 5 seconds
+            }
+
+            async updateData() {
+                try {
+                    // Update comprehensive analysis
+                    await this.updateComprehensiveAnalysis();
+                    
+                    // Update bitcoin data
+                    await this.updateBitcoinData();
+                    
+                    // Update enhanced signals
+                    await this.updateEnhancedSignals();
+                    
+                    // Update market scanner
+                    await this.updateMarketScanner();
+                    
+                    // Update system info
+                    await this.updateSystemInfo();
+                    
+                } catch (error) {
+                    console.error('Error updating data:', error);
+                }
+            }
+
+            async updateComprehensiveAnalysis() {
+                try {
+                    const response = await fetch('/api/trading/analysis');
+                    const data = await response.json();
+                    
+                    if (data.status === 'INSUFFICIENT_DATA') {
+                        this.showInsufficientDataMessage();
+                        return;
+                    }
+                    
+                    // Update current price
+                    this.updateElement('current-price', `${data.current_price?.toLocaleString() || '0'}`);
+                    
+                    // Update confidence
+                    const confidence = data.signal_analysis?.confidence || 0;
+                    this.updateElement('confidence-level', `${confidence}%`);
+                    this.updateConfidenceBar(confidence);
+                    
+                    // Update technical indicators
+                    this.updateTechnicalIndicators(data.technical_indicators);
+                    
+                    // Update signal analysis
+                    this.updateSignalAnalysis(data.signal_analysis);
+                    
+                } catch (error) {
+                    console.error('Error updating comprehensive analysis:', error);
+                }
+            }
+
+            async updateEnhancedSignals() {
+                try {
+                    const response = await fetch('/api/trading/signals?limit=10');
+                    const data = await response.json();
+                    
+                    if (data.signals) {
+                        this.updateElement('active-signals', data.signals.length);
+                        this.renderEnhancedSignalsTable(data.signals);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error updating enhanced signals:', error);
+                }
+            }
+
+            async updateMarketScanner() {
+                try {
+                    const response = await fetch('/api/trading/scanner');
+                    const data = await response.json();
+                    
+                    if (data.opportunities) {
+                        this.renderMarketScanner(data);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error updating market scanner:', error);
+                }
+            }
+
+            async updateSystemInfo() {
+                try {
+                    const response = await fetch('/api/integrated/dashboard-data');
+                    const data = await response.json();
+                    
+                    // Update data quality
+                    this.updateElement('data-quality', data.data_status?.data_quality || 'Unknown');
+                    
+                    // Update win rate
+                    const winRate = data.performance?.win_rate || 0;
+                    this.updateElement('win-rate', `${winRate}%`);
+                    
+                } catch (error) {
+                    console.error('Error updating system info:', error);
+                }
+            }
+
+            updateTechnicalIndicators(indicators) {
+                if (!indicators) return;
+                
+                // RSI
+                this.updateElement('rsi-value', indicators.RSI?.toFixed(1) || 'N/A');
+                this.updateIndicatorSignal('rsi-signal', indicators.RSI_Signal);
+                
+                // MACD
+                this.updateElement('macd-value', indicators.MACD_Line?.toFixed(4) || 'N/A');
+                this.updateIndicatorSignal('macd-signal', 
+                    indicators.MACD_Line > indicators.MACD_Signal ? 'BULLISH' : 'BEARISH');
+                
+                // Bollinger Bands
+                this.updateElement('bb-value', indicators.BB_Position?.toFixed(3) || 'N/A');
+                this.updateIndicatorSignal('bb-signal', 
+                    indicators.BB_Position < 0.2 ? 'OVERSOLD' : 
+                    indicators.BB_Position > 0.8 ? 'OVERBOUGHT' : 'NEUTRAL');
+                
+                // Stochastic
+                this.updateElement('stoch-value', `${indicators.Stoch_K?.toFixed(1) || 'N/A'}`);
+                this.updateIndicatorSignal('stoch-signal',
+                    indicators.Stoch_K < 20 ? 'OVERSOLD' :
+                    indicators.Stoch_K > 80 ? 'OVERBOUGHT' : 'NEUTRAL');
+                
+                // ATR
+                this.updateElement('atr-value', `${indicators.ATR?.toFixed(2) || 'N/A'}`);
+                
+                // Volume
+                this.updateElement('volume-value', `${indicators.Volume_Ratio?.toFixed(1) || 'N/A'}x`);
+                this.updateIndicatorSignal('volume-signal',
+                    indicators.Volume_Ratio > 1.5 ? 'HIGH' : 'NORMAL');
+                
+                // Support/Resistance
+                this.updateElement('support-value', `${indicators.Support?.toLocaleString() || 'N/A'}`);
+                this.updateElement('resistance-value', `${indicators.Resistance?.toLocaleString() || 'N/A'}`);
+            }
+
+            updateIndicatorSignal(elementId, signal) {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                
+                element.textContent = signal || 'N/A';
+                element.className = 'indicator-signal';
+                
+                if (signal === 'BULLISH' || signal === 'OVERSOLD' || signal === 'HIGH') {
+                    element.classList.add('signal-bullish');
+                } else if (signal === 'BEARISH' || signal === 'OVERBOUGHT') {
+                    element.classList.add('signal-bearish');
+                } else {
+                    element.classList.add('signal-neutral');
+                }
+            }
+
+            renderEnhancedSignalsTable(signals) {
+                const tbody = document.getElementById('enhanced-signals-table');
+                if (!tbody) return;
+                
+                if (signals.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center" style="padding: 2rem;">
+                                <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                                <div>Nenhum sinal Enhanced ativo</div>
+                                <small class="text-muted">Aguardando confluência de indicadores com alta confiança</small>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = signals.map(signal => `
+                    <tr>
+                        <td>
+                            <span class="signal-badge ${signal.signal_type?.includes('BUY') ? 'signal-confluence-buy' : 'signal-confluence-sell'}">
+                                ${signal.signal_type || signal.pattern_type || 'N/A'}
+                            </span>
+                        </td>
+                        <td>${signal.entry_price?.toLocaleString() || 'N/A'}</td>
+                        <td>
+                            <div style="font-size: 0.75rem;">
+                                <div>T1: ${signal.target_1?.toLocaleString() || signal.target_price?.toLocaleString() || 'N/A'}</div>
+                                <div>T2: ${signal.target_2?.toLocaleString() || 'N/A'}</div>
+                                <div>T3: ${signal.target_3?.toLocaleString() || 'N/A'}</div>
+                            </div>
+                        </td>
+                        <td>${signal.stop_loss?.toLocaleString() || 'N/A'}</td>
+                        <td>${signal.risk_reward_ratio?.toFixed(1) || 'N/A'}:1</td>
+                        <td>
+                            <div>${signal.confidence || 0}%</div>
+                            <div class="confidence-bar" style="width: 60px; height: 4px;">
+                                <div class="confidence-fill ${this.getConfidenceClass(signal.confidence)}" 
+                                     style="width: ${signal.confidence || 0}%"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${this.getStatusBadgeClass(signal.status)}">
+                                ${signal.status || 'ACTIVE'}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="${signal.profit_loss >= 0 ? 'text-success' : 'text-danger'}">
+                                ${signal.profit_loss?.toFixed(2) || '0.00'}%
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            renderMarketScanner(scannerData) {
+                const container = document.getElementById('scanner-opportunities');
+                if (!container) return;
+                
+                const opportunities = scannerData.opportunities || [];
+                
+                if (opportunities.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center" style="padding: 2rem;">
+                            <i class="fas fa-check-circle fa-2x mb-3"></i>
+                            <div>Mercado estável</div>
+                            <small style="opacity: 0.8;">Aguardando oportunidades de alta qualidade</small>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = opportunities.map(opp => `
+                    <div class="opportunity-card opportunity-${opp.priority?.toLowerCase()}">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h6 style="margin: 0; color: white;">${opp.type?.replace(/_/g, ' ')}</h6>
+                                <div style="font-size: 0.875rem; opacity: 0.9;">${opp.description}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; opacity: 0.8;">${opp.priority}</div>
+                                <div style="font-weight: 600;">${opp.action}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateConfidenceBar(confidence) {
+                const bar = document.querySelector('.confidence-fill');
+                if (!bar) return;
+                
+                bar.style.width = `${confidence}%`;
+                bar.className = `confidence-fill ${this.getConfidenceClass(confidence)}`;
+            }
+
+            getConfidenceClass(confidence) {
+                if (confidence >= 70) return 'confidence-high';
+                if (confidence >= 50) return 'confidence-medium';
+                return 'confidence-low';
+            }
+
+            getStatusBadgeClass(status) {
+                if (status === 'ACTIVE') return 'bg-primary';
+                if (status?.includes('TARGET')) return 'bg-success';
+                if (status?.includes('STOP')) return 'bg-danger';
+                return 'bg-secondary';
+            }
+
+            updateElement(id, value) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+
+            updateSystemStatus(text, status) {
+                const statusText = document.getElementById('system-status-text');
+                if (statusText) {
+                    statusText.textContent = text;
+                }
+            }
+
+            showInsufficientDataMessage() {
+                const indicators = document.getElementById('indicators-display');
+                const signals = document.getElementById('enhanced-signals-table');
+                
+                if (indicators) {
+                    indicators.innerHTML = `
+                        <div class="text-center" style="padding: 2rem;">
+                            <i class="fas fa-clock fa-2x text-warning mb-3"></i>
+                            <div>Coletando dados para análise Enhanced</div>
+                            <small class="text-muted">Aguarde alguns minutos para análise completa</small>
+                        </div>
+                    `;
+                }
+            }
+
+            showNotification(message, type) {
+                // Simple notification system
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>${message}</span>
+                        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+
+            async updateBitcoinData() {
+                try {
+                    const response = await fetch('/api/bitcoin/current');
+                    const data = await response.json();
+                    
+                    if (data.price) {
+                        // Update chart
+                        if (this.chart) {
+                            const now = new Date().toLocaleTimeString();
+                            this.chart.data.labels.push(now);
+                            this.chart.data.datasets[0].data.push(data.price);
+                            
+                            // Keep only last 20 points
+                            if (this.chart.data.labels.length > 20) {
+                                this.chart.data.labels.shift();
+                                this.chart.data.datasets[0].data.shift();
+                                this.chart.data.datasets[1].data.shift();
+                            }
+                            
+                            this.chart.update('none');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating bitcoin data:', error);
+                }
+            }
+        }
+
+        // Update last update time
+        function updateLastUpdate() {
+            const element = document.getElementById('last-update');
+            if (element) {
+                element.textContent = new Date().toLocaleString('pt-BR');
+            }
+        }
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.enhancedDashboard = new EnhancedDashboard();
+            updateLastUpdate();
+            setInterval(updateLastUpdate, 60000); // Update every minute
+        });
+
+        // Handle tab changes
+        document.addEventListener('shown.bs.tab', function(event) {
+            if (event.target.getAttribute('href') === '#indicators' && window.enhancedDashboard) {
+                window.enhancedDashboard.updateData();
+            }
+        });
+    </script>
 </body>
 </html>

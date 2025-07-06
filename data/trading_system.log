@@ -1008,3 +1008,1186 @@ AttributeError: 'EnhancedTradingAnalyzer' object has no attribute 'load_previous
 2025-07-06 14:47:39,542 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
 2025-07-06 14:47:39,543 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
 2025-07-06 14:47:39,869 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:11,396 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:48:11,397 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:48:11,399 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:48:11,400 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:48:11,401 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:48:11,402 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:48:11,403 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:48:11,405 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:48:11,405 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:48:11,405 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 14:48:11,407 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 14:48:11,410 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:48:11,411 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 14:48:11,412 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 14:48:11,413 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 14:48:11,415 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:48:11,417 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:48:11,418 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:48:11,419 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:48:11,419 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 14:48:11,419 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 14:48:11,439 - INFO - [CTRL] Rotas registradas.
+2025-07-06 14:48:11,439 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 14:48:11,440 - INFO - ============================================================
+2025-07-06 14:48:11,440 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 14:48:11,440 - INFO - ============================================================
+2025-07-06 14:48:11,441 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 14:48:11,441 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 14:48:11,441 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 14:48:11,441 - INFO - 
+2025-07-06 14:48:11,442 - INFO - [API] APIs disponíveis:
+2025-07-06 14:48:11,442 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 14:48:11,442 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 14:48:11,443 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 14:48:11,443 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 14:48:11,443 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 14:48:11,444 - INFO - 
+2025-07-06 14:48:11,444 - INFO - [CTRL] Controles (POST):
+2025-07-06 14:48:11,444 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 14:48:11,444 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 14:48:11,445 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 14:48:11,445 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 14:48:11,445 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 14:48:11,446 - INFO - 
+2025-07-06 14:48:11,446 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 14:48:11,446 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 14:48:11,446 - INFO - ============================================================
+2025-07-06 14:48:11,447 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 14:48:11,474 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 14:48:11,475 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 14:48:11,805 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:48:11,823 - INFO - [DATA] Dados coletados: $108916.60 (binance) - Change: 0.80%
+2025-07-06 14:48:14,800 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:14,802 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:14] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:14,817 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:14] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:15,259 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:15,260 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:15] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:15,571 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:15] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:16,102 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "GET / HTTP/1.1" 200 -
+2025-07-06 14:48:16,569 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 14:48:16,797 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "[36mGET /static/js/dashboard.js HTTP/1.1[0m" 304 -
+2025-07-06 14:48:16,845 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 14:48:16,855 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "[36mGET /static/css/dashboard.css HTTP/1.1[0m" 304 -
+2025-07-06 14:48:16,861 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "[36mGET /static/js/dashboard-updates.js HTTP/1.1[0m" 304 -
+2025-07-06 14:48:16,900 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:16,901 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:16] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:17,207 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:17] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:22,217 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:22,218 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:22] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:26,737 - WARNING - [STREAMER] Streaming já está em execução.
+2025-07-06 14:48:26,738 - INFO - [OK] Bitcoin streaming iniciado via API.
+2025-07-06 14:48:26,738 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:26] "POST /api/bitcoin/start-stream HTTP/1.1" 200 -
+2025-07-06 14:48:27,230 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:27] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:27,231 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:27,233 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:27] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:31,903 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:31,904 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:31] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:36,915 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:36,916 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:36] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:37,228 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:37] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:42,210 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:42,212 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:42] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:46,905 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:46,906 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:46] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:47,211 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:47] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:48:52,828 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:52,829 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:52] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:57,516 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:48:57,517 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:57] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:48:57,818 - INFO - 127.0.0.1 - - [06/Jul/2025 14:48:57] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:49:02,829 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:02,832 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:02] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:07,530 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:07,534 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:07] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:07,844 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:07] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:49:12,844 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:12,845 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:12] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:17,512 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:17,513 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:17] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:17,823 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:17] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:49:22,826 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:22,827 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:22] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:27,523 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:27,525 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:27] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:27,836 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:27] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:49:32,822 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:32,825 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:32] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:37,522 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:37,524 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:37] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:37,833 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:37] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:49:42,847 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:42,849 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:42] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:47,512 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:49:47,513 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:47] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:49:47,814 - INFO - 127.0.0.1 - - [06/Jul/2025 14:49:47] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:50:39,865 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:50:39,867 - INFO - 127.0.0.1 - - [06/Jul/2025 14:50:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:50:39,873 - INFO - 127.0.0.1 - - [06/Jul/2025 14:50:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:51:39,523 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:51:39,524 - INFO - 127.0.0.1 - - [06/Jul/2025 14:51:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:51:39,840 - INFO - 127.0.0.1 - - [06/Jul/2025 14:51:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:52:39,608 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:52:39,610 - INFO - 127.0.0.1 - - [06/Jul/2025 14:52:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:52:39,934 - INFO - 127.0.0.1 - - [06/Jul/2025 14:52:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:53:12,187 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:53:12,195 - INFO - [DATA] Dados coletados: $108901.53 (binance) - Change: 0.76%
+2025-07-06 14:53:39,545 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:53:39,546 - INFO - 127.0.0.1 - - [06/Jul/2025 14:53:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:53:39,856 - INFO - 127.0.0.1 - - [06/Jul/2025 14:53:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:54:39,630 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:54:39,634 - INFO - 127.0.0.1 - - [06/Jul/2025 14:54:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:54:39,964 - INFO - 127.0.0.1 - - [06/Jul/2025 14:54:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:55:39,534 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:55:39,536 - INFO - 127.0.0.1 - - [06/Jul/2025 14:55:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:55:39,849 - INFO - 127.0.0.1 - - [06/Jul/2025 14:55:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:56:39,583 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:56:39,587 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:56:39,929 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:56:50,505 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:56:50,505 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:56:50,507 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:56:50,509 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:56:50,509 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:56:50,510 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:56:50,511 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:56:50,512 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:56:50,513 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:56:50,513 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 14:56:50,514 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 14:56:50,518 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:56:50,518 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 14:56:50,519 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 14:56:50,520 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 14:56:50,521 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:56:50,523 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:56:50,524 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:56:50,525 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:56:50,525 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 14:56:50,526 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 14:56:50,544 - INFO - [CTRL] Rotas registradas.
+2025-07-06 14:56:50,544 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 14:56:50,544 - INFO - ============================================================
+2025-07-06 14:56:50,544 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 14:56:50,545 - INFO - ============================================================
+2025-07-06 14:56:50,545 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 14:56:50,545 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 14:56:50,545 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 14:56:50,546 - INFO - 
+2025-07-06 14:56:50,546 - INFO - [API] APIs disponíveis:
+2025-07-06 14:56:50,546 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 14:56:50,546 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 14:56:50,546 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 14:56:50,547 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 14:56:50,547 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 14:56:50,547 - INFO - 
+2025-07-06 14:56:50,547 - INFO - [CTRL] Controles (POST):
+2025-07-06 14:56:50,548 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 14:56:50,548 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 14:56:50,548 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 14:56:50,548 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 14:56:50,548 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 14:56:50,549 - INFO - 
+2025-07-06 14:56:50,549 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 14:56:50,549 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 14:56:50,549 - INFO - ============================================================
+2025-07-06 14:56:50,549 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 14:56:50,572 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 14:56:50,573 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 14:56:50,912 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:56:50,930 - INFO - [DATA] Dados coletados: $108911.99 (binance) - Change: 0.76%
+2025-07-06 14:56:55,746 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:55] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:56:55,749 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:56:55,751 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:55] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:56:56,909 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:56:56,911 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:56] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:56:57,213 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:57] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:56:58,084 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:58] "GET / HTTP/1.1" 200 -
+2025-07-06 14:56:58,546 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:58] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:56:58,850 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:56:58,852 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:58] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:56:58,883 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:56:58,883 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:58] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:56:59,203 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:59] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:56:59,465 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:56:59,467 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:59] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:56:59,540 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:56:59,543 - INFO - 127.0.0.1 - - [06/Jul/2025 14:56:59] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:01,437 - WARNING - 404 Not Found: /start-bitcoin
+2025-07-06 14:57:01,439 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:01] "[33mPOST /start-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 14:57:03,865 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:03] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:04,115 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:04,117 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:04] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:04,182 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:04] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:04,431 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:04,433 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:04] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:04,500 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:04,503 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:04] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:08,559 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:08] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:08,878 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:08,879 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:08] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:09,131 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:09] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:09,195 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:09,197 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:09] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:09,465 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:09,467 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:09] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:13,558 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:13] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:13,886 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:13,887 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:13] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:14,128 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:14] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:14,205 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:14,205 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:14] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:14,441 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:14,444 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:14] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:18,561 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:18] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:18,889 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:18,890 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:18] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:19,140 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:19] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:19,219 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:19,221 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:19] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:19,474 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:19,477 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:19] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:24,517 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:24] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:24,829 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:24,830 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:24] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:25,095 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:25] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:25,152 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:25,154 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:25] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:25,418 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:25,420 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:25] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:29,523 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:29] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:29,846 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:29,847 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:29] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:30,103 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:30] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:30,157 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:30,159 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:30] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:30,434 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:30,435 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:30] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:32,455 - WARNING - 404 Not Found: /start-bitcoin
+2025-07-06 14:57:32,457 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:32] "[33mPOST /start-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 14:57:33,867 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:33] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:34,132 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:34,133 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:34] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:34,199 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:34] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:34,451 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:34,453 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:34] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:34,519 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:34,523 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:34] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:38,571 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:38] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:38,897 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:38,898 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:38] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:39,147 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:39] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:39,214 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:39,215 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:39] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:39,466 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:39,469 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:41,981 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:41] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:42,301 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:42,301 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:42] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:42,540 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:42] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:42,609 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:42,610 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:42] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:42,848 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:42,850 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:42] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:43,563 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:43] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:43,880 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:43,882 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:43] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:44,144 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:44] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:44,207 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:44,208 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:44] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:44,450 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:44,451 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:44] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:48,554 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:48] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:48,876 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:48,877 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:48] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:49,142 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:49] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:49,199 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:49,200 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:49] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:49,459 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:49,460 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:49] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:54,533 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:54] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:54,860 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:54,862 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:54] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:57:55,127 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:55] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:57:55,201 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:57:55,202 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:55] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:57:55,521 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:57:55,522 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:55] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:57:59,519 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:59] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:57:59,842 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:57:59,843 - INFO - 127.0.0.1 - - [06/Jul/2025 14:57:59] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:00,092 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:00] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:00,162 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:00,163 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:00] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:00,401 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:00,402 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:00] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:04,528 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:04] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:04,841 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:04,841 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:04] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:05,104 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:05] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:05,158 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:05,159 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:05] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:05,419 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:05,421 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:05] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:09,817 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:09] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:10,081 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:10,083 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:10] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:10,142 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:10] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:10,401 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:10,401 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:10] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:10,464 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:10,465 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:10] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:14,520 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:14] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:14,832 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:14,832 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:14] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:15,094 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:15] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:15,144 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:15,145 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:15] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:15,416 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:15,418 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:15] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:19,517 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:19] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:19,836 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:19,837 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:19] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:20,102 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:20] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:20,157 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:20,158 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:20] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:20,425 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:20,427 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:20] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:24,511 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:24] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:24,821 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:24,822 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:24] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:25,088 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:25] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:25,149 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:25,150 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:25] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:25,407 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:25,409 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:25] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:29,518 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:29] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:29,838 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:29,840 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:29] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:30,107 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:30] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:30,154 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:30,155 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:30] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:30,424 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:30,427 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:30] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:34,520 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:34] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:34,844 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:34,845 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:34] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:35,090 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:35] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:35,150 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:35,151 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:35] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:35,401 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:35,402 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:35] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:38,547 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:38] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:38,867 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:38,867 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:38] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:39,115 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:39] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:39,184 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:39,186 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:39] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:39,436 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:39,438 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:39,498 - WARNING - 404 Not Found: /stop-bitcoin
+2025-07-06 14:58:39,499 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:39] "[33mPOST /stop-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 14:58:44,521 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:44] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:44,840 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:44,842 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:44] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:45,102 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:45] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:45,157 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:45,158 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:45] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:45,421 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:45,422 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:45] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:48,290 - WARNING - 404 Not Found: /start-bitcoin
+2025-07-06 14:58:48,292 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:48] "[33mPOST /start-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 14:58:48,879 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:48] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:49,129 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:49,131 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:49] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:49,194 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:49] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:49,460 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:49,462 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:49] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:49,526 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:49,528 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:49] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:51,605 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:51] "GET /bitcoin/ HTTP/1.1" 200 -
+2025-07-06 14:58:52,186 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:52] "GET /bitcoin/api/stream-status HTTP/1.1" 200 -
+2025-07-06 14:58:52,187 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:52] "GET /bitcoin/api/recent-data?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:52,188 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:52,189 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:52] "GET /bitcoin/api/metrics?time_window_minutes=30 HTTP/1.1" 200 -
+2025-07-06 14:58:54,220 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:54] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:54,540 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:54,542 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:54] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:54,795 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:54] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:54,856 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:54,856 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:54] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:55,109 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:55,111 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:55] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:58:55,386 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:55] "GET /trading/ HTTP/1.1" 200 -
+2025-07-06 14:58:56,102 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:56] "GET /trading/api/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:56,103 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:56] "GET /trading/api/signals HTTP/1.1" 200 -
+2025-07-06 14:58:58,562 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:58] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:58:58,887 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:58:58,888 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:58] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:58:59,136 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:59] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:58:59,198 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:58:59,199 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:59] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:58:59,454 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:58:59,456 - INFO - 127.0.0.1 - - [06/Jul/2025 14:58:59] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:04,521 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:04] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:04,844 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:04,846 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:04] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:05,095 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:05] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:05,173 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:05,173 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:05] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:05,424 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:05,427 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:05] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:09,516 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:09] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:09,824 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:09,825 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:09] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:10,096 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:10] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:10,149 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:10,150 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:10] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:10,413 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:10,415 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:10] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:14,516 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:14] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:14,842 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:14,844 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:14] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:15,082 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:15] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:15,161 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:15,162 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:15] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:15,402 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:15,403 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:15] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:19,518 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:19] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:19,842 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:19,842 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:19] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:20,099 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:20] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:20,163 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:20,164 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:20] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:20,427 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:20,429 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:20] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:24,523 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:24] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:24,836 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:24,838 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:24] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:25,094 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:25] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:25,155 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:25,156 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:25] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:25,408 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:25,409 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:25] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:29,511 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:29] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:29,826 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:29,827 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:29] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:30,083 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:30] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:30,148 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:30,150 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:30] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:30,407 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:30,409 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:30] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:34,510 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:34] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:34,815 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:34,816 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:34] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:35,073 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:35] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:35,194 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:35,194 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:35] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:35,506 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:35,506 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:35] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:39,584 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:39] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:39,924 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:39,925 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:39] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:40,180 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:40] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:40,251 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:40,253 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:40] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:40,494 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:40,494 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:40] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:44,515 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:44] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:44,826 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:44,827 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:44] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:45,084 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:45] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:45,148 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:45,150 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:45] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:45,405 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:45,407 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:45] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:49,518 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:49] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:49,840 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:49,842 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:49] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:50,089 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:50] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:50,155 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:50,156 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:50] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:50,409 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:50,412 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:50] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:54,518 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:54] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:54,842 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:54,844 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:54] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 14:59:55,112 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:55] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 14:59:55,159 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 14:59:55,161 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:55] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 14:59:55,433 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:59:55,436 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:55] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 14:59:59,529 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:59] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 14:59:59,871 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 14:59:59,873 - INFO - 127.0.0.1 - - [06/Jul/2025 14:59:59] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:00:00,124 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:00] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:00:00,185 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:00:00,186 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:00] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:00:00,444 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:00:00,446 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:00] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:00:39,541 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:39] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:00:39,890 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:00:39,892 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:39] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:00:40,156 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:40] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:00:40,217 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:00:40,219 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:40] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:00:40,482 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:00:40,484 - INFO - 127.0.0.1 - - [06/Jul/2025 15:00:40] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:01:39,531 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:39] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:01:39,876 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:01:39,876 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:39] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:01:40,116 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:40] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:01:40,196 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:01:40,196 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:40] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:01:40,469 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:01:40,470 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:40] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:01:51,272 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 15:01:51,281 - INFO - [DATA] Dados coletados: $108919.23 (binance) - Change: 0.76%
+2025-07-06 15:01:59,609 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:59] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:01:59,943 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:01:59,944 - INFO - 127.0.0.1 - - [06/Jul/2025 15:01:59] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:00,199 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:00] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:00,249 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:00,249 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:00] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:00,509 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:00,510 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:00] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:03,551 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:03] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:03,865 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:03,867 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:03] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:04,132 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:04] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:04,194 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:04,196 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:04] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:04,450 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:04,452 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:04] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:05,928 - WARNING - 404 Not Found: /start-bitcoin
+2025-07-06 15:02:05,929 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:05] "[33mPOST /start-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 15:02:08,881 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:08] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:09,042 - WARNING - 404 Not Found: /stop-bitcoin
+2025-07-06 15:02:09,043 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:09] "[33mPOST /stop-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 15:02:09,129 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:09,130 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:09] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:09,197 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:09] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:09,445 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:09,447 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:09] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:09,514 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:09,517 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:09] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:11,092 - WARNING - 404 Not Found: /start-bitcoin
+2025-07-06 15:02:11,093 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:11] "[33mPOST /start-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 15:02:13,877 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:13] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:14,124 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:14,125 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:14] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:14,200 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:14] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:14,443 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:14,444 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:14] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:14,513 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:14,514 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:14] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:19,518 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:19] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:19,835 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:19,836 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:19] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:20,091 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:20] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:20,153 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:20,153 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:20] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:20,408 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:20,410 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:20] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:24,516 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:24] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:24,837 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:24,839 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:24] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:25,095 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:25] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:25,158 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:25,158 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:25] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:25,411 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:25,413 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:25] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:29,522 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:29] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:29,838 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:29,839 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:29] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:30,096 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:30] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:30,153 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:30,154 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:30] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:30,416 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:30,417 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:30] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:34,507 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:34] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:34,840 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:34,840 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:34] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:35,091 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:35] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:35,183 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:35,183 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:35] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:35,399 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:35,400 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:35] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:39,539 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:39] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:39,864 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:39,866 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:39] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:40,146 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:40] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:40,180 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:40,181 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:40] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:40,475 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:40,478 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:40] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:47,688 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 15:02:47,689 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 15:02:47,691 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:02:47,693 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:02:47,693 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 15:02:47,695 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:02:47,696 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:02:47,697 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:02:47,698 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:02:47,698 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 15:02:47,699 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 15:02:47,702 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:02:47,702 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 15:02:47,703 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 15:02:47,704 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 15:02:47,706 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:02:47,707 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:02:47,709 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:02:47,709 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:02:47,709 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 15:02:47,710 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 15:02:47,729 - INFO - [CTRL] Rotas registradas.
+2025-07-06 15:02:47,729 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 15:02:47,729 - INFO - ============================================================
+2025-07-06 15:02:47,729 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 15:02:47,730 - INFO - ============================================================
+2025-07-06 15:02:47,730 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 15:02:47,730 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 15:02:47,731 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 15:02:47,731 - INFO - 
+2025-07-06 15:02:47,731 - INFO - [API] APIs disponíveis:
+2025-07-06 15:02:47,731 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 15:02:47,731 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 15:02:47,732 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 15:02:47,732 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 15:02:47,732 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 15:02:47,732 - INFO - 
+2025-07-06 15:02:47,733 - INFO - [CTRL] Controles (POST):
+2025-07-06 15:02:47,733 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 15:02:47,733 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 15:02:47,733 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 15:02:47,733 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 15:02:47,734 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 15:02:47,734 - INFO - 
+2025-07-06 15:02:47,734 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 15:02:47,734 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 15:02:47,734 - INFO - ============================================================
+2025-07-06 15:02:47,735 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 15:02:47,760 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 15:02:47,760 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 15:02:47,952 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:47] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:48,076 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 15:02:48,083 - INFO - [DATA] Dados coletados: $108885.59 (binance) - Change: 0.74%
+2025-07-06 15:02:48,188 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:48,189 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:48] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:48,275 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:48,277 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:48] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:49,524 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:49] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:02:49,831 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:49,832 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:49] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:50,092 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:50] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:02:50,142 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:02:50,143 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:50] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:02:50,413 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:02:50,416 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:50] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:02:52,123 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:52] "GET / HTTP/1.1" 200 -
+2025-07-06 15:02:52,742 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:02:52,743 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:52] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:02:53,070 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:02:53,083 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:53] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:02:53,113 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:53] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:02:53,423 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:02:53,423 - INFO - 127.0.0.1 - - [06/Jul/2025 15:02:53] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:03:07,516 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:03:07,517 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:07] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:03:07,847 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:03:07,849 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:07] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:03:08,084 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:08] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:03:08,198 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:03:08,200 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:08] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:03:22,531 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:03:22,533 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:22] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:03:22,859 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:03:22,860 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:22] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:03:23,105 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:23] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:03:23,192 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:03:23,194 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:23] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:03:34,741 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 15:03:34,742 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 15:03:34,744 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:03:34,745 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:03:34,745 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 15:03:34,746 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:03:34,747 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:03:34,748 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:03:34,749 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:03:34,749 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 15:03:34,750 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 15:03:34,753 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:03:34,753 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 15:03:34,754 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 15:03:34,755 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 15:03:34,756 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:03:34,758 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:03:34,760 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:03:34,760 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:03:34,760 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 15:03:34,760 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 15:03:34,777 - INFO - [CTRL] Rotas registradas.
+2025-07-06 15:03:34,777 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 15:03:34,778 - INFO - ============================================================
+2025-07-06 15:03:34,778 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 15:03:34,778 - INFO - ============================================================
+2025-07-06 15:03:34,778 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 15:03:34,778 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 15:03:34,779 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 15:03:34,779 - INFO - 
+2025-07-06 15:03:34,779 - INFO - [API] APIs disponíveis:
+2025-07-06 15:03:34,779 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 15:03:34,779 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 15:03:34,780 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 15:03:34,780 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 15:03:34,780 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 15:03:34,780 - INFO - 
+2025-07-06 15:03:34,780 - INFO - [CTRL] Controles (POST):
+2025-07-06 15:03:34,780 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 15:03:34,781 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 15:03:34,781 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 15:03:34,781 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 15:03:34,781 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 15:03:34,781 - INFO - 
+2025-07-06 15:03:34,781 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 15:03:34,782 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 15:03:34,782 - INFO - ============================================================
+2025-07-06 15:03:34,783 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 15:03:34,806 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 15:03:34,806 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 15:03:35,168 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 15:03:35,185 - INFO - [DATA] Dados coletados: $108885.59 (binance) - Change: 0.75%
+2025-07-06 15:03:37,740 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:03:37,741 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:37] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:03:38,007 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:03:38,007 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:38] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:03:38,054 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:38] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:03:38,336 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:38] "GET / HTTP/1.1" 200 -
+2025-07-06 15:03:38,606 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:03:38,607 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:38] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:03:38,624 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:03:38,626 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:38] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:03:38,990 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:38] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:03:39,252 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:03:39,254 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:39] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:03:54,524 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:03:54,524 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:54] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:03:54,831 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:03:54,831 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:54] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:03:55,106 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:55] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:03:55,162 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:03:55,163 - INFO - 127.0.0.1 - - [06/Jul/2025 15:03:55] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:04:09,509 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:04:09,509 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:09] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:04:09,815 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:04:09,816 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:09] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:04:10,083 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:10] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:04:10,132 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:04:10,133 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:10] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:04:22,437 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 15:04:22,438 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 15:04:22,439 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:04:22,441 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:04:22,441 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 15:04:22,442 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:04:22,443 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:04:22,444 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:04:22,444 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:04:22,445 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 15:04:22,446 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 15:04:22,449 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:04:22,449 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 15:04:22,450 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 15:04:22,451 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 15:04:22,452 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:04:22,453 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:04:22,455 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:04:22,455 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:04:22,456 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 15:04:22,456 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 15:04:22,473 - INFO - [CTRL] Rotas registradas.
+2025-07-06 15:04:22,473 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 15:04:22,473 - INFO - ============================================================
+2025-07-06 15:04:22,473 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 15:04:22,474 - INFO - ============================================================
+2025-07-06 15:04:22,474 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 15:04:22,474 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 15:04:22,474 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 15:04:22,474 - INFO - 
+2025-07-06 15:04:22,475 - INFO - [API] APIs disponíveis:
+2025-07-06 15:04:22,475 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 15:04:22,475 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 15:04:22,475 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 15:04:22,476 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 15:04:22,476 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 15:04:22,476 - INFO - 
+2025-07-06 15:04:22,476 - INFO - [CTRL] Controles (POST):
+2025-07-06 15:04:22,476 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 15:04:22,477 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 15:04:22,477 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 15:04:22,477 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 15:04:22,477 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 15:04:22,477 - INFO - 
+2025-07-06 15:04:22,478 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 15:04:22,478 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 15:04:22,478 - INFO - ============================================================
+2025-07-06 15:04:22,478 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 15:04:22,501 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 15:04:22,501 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 15:04:22,833 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 15:04:22,850 - INFO - [DATA] Dados coletados: $108871.74 (binance) - Change: 0.74%
+2025-07-06 15:04:24,711 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:04:24,713 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:24] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:04:24,975 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:04:24,978 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:24] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:04:25,027 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:25] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:04:25,330 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:04:25,331 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:25] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:04:26,898 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:26] "GET / HTTP/1.1" 200 -
+2025-07-06 15:04:27,635 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:27] "[36mGET /static/js/dashboard-updates.js HTTP/1.1[0m" 304 -
+2025-07-06 15:04:27,657 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:27] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 15:04:27,710 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:27] "[36mGET /static/js/dashboard.js HTTP/1.1[0m" 304 -
+2025-07-06 15:04:27,728 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:27] "[36mGET /static/css/dashboard.css HTTP/1.1[0m" 304 -
+2025-07-06 15:04:27,736 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:27] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 15:04:27,771 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:27,772 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:27] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:04:28,083 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:28] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:04:30,220 - WARNING - [STREAMER] Streaming já está em execução.
+2025-07-06 15:04:30,220 - INFO - [OK] Bitcoin streaming iniciado via API.
+2025-07-06 15:04:30,221 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:30] "POST /api/bitcoin/start-stream HTTP/1.1" 200 -
+2025-07-06 15:04:32,794 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:32,796 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:32] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:04:38,081 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:38] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:04:38,082 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:38,083 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:38] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:04:42,779 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:42,780 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:42] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:04:48,830 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:48] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:04:48,831 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:48,832 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:48] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:04:53,523 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:53,525 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:53] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:04:58,081 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:58] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:04:58,081 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:04:58,082 - INFO - 127.0.0.1 - - [06/Jul/2025 15:04:58] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:03,515 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:03,516 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:03] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:08,821 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:08] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:05:08,824 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:08,827 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:08] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:13,513 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:13,514 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:13] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:18,835 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:18] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:05:18,836 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:18,838 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:18] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:23,524 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:23,527 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:23] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:28,828 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:28] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:05:28,832 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:28,836 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:28] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:33,509 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:33,510 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:33] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:38,840 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:38] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:05:38,842 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:38,845 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:38] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:43,523 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:43,523 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:43] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:48,839 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:48] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:05:48,842 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:48,845 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:48] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:05:53,521 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:05:53,522 - INFO - 127.0.0.1 - - [06/Jul/2025 15:05:53] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:06:39,849 - INFO - 127.0.0.1 - - [06/Jul/2025 15:06:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:06:39,853 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:06:39,859 - INFO - 127.0.0.1 - - [06/Jul/2025 15:06:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:07:39,528 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:07:39,529 - INFO - 127.0.0.1 - - [06/Jul/2025 15:07:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:07:39,843 - INFO - 127.0.0.1 - - [06/Jul/2025 15:07:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:08:39,547 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 15:08:39,548 - INFO - 127.0.0.1 - - [06/Jul/2025 15:08:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 15:08:39,867 - INFO - 127.0.0.1 - - [06/Jul/2025 15:08:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:09:50,080 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 15:09:50,081 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 15:09:50,083 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:09:50,084 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:09:50,085 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 15:09:50,086 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:09:50,087 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:09:50,088 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:09:50,089 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:09:50,089 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 15:09:50,090 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 15:09:50,093 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:09:50,093 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 15:09:50,094 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 15:09:50,095 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 15:09:50,096 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:09:50,098 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:09:50,099 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:09:50,099 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:09:50,099 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 15:09:50,100 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 15:09:50,117 - INFO - [CTRL] Rotas registradas.
+2025-07-06 15:09:50,118 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 15:09:50,118 - INFO - ============================================================
+2025-07-06 15:09:50,119 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 15:09:50,119 - INFO - ============================================================
+2025-07-06 15:09:50,119 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 15:09:50,120 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 15:09:50,120 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 15:09:50,120 - INFO - 
+2025-07-06 15:09:50,120 - INFO - [API] APIs disponíveis:
+2025-07-06 15:09:50,121 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 15:09:50,121 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 15:09:50,121 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 15:09:50,122 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 15:09:50,122 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 15:09:50,122 - INFO - 
+2025-07-06 15:09:50,122 - INFO - [CTRL] Controles (POST):
+2025-07-06 15:09:50,123 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 15:09:50,123 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 15:09:50,123 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 15:09:50,123 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 15:09:50,124 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 15:09:50,124 - INFO - 
+2025-07-06 15:09:50,124 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 15:09:50,124 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 15:09:50,125 - INFO - ============================================================
+2025-07-06 15:09:50,125 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 15:09:50,146 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 15:09:50,147 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 15:09:50,516 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 15:09:50,534 - INFO - [DATA] Dados coletados: $108805.67 (binance) - Change: 0.74%
+2025-07-06 15:09:52,914 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:09:52,915 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:52] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:09:52,918 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:52] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 15:09:54,196 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:54] "GET / HTTP/1.1" 200 -
+2025-07-06 15:09:54,984 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:09:54,985 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:54] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:09:55,232 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:09:55,233 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:55] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:09:55,304 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:55] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:09:55,573 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:09:55,574 - INFO - 127.0.0.1 - - [06/Jul/2025 15:09:55] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:10:10,523 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:10:10,524 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:10] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:10:10,839 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:10:10,840 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:10] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:10:11,104 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:11] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:10:11,190 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:10:11,191 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:11] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:10:25,520 - WARNING - 404 Not Found: /api/system/status
+2025-07-06 15:10:25,521 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:25] "[33mGET /api/system/status HTTP/1.1[0m" 404 -
+2025-07-06 15:10:25,847 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:10:25,849 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:25] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:10:26,106 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:26] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:10:26,208 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:10:26,210 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:26] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:10:44,038 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 15:10:44,039 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 15:10:44,041 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:10:44,042 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:10:44,042 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 15:10:44,044 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:10:44,045 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:10:44,047 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:10:44,048 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:10:44,048 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 15:10:44,049 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 15:10:44,053 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 15:10:44,053 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 15:10:44,054 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 15:10:44,055 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 15:10:44,056 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 15:10:44,058 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 15:10:44,059 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 15:10:44,060 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 15:10:44,060 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 15:10:44,060 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 15:10:44,078 - INFO - [CTRL] Rotas registradas.
+2025-07-06 15:10:44,079 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 15:10:44,079 - INFO - ============================================================
+2025-07-06 15:10:44,079 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 15:10:44,079 - INFO - ============================================================
+2025-07-06 15:10:44,080 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 15:10:44,080 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 15:10:44,080 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 15:10:44,080 - INFO - 
+2025-07-06 15:10:44,081 - INFO - [API] APIs disponíveis:
+2025-07-06 15:10:44,081 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 15:10:44,081 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 15:10:44,081 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 15:10:44,082 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 15:10:44,082 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 15:10:44,082 - INFO - 
+2025-07-06 15:10:44,082 - INFO - [CTRL] Controles (POST):
+2025-07-06 15:10:44,082 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 15:10:44,083 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 15:10:44,083 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 15:10:44,083 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 15:10:44,083 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 15:10:44,083 - INFO - 
+2025-07-06 15:10:44,084 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 15:10:44,084 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 15:10:44,084 - INFO - ============================================================
+2025-07-06 15:10:44,085 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 15:10:44,109 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 15:10:44,109 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 15:10:44,175 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:44] "GET /api/trading/signals HTTP/1.1" 200 -
+2025-07-06 15:10:44,457 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 15:10:44,474 - INFO - [DATA] Dados coletados: $108805.67 (binance) - Change: 0.74%
+2025-07-06 15:10:44,481 - WARNING - 404 Not Found: /api/trading/analytics
+2025-07-06 15:10:44,483 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:44] "[33mGET /api/trading/analytics HTTP/1.1[0m" 404 -
+2025-07-06 15:10:47,616 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:47] "GET / HTTP/1.1" 200 -
+2025-07-06 15:10:48,191 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:48] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:10:48,192 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:10:48,194 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:48] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:10:48,454 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:10:48,455 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:48] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:10:48,517 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:48] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:10:48,772 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:10:48,774 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:48] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:10:48,855 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:10:48,856 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:48] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:10:50,931 - WARNING - 404 Not Found: /start-bitcoin
+2025-07-06 15:10:50,934 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:50] "[33mPOST /start-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 15:10:53,203 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:53] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:10:53,457 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:10:53,457 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:53] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:10:53,525 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:53] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:10:53,768 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:10:53,769 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:53] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:10:53,835 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:10:53,836 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:53] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:10:58,526 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:58] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:10:58,853 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:10:58,854 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:58] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:10:59,108 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:59] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:10:59,172 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:10:59,173 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:59] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:10:59,427 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:10:59,428 - INFO - 127.0.0.1 - - [06/Jul/2025 15:10:59] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:03,529 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:03] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:03,844 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:03,846 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:03] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:04,106 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:04] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:04,161 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:04,162 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:04] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:04,424 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:04,426 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:04] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:08,531 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:08] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:08,854 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:08,855 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:08] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:09,121 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:09] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:09,176 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:09,178 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:09] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:09,437 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:09,439 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:09] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:12,898 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:12] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:13,227 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:13,228 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:13] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:13,478 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:13] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:13,555 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:13,557 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:13] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:13,807 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:13,809 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:13] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:18,516 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:18] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:18,850 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:18,853 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:18] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:19,085 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:19] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:19,173 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:19,175 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:19] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:19,392 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:19,393 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:19] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:23,525 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:23] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:23,845 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:23,847 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:23] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:24,114 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:24] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:24,173 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:24,175 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:24] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:24,431 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:24,432 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:24] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:28,525 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:28] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:28,848 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:28,850 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:28] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:29,095 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:29] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:29,167 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:29,168 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:29] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:29,412 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:29,413 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:29] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:33,515 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:33] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:33,832 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:33,833 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:33] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:34,097 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:34] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:34,151 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:34,152 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:34] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:34,417 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:34,419 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:34] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:38,544 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:38] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:38,862 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:38,864 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:38] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:39,112 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:39] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:39,195 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:39,197 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:39] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:39,426 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:39,426 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:39] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:43,527 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:43] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:43,851 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:43,852 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:43] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:44,120 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:44] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:44,176 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:44,177 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:44] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:44,437 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:44,438 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:44] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:47,880 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:47] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:48,194 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:48,195 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:48] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:48,458 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:48] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:48,505 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:48,505 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:48] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:48,792 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:48,794 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:48] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:50,089 - WARNING - 404 Not Found: /stop-bitcoin
+2025-07-06 15:11:50,090 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:50] "[33mPOST /stop-bitcoin HTTP/1.1[0m" 404 -
+2025-07-06 15:11:53,197 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:53] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:53,455 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:53,456 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:53] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:53,517 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:53] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:53,783 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:53,783 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:53] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:53,839 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:53,839 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:53] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -
+2025-07-06 15:11:58,518 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:58] "GET /api/trading/analysis HTTP/1.1" 200 -
+2025-07-06 15:11:58,834 - WARNING - 404 Not Found: /api/bitcoin/current
+2025-07-06 15:11:58,835 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:58] "[33mGET /api/bitcoin/current HTTP/1.1[0m" 404 -
+2025-07-06 15:11:59,095 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:59] "GET /api/trading/signals?limit=10 HTTP/1.1" 200 -
+2025-07-06 15:11:59,153 - WARNING - 404 Not Found: /api/trading/scanner
+2025-07-06 15:11:59,155 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:59] "[33mGET /api/trading/scanner HTTP/1.1[0m" 404 -
+2025-07-06 15:11:59,421 - WARNING - 404 Not Found: /api/integrated/dashboard-data
+2025-07-06 15:11:59,423 - INFO - 127.0.0.1 - - [06/Jul/2025 15:11:59] "[33mGET /api/integrated/dashboard-data HTTP/1.1[0m" 404 -

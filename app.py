@@ -158,7 +158,7 @@ class IntegratedController:
         @self.app.route('/api/trading/analysis')
         def get_trading_analysis():
             try:
-                analysis = self.trading_analyzer.get_comprehensive_analysis()
+                analysis = self.trading_analyzer.get_current_analysis()
                 return jsonify(analysis)
             except Exception as e:
                 logger.error(f"Erro ao obter análise de trading: {e}")
@@ -169,7 +169,7 @@ class IntegratedController:
             try:
                 limit = request.args.get('limit', 20, type=int)
                 limit = min(limit, 100)
-                analysis = self.trading_analyzer.get_comprehensive_analysis()
+                analysis = self.trading_analyzer.get_current_analysis()
                 signals = analysis.get('recent_signals', [])
                 return jsonify(signals[-limit:] if signals else [])
             except Exception as e:
@@ -179,7 +179,7 @@ class IntegratedController:
         @self.app.route('/api/trading/active-signals')
         def get_active_signals():
             try:
-                analysis = self.trading_analyzer.get_comprehensive_analysis()
+                analysis = self.trading_analyzer.get_current_analysis()
                 signals = analysis.get('recent_signals', [])
                 active = [s for s in signals if s.get('status') == 'ACTIVE']
                 
@@ -385,7 +385,7 @@ def create_sample_data():
         
         logger.info(f"[OK] {num_samples} registros de exemplo criados e processados.")
         
-        analysis = analyzer.get_comprehensive_analysis()
+        analysis = analyzer.get_current_analysis()
         logger.info(f"[DATA] Sinais de trading de exemplo criados: {len(analysis['recent_signals'])}")
         logger.info(f"[TARGET] Sinais ativos de exemplo: {analysis['active_signals']}")
         
@@ -420,7 +420,7 @@ def check_trading_analyzer_initial_load():
     """
     try:
         analyzer = EnhancedTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
-        _ = analyzer.get_comprehensive_analysis()
+        _ = analyzer.get_current_analysis()
         logger.info("[OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.")
         return True
     except Exception as e:
