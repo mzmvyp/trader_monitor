@@ -28,9 +28,7 @@ class BitcoinAnalyticsEngine:
             time_window_minutes (int): The duration in minutes for the real-time window.
 
         Returns:
-            dict: A dictionary containing aggregated metrics like average price,
-                  min/max price, average 24h change, price range, and last update time.
-                  Returns default zero values if no data is found in the window.
+            dict: A dictionary containing aggregated metrics.
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -39,6 +37,15 @@ class BitcoinAnalyticsEngine:
         cutoff_time = datetime.now() - timedelta(minutes=time_window_minutes)
         
         try:
+            # First check if we have any data at all
+            cursor.execute('SELECT COUNT(*) FROM bitcoin_stream')
+            total_count = cursor.fetchone()[0]
+            
+            if total_count == 0:
+                logger.info(f"[ANALYTICS] Nenhum dado no banco de dados.")
+                return self._get_empty_metrics()
+            
+            # Check for data in the time window
             cursor.execute('''
                 SELECT 
                     COUNT(*) as count,
@@ -49,12 +56,11 @@ class BitcoinAnalyticsEngine:
                     MAX(timestamp) as last_update
                 FROM bitcoin_stream 
                 WHERE timestamp > ?
-            ''', (cutoff_time.isoformat(),)) # Ensure timestamp is in ISO format for comparison
+            ''', (cutoff_time.isoformat(),))
             
             result = cursor.fetchone()
-            conn.close()
             
-            if result and result[0] > 0: # Check if any data points were found
+            if result and result[0] > 0:
                 avg_price = round(result[1], 2) if result[1] is not None else 0
                 min_price = round(result[2], 2) if result[2] is not None else 0
                 max_price = round(result[3], 2) if result[3] is not None else 0
@@ -68,33 +74,54 @@ class BitcoinAnalyticsEngine:
                     'max_price': max_price,
                     'avg_change_24h': avg_change,
                     'price_range': round(max_price - min_price, 2),
-                    'last_update': last_update_str
+                    'last_update': last_update_str,
+                    'total_records': total_count
                 }
             else:
-                logger.info(f"[ANALYTICS] Nenhuns dados encontrados para as últimas {time_window_minutes} minutos.")
-                return {
-                    'data_points': 0,
-                    'avg_price': 0,
-                    'min_price': 0,
-                    'max_price': 0,
-                    'avg_change_24h': 0,
-                    'price_range': 0,
-                    'last_update': datetime.now().isoformat() # Return current time if no data
-                }
+                # No data in time window, get latest data
+                logger.info(f"[ANALYTICS] Sem dados nos últimos {time_window_minutes} minutos para métricas em tempo real.")
+                
+                cursor.execute('''
+                    SELECT price, price_change_24h, timestamp
+                    FROM bitcoin_stream 
+                    ORDER BY timestamp DESC 
+                    LIMIT 1
+                ''')
+                
+                latest = cursor.fetchone()
+                if latest:
+                    return {
+                        'data_points': 0,
+                        'avg_price': round(latest[0], 2),
+                        'min_price': round(latest[0], 2),
+                        'max_price': round(latest[0], 2),
+                        'avg_change_24h': round(latest[1], 2) if latest[1] else 0,
+                        'price_range': 0,
+                        'last_update': latest[2],
+                        'total_records': total_count
+                    }
+                else:
+                    return self._get_empty_metrics()
+                
         except Exception as e:
             logger.error(f"[ANALYTICS] Erro ao obter métricas em tempo real: {e}")
-            return {
-                'data_points': 0,
-                'avg_price': 0,
-                'min_price': 0,
-                'max_price': 0,
-                'avg_change_24h': 0,
-                'price_range': 0,
-                'last_update': datetime.now().isoformat()
-            }
+            return self._get_empty_metrics()
         finally:
             if conn:
                 conn.close()
+
+    def _get_empty_metrics(self) -> dict:
+        """Returns empty metrics structure"""
+        return {
+            'data_points': 0,
+            'avg_price': 0,
+            'min_price': 0,
+            'max_price': 0,
+            'avg_change_24h': 0,
+            'price_range': 0,
+            'last_update': datetime.now().isoformat(),
+            'total_records': 0
+        }
 
     def get_historical_data(self, limit: int = 100) -> list[dict]:
         """
@@ -118,11 +145,10 @@ class BitcoinAnalyticsEngine:
             ''', (limit,))
             
             rows = cursor.fetchall()
-            conn.close()
 
             # Convert rows to list of dictionaries for easier consumption
             historical_data = []
-            for row in reversed(rows): # Reverse to get chronological order
+            for row in reversed(rows):  # Reverse to get chronological order
                 historical_data.append({
                     'timestamp': row[0],
                     'price': row[1],
@@ -142,7 +168,6 @@ class BitcoinAnalyticsEngine:
     def get_analytics_summary(self) -> list[dict]:
         """
         Retrieves a summary of the calculated analytics from the 'bitcoin_analytics' table.
-        This table stores aggregated data over specific windows.
 
         Returns:
             list[dict]: A list of dictionaries, each representing an analytics summary record.
@@ -157,11 +182,10 @@ class BitcoinAnalyticsEngine:
                     price_volatility, total_volume, data_points, created_at
                 FROM bitcoin_analytics
                 ORDER BY window_end DESC
-                LIMIT 10 # Get the most recent 10 analytics summaries
+                LIMIT 10
             ''')
             
             rows = cursor.fetchall()
-            conn.close()
 
             analytics_summary = []
             for row in rows:
@@ -183,4 +207,3 @@ class BitcoinAnalyticsEngine:
         finally:
             if conn:
                 conn.close()
-

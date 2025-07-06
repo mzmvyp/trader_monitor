@@ -251,3 +251,760 @@
 2025-07-06 02:42:19,479 - INFO - 127.0.0.1 - - [06/Jul/2025 02:42:19] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
 2025-07-06 02:42:24,832 - INFO - 127.0.0.1 - - [06/Jul/2025 02:42:24] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
 2025-07-06 02:42:24,834 - INFO - 127.0.0.1 - - [06/Jul/2025 02:42:24] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 12:50:58,505 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 12:50:58,506 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 12:50:58,508 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 12:50:58,509 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 12:50:58,509 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 12:50:58,510 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 12:50:58,512 - INFO - [ANALYZER] Carregados: 5 preços, 1 sinais, análises: 50.
+2025-07-06 12:50:58,512 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 12:50:58,514 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 12:50:58,517 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 12:50:58,518 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 12:50:58,519 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 12:50:58,520 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 12:50:58,522 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 12:50:58,524 - INFO - [ANALYZER] Carregados: 5 preços, 1 sinais, análises: 50.
+2025-07-06 12:50:58,524 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 12:50:58,524 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 12:50:58,542 - INFO - [CTRL] Rotas registradas.
+2025-07-06 12:50:58,542 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 12:50:58,543 - INFO - ============================================================
+2025-07-06 12:50:58,543 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 12:50:58,543 - INFO - ============================================================
+2025-07-06 12:50:58,543 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 12:50:58,544 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 12:50:58,544 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 12:50:58,544 - INFO - 
+2025-07-06 12:50:58,544 - INFO - [API] APIs disponíveis:
+2025-07-06 12:50:58,545 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 12:50:58,545 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 12:50:58,545 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 12:50:58,545 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 12:50:58,545 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 12:50:58,546 - INFO - 
+2025-07-06 12:50:58,546 - INFO - [CTRL] Controles (POST):
+2025-07-06 12:50:58,546 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 12:50:58,546 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 12:50:58,546 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 12:50:58,547 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 12:50:58,547 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 12:50:58,547 - INFO - 
+2025-07-06 12:50:58,547 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 12:50:58,547 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 12:50:58,548 - INFO - ============================================================
+2025-07-06 12:50:58,548 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 12:50:58,592 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 12:50:58,593 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 12:50:58,900 - INFO - [DATA] Dados coletados: $108761.99 (binance) - Change: 0.66%
+2025-07-06 12:51:06,236 - INFO - 127.0.0.1 - - [06/Jul/2025 12:51:06] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 12:51:06,238 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 12:51:06,239 - INFO - 127.0.0.1 - - [06/Jul/2025 12:51:06] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 12:51:07,531 - INFO - 127.0.0.1 - - [06/Jul/2025 12:51:07] "GET / HTTP/1.1" 200 -
+2025-07-06 12:51:08,124 - INFO - 127.0.0.1 - - [06/Jul/2025 12:51:08] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 12:51:08,141 - INFO - 127.0.0.1 - - [06/Jul/2025 12:51:08] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 13:11:40,802 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 13:11:40,802 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 13:11:40,804 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 13:11:40,806 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 13:11:40,806 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 13:11:40,807 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 13:11:40,809 - INFO - [ANALYZER] Carregados: 5 preços, 1 sinais, análises: 50.
+2025-07-06 13:11:40,809 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 13:11:40,810 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 13:11:40,813 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 13:11:40,813 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 13:11:40,814 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 13:11:40,815 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 13:11:40,816 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 13:11:40,818 - INFO - [ANALYZER] Carregados: 5 preços, 1 sinais, análises: 50.
+2025-07-06 13:11:40,818 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 13:11:40,818 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 13:11:40,837 - INFO - [CTRL] Rotas registradas.
+2025-07-06 13:11:40,838 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 13:11:40,838 - INFO - ============================================================
+2025-07-06 13:11:40,838 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 13:11:40,838 - INFO - ============================================================
+2025-07-06 13:11:40,839 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 13:11:40,839 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 13:11:40,839 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 13:11:40,840 - INFO - 
+2025-07-06 13:11:40,840 - INFO - [API] APIs disponíveis:
+2025-07-06 13:11:40,840 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 13:11:40,840 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 13:11:40,841 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 13:11:40,841 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 13:11:40,841 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 13:11:40,842 - INFO - 
+2025-07-06 13:11:40,842 - INFO - [CTRL] Controles (POST):
+2025-07-06 13:11:40,842 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 13:11:40,843 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 13:11:40,843 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 13:11:40,844 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 13:11:40,844 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 13:11:40,844 - INFO - 
+2025-07-06 13:11:40,845 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 13:11:40,845 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 13:11:40,845 - INFO - ============================================================
+2025-07-06 13:11:40,845 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 13:11:40,869 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 13:11:40,870 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 13:11:41,190 - INFO - [DATA] Dados coletados: $108775.99 (binance) - Change: 0.71%
+2025-07-06 13:11:47,640 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:47] "GET / HTTP/1.1" 200 -
+2025-07-06 13:11:48,280 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "GET /static/css/dashboard.css HTTP/1.1" 200 -
+2025-07-06 13:11:48,502 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 13:11:48,516 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "GET /static/js/dashboard-updates.js HTTP/1.1" 200 -
+2025-07-06 13:11:48,558 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 13:11:48,602 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "GET /static/js/dashboard.js HTTP/1.1" 200 -
+2025-07-06 13:11:48,642 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:11:48,644 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:11:48,949 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:48] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:11:53,962 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:11:53,963 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:53] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:11:58,653 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:11:58,654 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:58] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:11:58,958 - INFO - 127.0.0.1 - - [06/Jul/2025 13:11:58] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:00,435 - WARNING - [STREAMER] Streaming já está em execução.
+2025-07-06 13:12:00,436 - INFO - [OK] Bitcoin streaming iniciado via API.
+2025-07-06 13:12:00,437 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:00] "POST /api/bitcoin/start-stream HTTP/1.1" 200 -
+2025-07-06 13:12:03,645 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:03,646 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:03] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:08,953 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:08] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:08,954 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:08,955 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:08] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:13,651 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:13,653 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:13] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:18,966 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:18] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:18,967 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:18,968 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:18] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:23,654 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:23,655 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:23] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:28,973 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:28] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:28,976 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:28,980 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:28] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:33,641 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:33,643 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:33] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:38,957 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:38] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:38,958 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:38,959 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:38] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:43,651 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:43,652 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:43] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:48,966 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:48] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:48,968 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:48,971 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:48] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:53,641 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:53,642 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:53] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:12:59,833 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:59] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:12:59,835 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:12:59,838 - INFO - 127.0.0.1 - - [06/Jul/2025 13:12:59] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:04,529 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:04,531 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:04] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:09,844 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:09] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:13:09,847 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:09,849 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:09] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:14,527 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:14,529 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:14] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:19,824 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:19] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:13:19,826 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:19,829 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:19] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:24,524 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:24,525 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:24] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:29,833 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:29] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:13:29,834 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:29,836 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:29] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:34,519 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:34,521 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:34] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:39,874 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:39,875 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:39,903 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:13:44,512 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:44,514 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:44] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:49,843 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:49] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:13:49,845 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:49,846 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:49] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:53,642 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:53,643 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:53] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:13:58,965 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:58] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:13:58,966 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:13:58,967 - INFO - 127.0.0.1 - - [06/Jul/2025 13:13:58] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:03,656 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:03,660 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:03] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:09,849 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:09] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:14:09,851 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:09,855 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:09] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:14,522 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:14,523 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:14] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:19,821 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:19] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:14:19,823 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:19,826 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:19] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:24,519 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:24,520 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:24] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:29,834 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:29] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:14:29,837 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:29,839 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:29] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:34,518 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:34,519 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:34] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:39,844 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:39,845 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:39,848 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:14:44,529 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:44,531 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:44] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:49,824 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:49] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:14:49,825 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:49,826 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:49] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:54,533 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:54,535 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:54] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:14:59,822 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:59] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:14:59,824 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:14:59,827 - INFO - 127.0.0.1 - - [06/Jul/2025 13:14:59] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:15:04,513 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:15:04,514 - INFO - 127.0.0.1 - - [06/Jul/2025 13:15:04] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:15:39,851 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:15:39,854 - INFO - 127.0.0.1 - - [06/Jul/2025 13:15:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:15:39,855 - INFO - 127.0.0.1 - - [06/Jul/2025 13:15:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:16:39,529 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:16:39,530 - INFO - 127.0.0.1 - - [06/Jul/2025 13:16:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:16:39,853 - INFO - 127.0.0.1 - - [06/Jul/2025 13:16:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:16:41,547 - INFO - [DATA] Dados coletados: $108792.60 (binance) - Change: 0.69%
+2025-07-06 13:17:39,533 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:17:39,534 - INFO - 127.0.0.1 - - [06/Jul/2025 13:17:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:17:39,849 - INFO - 127.0.0.1 - - [06/Jul/2025 13:17:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:18:39,559 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:18:39,561 - INFO - 127.0.0.1 - - [06/Jul/2025 13:18:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:18:39,878 - INFO - 127.0.0.1 - - [06/Jul/2025 13:18:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:19:39,532 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:19:39,533 - INFO - 127.0.0.1 - - [06/Jul/2025 13:19:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:19:39,850 - INFO - 127.0.0.1 - - [06/Jul/2025 13:19:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:20:39,544 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:20:39,546 - INFO - 127.0.0.1 - - [06/Jul/2025 13:20:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:20:39,878 - INFO - 127.0.0.1 - - [06/Jul/2025 13:20:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:21:39,537 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:21:39,538 - INFO - 127.0.0.1 - - [06/Jul/2025 13:21:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:21:39,859 - INFO - 127.0.0.1 - - [06/Jul/2025 13:21:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:21:41,929 - INFO - [DATA] Dados coletados: $108853.21 (binance) - Change: 0.75%
+2025-07-06 13:22:39,530 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:22:39,531 - INFO - 127.0.0.1 - - [06/Jul/2025 13:22:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:22:39,852 - INFO - 127.0.0.1 - - [06/Jul/2025 13:22:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:23:39,540 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:23:39,541 - INFO - 127.0.0.1 - - [06/Jul/2025 13:23:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:23:39,865 - INFO - 127.0.0.1 - - [06/Jul/2025 13:23:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:24:39,527 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:24:39,528 - INFO - 127.0.0.1 - - [06/Jul/2025 13:24:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:24:39,843 - INFO - 127.0.0.1 - - [06/Jul/2025 13:24:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:25:39,533 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:25:39,534 - INFO - 127.0.0.1 - - [06/Jul/2025 13:25:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:25:39,852 - INFO - 127.0.0.1 - - [06/Jul/2025 13:25:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:26:39,842 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:26:39,843 - INFO - 127.0.0.1 - - [06/Jul/2025 13:26:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:26:39,845 - INFO - 127.0.0.1 - - [06/Jul/2025 13:26:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 13:26:42,306 - INFO - [DATA] Dados coletados: $108843.59 (binance) - Change: 0.80%
+2025-07-06 13:27:39,550 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 13:27:39,551 - INFO - 127.0.0.1 - - [06/Jul/2025 13:27:39] "GET /api/integrated/dashboard-data HTTP/1.1" 200 -
+2025-07-06 13:27:39,859 - INFO - 127.0.0.1 - - [06/Jul/2025 13:27:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:16:16,383 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:16:16,384 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:16:16,386 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:16:16,387 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:16:16,387 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:16:16,388 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:16:16,390 - INFO - [ANALYZER] Carregados: 5 preços, 1 sinais, análises: 50.
+2025-07-06 14:16:16,390 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 14:16:16,391 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 14:16:16,394 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:16:16,394 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 14:16:16,395 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 14:16:16,395 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 14:16:16,397 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:16:16,398 - INFO - [ANALYZER] Carregados: 5 preços, 1 sinais, análises: 50.
+2025-07-06 14:16:16,398 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 14:16:16,399 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 14:16:16,415 - INFO - [CTRL] Rotas registradas.
+2025-07-06 14:16:16,416 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 14:16:16,416 - INFO - ============================================================
+2025-07-06 14:16:16,416 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 14:16:16,416 - INFO - ============================================================
+2025-07-06 14:16:16,417 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 14:16:16,417 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 14:16:16,417 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 14:16:16,417 - INFO - 
+2025-07-06 14:16:16,418 - INFO - [API] APIs disponíveis:
+2025-07-06 14:16:16,418 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 14:16:16,418 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 14:16:16,418 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 14:16:16,418 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 14:16:16,419 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 14:16:16,419 - INFO - 
+2025-07-06 14:16:16,419 - INFO - [CTRL] Controles (POST):
+2025-07-06 14:16:16,419 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 14:16:16,419 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 14:16:16,420 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 14:16:16,420 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 14:16:16,420 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 14:16:16,420 - INFO - 
+2025-07-06 14:16:16,420 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 14:16:16,421 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 14:16:16,421 - INFO - ============================================================
+2025-07-06 14:16:16,421 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 14:16:16,444 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 14:16:16,444 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 14:16:16,775 - INFO - [DATA] Dados coletados: $108769.83 (binance) - Change: 0.68%
+2025-07-06 14:18:21,091 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:18:21,091 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:18:21,093 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:18:21,094 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:18:21,094 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:18:21,095 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:18:21,116 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:18:21,116 - ERROR - [ERROR] Problema com trading_analyzer durante a verificação inicial: 'EnhancedTradingAnalyzer' object has no attribute 'load_previous_data'
+2025-07-06 14:18:21,119 - ERROR - [ERROR] Traceback: Traceback (most recent call last):
+  File "c:\Users\mzmvy\Documents\python\trading_system\app.py", line 422, in check_trading_analyzer_initial_load
+    analyzer = EnhancedTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
+  File "c:\Users\mzmvy\Documents\python\trading_system\services\trading_analyzer.py", line 1709, in __init__
+    super().__init__(db_path)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "c:\Users\mzmvy\Documents\python\trading_system\services\trading_analyzer.py", line 79, in __init__
+    self.load_previous_data()
+    ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'EnhancedTradingAnalyzer' object has no attribute 'load_previous_data'
+
+2025-07-06 14:18:21,119 - CRITICAL - [ERROR] Falha na verificação inicial do Trading Analyzer. Encerrando.
+2025-07-06 14:18:29,425 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:18:29,426 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:18:29,428 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:18:29,429 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:18:29,429 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:18:29,431 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:18:29,432 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:18:29,432 - ERROR - [ERROR] Problema com trading_analyzer durante a verificação inicial: 'EnhancedTradingAnalyzer' object has no attribute 'load_previous_data'
+2025-07-06 14:18:29,434 - ERROR - [ERROR] Traceback: Traceback (most recent call last):
+  File "c:\Users\mzmvy\Documents\python\trading_system\app.py", line 422, in check_trading_analyzer_initial_load
+    analyzer = EnhancedTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
+  File "c:\Users\mzmvy\Documents\python\trading_system\services\trading_analyzer.py", line 1709, in __init__
+    super().__init__(db_path)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "c:\Users\mzmvy\Documents\python\trading_system\services\trading_analyzer.py", line 79, in __init__
+    self.load_previous_data()
+    ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'EnhancedTradingAnalyzer' object has no attribute 'load_previous_data'
+
+2025-07-06 14:18:29,435 - CRITICAL - [ERROR] Falha na verificação inicial do Trading Analyzer. Encerrando.
+2025-07-06 14:37:50,217 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:37:50,218 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:37:50,219 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:37:50,221 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:37:50,221 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:37:50,222 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:37:50,223 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:37:50,225 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:37:50,225 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:37:50,226 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 14:37:50,227 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 14:37:50,232 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:37:50,233 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 14:37:50,235 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 14:37:50,236 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 14:37:50,238 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:37:50,241 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:37:50,243 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:37:50,243 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:37:50,243 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 14:37:50,244 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 14:37:50,263 - INFO - [CTRL] Rotas registradas.
+2025-07-06 14:37:50,263 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 14:37:50,263 - INFO - ============================================================
+2025-07-06 14:37:50,264 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 14:37:50,264 - INFO - ============================================================
+2025-07-06 14:37:50,264 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 14:37:50,264 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 14:37:50,265 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 14:37:50,265 - INFO - 
+2025-07-06 14:37:50,265 - INFO - [API] APIs disponíveis:
+2025-07-06 14:37:50,265 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 14:37:50,266 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 14:37:50,266 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 14:37:50,266 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 14:37:50,266 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 14:37:50,267 - INFO - 
+2025-07-06 14:37:50,267 - INFO - [CTRL] Controles (POST):
+2025-07-06 14:37:50,267 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 14:37:50,267 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 14:37:50,267 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 14:37:50,268 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 14:37:50,268 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 14:37:50,268 - INFO - 
+2025-07-06 14:37:50,268 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 14:37:50,268 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 14:37:50,269 - INFO - ============================================================
+2025-07-06 14:37:50,269 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 14:37:50,293 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 14:37:50,294 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 14:37:50,615 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:37:50,652 - INFO - [DATA] Dados coletados: $108911.25 (binance) - Change: 0.86%
+2025-07-06 14:37:56,950 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:56] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:37:56,950 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:37:56,951 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:37:56,952 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:56] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:37:58,445 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:58] "GET / HTTP/1.1" 200 -
+2025-07-06 14:37:59,343 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "[36mGET /static/js/dashboard-updates.js HTTP/1.1[0m" 304 -
+2025-07-06 14:37:59,362 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 14:37:59,369 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "[36mGET /static/css/dashboard.css HTTP/1.1[0m" 304 -
+2025-07-06 14:37:59,438 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "[36mGET /static/js/dashboard.js HTTP/1.1[0m" 304 -
+2025-07-06 14:37:59,446 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 14:37:59,483 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:37:59,483 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:37:59,484 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:37:59,793 - INFO - 127.0.0.1 - - [06/Jul/2025 14:37:59] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:04,339 - WARNING - [STREAMER] Streaming já está em execução.
+2025-07-06 14:38:04,339 - INFO - [OK] Bitcoin streaming iniciado via API.
+2025-07-06 14:38:04,340 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:04] "POST /api/bitcoin/start-stream HTTP/1.1" 200 -
+2025-07-06 14:38:04,592 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:04,592 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:04,593 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:04] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:09,482 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:09,483 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:09,483 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:09] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:09,790 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:09] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:14,828 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:14,829 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:14,830 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:14] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:19,514 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:19,515 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:19,515 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:19] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:19,820 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:19] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:24,827 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:24,828 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:24,828 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:24] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:29,521 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:29,521 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:29,522 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:29] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:29,828 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:29] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:34,829 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:34,829 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:34,829 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:34] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:39,536 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:39,537 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:39,537 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:39,844 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:44,530 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:44,532 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:44,533 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:44] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:49,854 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:49] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:49,854 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:49,855 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:49,855 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:49] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:54,524 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:54,524 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:54,525 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:54] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:38:59,836 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:59] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:38:59,837 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:38:59,838 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:38:59,838 - INFO - 127.0.0.1 - - [06/Jul/2025 14:38:59] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:39:04,531 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:39:04,534 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:39:04,535 - INFO - 127.0.0.1 - - [06/Jul/2025 14:39:04] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:39:09,832 - INFO - 127.0.0.1 - - [06/Jul/2025 14:39:09] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:39:09,834 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:39:09,835 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:39:09,837 - INFO - 127.0.0.1 - - [06/Jul/2025 14:39:09] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:39:14,522 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:39:14,523 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:39:14,523 - INFO - 127.0.0.1 - - [06/Jul/2025 14:39:14] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:39:39,862 - INFO - 127.0.0.1 - - [06/Jul/2025 14:39:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:39:39,864 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:39:39,866 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:39:39,868 - INFO - 127.0.0.1 - - [06/Jul/2025 14:39:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:40:39,581 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:40:39,584 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:40:39,587 - INFO - 127.0.0.1 - - [06/Jul/2025 14:40:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:40:39,924 - INFO - 127.0.0.1 - - [06/Jul/2025 14:40:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:41:39,682 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:41:39,683 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:41:39,683 - INFO - 127.0.0.1 - - [06/Jul/2025 14:41:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:41:39,991 - INFO - 127.0.0.1 - - [06/Jul/2025 14:41:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:42:39,907 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:42:39,908 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:42:39,910 - INFO - 127.0.0.1 - - [06/Jul/2025 14:42:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:42:39,936 - INFO - 127.0.0.1 - - [06/Jul/2025 14:42:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:42:51,000 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:42:51,006 - INFO - [DATA] Dados coletados: $108957.30 (binance) - Change: 0.87%
+2025-07-06 14:43:39,584 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:43:39,585 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:43:39,586 - INFO - 127.0.0.1 - - [06/Jul/2025 14:43:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:43:39,909 - INFO - 127.0.0.1 - - [06/Jul/2025 14:43:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:05,229 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:44:05,230 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:44:05,233 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:44:05,235 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:44:05,235 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:44:05,238 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:44:05,240 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:44:05,242 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:44:05,243 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 14:44:05,245 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 14:44:05,248 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:44:05,249 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 14:44:05,250 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 14:44:05,250 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 14:44:05,252 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:44:05,254 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:44:05,256 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:44:05,257 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 14:44:05,257 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 14:44:05,279 - INFO - [CTRL] Rotas registradas.
+2025-07-06 14:44:05,279 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 14:44:05,279 - INFO - ============================================================
+2025-07-06 14:44:05,279 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 14:44:05,280 - INFO - ============================================================
+2025-07-06 14:44:05,280 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 14:44:05,280 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 14:44:05,281 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 14:44:05,281 - INFO - 
+2025-07-06 14:44:05,281 - INFO - [API] APIs disponíveis:
+2025-07-06 14:44:05,281 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 14:44:05,281 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 14:44:05,282 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 14:44:05,282 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 14:44:05,282 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 14:44:05,282 - INFO - 
+2025-07-06 14:44:05,283 - INFO - [CTRL] Controles (POST):
+2025-07-06 14:44:05,283 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 14:44:05,283 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 14:44:05,283 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 14:44:05,284 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 14:44:05,284 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 14:44:05,284 - INFO - 
+2025-07-06 14:44:05,284 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 14:44:05,285 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 14:44:05,285 - INFO - ============================================================
+2025-07-06 14:44:05,285 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 14:44:05,311 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 14:44:05,311 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 14:44:05,703 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:44:05,722 - INFO - [DATA] Dados coletados: $108957.30 (binance) - Change: 0.83%
+2025-07-06 14:44:09,420 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:09,421 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:09,423 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:09] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:09,427 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:09] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:09,671 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:09,673 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:09,673 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:09] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:13,107 - WARNING - [STREAMER] Streaming já está em execução.
+2025-07-06 14:44:13,107 - INFO - [OK] Bitcoin streaming iniciado via API.
+2025-07-06 14:44:13,108 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:13] "POST /api/bitcoin/start-stream HTTP/1.1" 200 -
+2025-07-06 14:44:14,794 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:14,795 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:14,797 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:14] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:19,490 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:19,490 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:19,491 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:19] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:19,802 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:19] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:24,789 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:24,789 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:24,790 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:24] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:29,532 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:29,535 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:29,536 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:29] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:29,837 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:29] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:34,838 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:34,839 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:34,841 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:34] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:39,595 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:39,597 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:39,599 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:39,936 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:44,483 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:44,483 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:44,484 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:44] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:49,826 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:49] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:49,828 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:49,828 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:49,829 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:49] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:54,515 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:54,516 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:54,517 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:54] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:44:59,819 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:59] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:44:59,820 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:44:59,821 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:44:59,822 - INFO - 127.0.0.1 - - [06/Jul/2025 14:44:59] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:04,521 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:04,522 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:04,522 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:04] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:09,839 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:09] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:45:09,842 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:09,843 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:09,845 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:09] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:14,512 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:14,513 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:14,513 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:14] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:19,831 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:19] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:45:19,833 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:19,835 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:19,837 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:19] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:24,521 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:24,523 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:24,524 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:24] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:29,826 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:29] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:45:29,826 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:29,827 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:29,828 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:29] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:45,423 - INFO - [OK] Todas as dependências Python estão disponíveis.
+2025-07-06 14:45:45,424 - INFO - [DB_SETUP] Inicializando todos os bancos de dados...
+2025-07-06 14:45:45,426 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:45:45,427 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:45:45,427 - INFO - [DB_SETUP] Inicialização de bancos de dados concluída.
+2025-07-06 14:45:45,429 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:45:45,430 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:45:45,431 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:45:45,431 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:45:45,432 - INFO - [OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.
+2025-07-06 14:45:45,432 - INFO - [DATA] Banco de dados de stream Bitcoin contém 50 registros. Usando dados existentes.
+2025-07-06 14:45:45,435 - INFO - [DB_SETUP] Banco de dados Bitcoin Stream em 'data\bitcoin_stream.db' inicializado/verificado.
+2025-07-06 14:45:45,435 - INFO - [MIGRATION] Verificando e migrando banco de dados: data\bitcoin_stream.db...
+2025-07-06 14:45:45,436 - INFO - [MIGRATION] Coluna 'data_hash' já existe.
+2025-07-06 14:45:45,437 - INFO - [MIGRATION] Migração concluída com sucesso.
+2025-07-06 14:45:45,438 - INFO - [DB_SETUP] Banco de dados Trading Analyzer em 'data\trading_analyzer.db' inicializado/verificado.
+2025-07-06 14:45:45,439 - INFO - [ENHANCED] Enhanced database schema initialized
+2025-07-06 14:45:45,440 - INFO - [ENHANCED] Historical data and active signals loaded.
+2025-07-06 14:45:45,440 - INFO - [COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend
+2025-07-06 14:45:45,441 - INFO - [STREAMER] Novo subscriber adicionado. Total: 1
+2025-07-06 14:45:45,441 - INFO - [STREAMER] Novo subscriber adicionado. Total: 2
+2025-07-06 14:45:45,457 - INFO - [CTRL] Rotas registradas.
+2025-07-06 14:45:45,458 - INFO - [CTRL] Manipuladores de erro configurados.
+2025-07-06 14:45:45,458 - INFO - ============================================================
+2025-07-06 14:45:45,458 - INFO - [START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA
+2025-07-06 14:45:45,458 - INFO - ============================================================
+2025-07-06 14:45:45,459 - INFO - [DATA] Dashboard Principal: http://localhost:5000
+2025-07-06 14:45:45,459 - INFO - [BTC] Dashboard Bitcoin: http://localhost:5000/bitcoin
+2025-07-06 14:45:45,459 - INFO - [TRADE] Dashboard Trading: http://localhost:5000/trading
+2025-07-06 14:45:45,459 - INFO - 
+2025-07-06 14:45:45,460 - INFO - [API] APIs disponíveis:
+2025-07-06 14:45:45,460 - INFO -    - Status Geral: http://localhost:5000/api/integrated/status
+2025-07-06 14:45:45,460 - INFO -    - Dados Dashboard: http://localhost:5000/api/integrated/dashboard-data
+2025-07-06 14:45:45,460 - INFO -    - Bitcoin Métricas: http://localhost:5000/api/bitcoin/metrics
+2025-07-06 14:45:45,460 - INFO -    - Trading Análise: http://localhost:5000/api/trading/analysis
+2025-07-06 14:45:45,461 - INFO -    - Sinais Ativos: http://localhost:5000/api/trading/active-signals
+2025-07-06 14:45:45,461 - INFO - 
+2025-07-06 14:45:45,461 - INFO - [CTRL] Controles (POST):
+2025-07-06 14:45:45,461 - INFO -    - Iniciar Stream: http://localhost:5000/api/bitcoin/start-stream
+2025-07-06 14:45:45,461 - INFO -    - Parar Stream: http://localhost:5000/api/bitcoin/stop-stream
+2025-07-06 14:45:45,461 - INFO -    - Forçar Salvar Estado: http://localhost:5000/api/control/force-save
+2025-07-06 14:45:45,462 - INFO -    - Limpar Dados: http://localhost:5000/api/control/cleanup
+2025-07-06 14:45:45,462 - INFO -    - Resetar Sinais: http://localhost:5000/api/control/reset-signals
+2025-07-06 14:45:45,462 - INFO - 
+2025-07-06 14:45:45,462 - INFO - [BINANCE] Usando apenas API Binance (intervalo: 5 minutos)
+2025-07-06 14:45:45,462 - INFO - [PERSIST] Persistência habilitada - dados preservados entre sessões
+2025-07-06 14:45:45,462 - INFO - ============================================================
+2025-07-06 14:45:45,463 - INFO - [START] Iniciando Bitcoin Data Streaming (Binance)...
+2025-07-06 14:45:45,485 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.28:5000
+2025-07-06 14:45:45,485 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-06 14:45:45,583 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:45,584 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:45,585 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:45] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:45,814 - WARNING - [ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()
+2025-07-06 14:45:45,831 - INFO - [DATA] Dados coletados: $108966.61 (binance) - Change: 0.82%
+2025-07-06 14:45:49,481 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:49,481 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:49,482 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:49] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:49,800 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:49] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:45:50,078 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "GET / HTTP/1.1" 200 -
+2025-07-06 14:45:50,794 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "[36mGET /static/js/dashboard-updates.js HTTP/1.1[0m" 304 -
+2025-07-06 14:45:50,858 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "[36mGET /static/js/dashboard.js HTTP/1.1[0m" 304 -
+2025-07-06 14:45:50,877 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 14:45:50,909 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 14:45:50,915 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "[36mGET /static/css/dashboard.css HTTP/1.1[0m" 304 -
+2025-07-06 14:45:50,954 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:50,955 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:50,956 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:50] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:51,263 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:51] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:45:54,860 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:54] "GET / HTTP/1.1" 200 -
+2025-07-06 14:45:55,108 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "[36mGET /static/css/main.css HTTP/1.1[0m" 304 -
+2025-07-06 14:45:55,198 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "[36mGET /static/js/dashboard.js HTTP/1.1[0m" 304 -
+2025-07-06 14:45:55,198 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "[36mGET /static/js/dashboard-updates.js HTTP/1.1[0m" 304 -
+2025-07-06 14:45:55,199 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "[36mGET /static/css/dashboard.css HTTP/1.1[0m" 304 -
+2025-07-06 14:45:55,199 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "[36mGET /static/js/common.js HTTP/1.1[0m" 304 -
+2025-07-06 14:45:55,253 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:45:55,253 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:45:55,254 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:45:55,553 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:55] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:45:58,767 - WARNING - [STREAMER] Streaming já está em execução.
+2025-07-06 14:45:58,768 - INFO - [OK] Bitcoin streaming iniciado via API.
+2025-07-06 14:45:58,768 - INFO - 127.0.0.1 - - [06/Jul/2025 14:45:58] "POST /api/bitcoin/start-stream HTTP/1.1" 200 -
+2025-07-06 14:46:00,254 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:00,255 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:00,255 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:00] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:05,835 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:05] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:46:05,835 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:05,836 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:05,837 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:05] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:10,522 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:10,524 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:10,526 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:10] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:15,836 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:15] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:46:15,837 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:15,839 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:15,839 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:15] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:20,518 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:20,520 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:20,522 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:20] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:25,842 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:25] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:46:25,845 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:25,847 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:25,848 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:25] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:30,526 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:30,527 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:30,529 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:30] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:35,835 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:35] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:46:35,835 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:35,836 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:35,836 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:35] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:40,511 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:40,512 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:40,512 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:40] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:45,835 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:45] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:46:45,837 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:45,838 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:45,839 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:45] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:50,524 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:50,525 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:50,527 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:50] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:46:55,849 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:55] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:46:55,852 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:46:55,854 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:46:55,856 - INFO - 127.0.0.1 - - [06/Jul/2025 14:46:55] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:47:00,515 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:47:00,516 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:47:00,517 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:00] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:47:05,831 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:05] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:47:05,832 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:47:05,833 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:47:05,834 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:05] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:47:10,547 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:47:10,548 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:47:10,549 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:10] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:47:15,839 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:15] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -
+2025-07-06 14:47:15,842 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:47:15,844 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:47:15,846 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:15] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:47:39,541 - INFO - [ANALYTICS] Sem dados nos últimos 30 minutos para métricas em tempo real.
+2025-07-06 14:47:39,542 - ERROR - [API] Erro ao obter dados do dashboard: 'EnhancedTradingAnalyzer' object has no attribute 'get_system_health'
+2025-07-06 14:47:39,543 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:39] "[35m[1mGET /api/integrated/dashboard-data HTTP/1.1[0m" 500 -
+2025-07-06 14:47:39,869 - INFO - 127.0.0.1 - - [06/Jul/2025 14:47:39] "GET /api/trading/signals?limit=5 HTTP/1.1" 200 -

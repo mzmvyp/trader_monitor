@@ -1,110 +1,149 @@
 # your_project/routes/trading_routes.py
 
 import sqlite3
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, render_template
 from utils.logging_config import logger
 
 # Create a Blueprint for Trading-related routes
-trading_bp = Blueprint('trading_routes', __name__)
+trading_bp = Blueprint('trading_routes', __name__, url_prefix='/trading')
 
-@trading_bp.route('/api/trading/analysis')
+@trading_bp.route('/')
+def trading_dashboard():
+    """
+    Renders the Trading dashboard page.
+    """
+    return render_template('trading_dashboard.html')
+
+@trading_bp.route('/api/analysis')
 def get_trading_analysis():
     """
     API endpoint to get the current comprehensive trading analysis.
-    This includes indicators, active signals, recent signals, and pattern statistics.
     """
-    # Access the SimpleTradingAnalyzer instance from the Flask app context
-    analysis = current_app.trading_analyzer.get_current_analysis()
-    return jsonify(analysis)
+    try:
+        analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        return jsonify(analysis)
+    except Exception as e:
+        logger.error(f"Erro ao obter análise de trading: {e}")
+        return jsonify({'error': str(e)}), 500
 
-@trading_bp.route('/api/trading/signals')
+@trading_bp.route('/api/signals')
 def get_trading_signals():
     """
     API endpoint to get a list of recent trading signals.
-    Accepts an optional 'limit' query parameter.
     """
-    limit = request.args.get('limit', 20, type=int)
-    limit = min(limit, 100) # Cap the limit
-    
-    # Access the SimpleTradingAnalyzer instance and get recent signals
-    analysis = current_app.trading_analyzer.get_current_analysis()
-    signals = analysis.get('recent_signals', [])
-    
-    # Return the most recent signals up to the specified limit
-    return jsonify(signals[-limit:] if signals else [])
+    try:
+        limit = request.args.get('limit', 20, type=int)
+        limit = min(limit, 100)  # Cap the limit
+        
+        analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        signals = analysis.get('recent_signals', [])
+        
+        return jsonify(signals[-limit:] if signals else [])
+    except Exception as e:
+        logger.error(f"Erro ao obter sinais de trading: {e}")
+        return jsonify({'error': str(e)}), 500
 
-@trading_bp.route('/api/trading/active-signals')
+@trading_bp.route('/api/active-signals')
 def get_active_signals():
     """
     API endpoint to get a list of currently active trading signals.
-    Includes the current Bitcoin price for context if available.
     """
-    analysis = current_app.trading_analyzer.get_current_analysis()
-    signals = analysis.get('recent_signals', []) # Assuming recent_signals includes all signals
-    active = [s for s in signals if s.get('status') == 'ACTIVE']
-    
-    current_price = 0
-    # Attempt to get the very latest price from the Bitcoin streamer's data queue
-    if current_app.bitcoin_streamer.data_queue:
-        current_price = current_app.bitcoin_streamer.data_queue[-1].price
-    
-    # Add current price to each active signal for frontend display
-    for signal in active:
-        signal['current_price'] = current_price
-            
-    return jsonify(active)
+    try:
+        analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        signals = analysis.get('recent_signals', [])
+        active = [s for s in signals if s.get('status') == 'ACTIVE']
+        
+        current_price = 0
+        if current_app.bitcoin_streamer.data_queue:
+            current_price = current_app.bitcoin_streamer.data_queue[-1].price
+        
+        for signal in active:
+            signal['current_price'] = current_price
+                
+        return jsonify(active)
+    except Exception as e:
+        logger.error(f"Erro ao obter sinais ativos: {e}")
+        return jsonify({'error': str(e)}), 500
 
-@trading_bp.route('/api/trading/pattern-stats')
+@trading_bp.route('/api/pattern-stats')
 def get_pattern_statistics():
     """
     API endpoint to get performance statistics for different trading patterns.
     """
-    analysis = current_app.trading_analyzer.get_current_analysis()
-    return jsonify(analysis.get('pattern_stats', []))
+    try:
+        analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        return jsonify(analysis.get('pattern_stats', []))
+    except Exception as e:
+        logger.error(f"Erro ao obter estatísticas de padrões: {e}")
+        return jsonify({'error': str(e)}), 500
 
-@trading_bp.route('/api/trading/indicators')
+@trading_bp.route('/api/indicators')
 def get_current_indicators():
     """
     API endpoint to get the latest calculated technical indicators.
     """
-    analysis = current_app.trading_analyzer.get_current_analysis()
-    return jsonify(analysis.get('indicators', {}))
+    try:
+        analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        return jsonify(analysis.get('indicators', {}))
+    except Exception as e:
+        logger.error(f"Erro ao obter indicadores: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Global API routes (without /trading prefix)
+@trading_bp.route('/api/trading/analysis')
+def get_trading_analysis_global():
+    """Global API endpoint for trading analysis"""
+    return get_trading_analysis()
+
+@trading_bp.route('/api/trading/signals')
+def get_trading_signals_global():
+    """Global API endpoint for trading signals"""
+    return get_trading_signals()
+
+@trading_bp.route('/api/trading/active-signals')
+def get_active_signals_global():
+    """Global API endpoint for active signals"""
+    return get_active_signals()
+
+@trading_bp.route('/api/trading/pattern-stats')
+def get_pattern_statistics_global():
+    """Global API endpoint for pattern statistics"""
+    return get_pattern_statistics()
+
+@trading_bp.route('/api/trading/indicators')
+def get_current_indicators_global():
+    """Global API endpoint for indicators"""
+    return get_current_indicators()
 
 @trading_bp.route('/api/control/cleanup', methods=['POST'])
 def cleanup_data():
     """
     API endpoint to clean up old data from both Bitcoin stream and trading analyzer databases.
-    Deletes records older than a specified number of days (default: 7 days).
     """
     try:
-        # Get days_to_keep from request JSON, default to Config setting
-        days_to_keep = request.json.get('days_to_keep', current_app.config.DEFAULT_DAYS_TO_KEEP_DATA) if request.json else current_app.config.DEFAULT_DAYS_TO_KEEP_DATA
+        from config import app_config
         
-        # Connect to Bitcoin Stream DB
-        conn_bitcoin = sqlite3.connect(current_app.config.BITCOIN_STREAM_DB)
+        days_to_keep = request.json.get('days_to_keep', app_config.DEFAULT_DAYS_TO_KEEP_DATA) if request.json else app_config.DEFAULT_DAYS_TO_KEEP_DATA
+        
+        conn_bitcoin = sqlite3.connect(app_config.BITCOIN_STREAM_DB)
         cursor_bitcoin = conn_bitcoin.cursor()
         
         cutoff_date = (current_app.datetime.now() - current_app.timedelta(days=days_to_keep)).isoformat()
         
-        # Delete old Bitcoin stream data
         cursor_bitcoin.execute('DELETE FROM bitcoin_stream WHERE timestamp < ?', (cutoff_date,))
         deleted_bitcoin = cursor_bitcoin.rowcount
         
-        # Delete old Bitcoin analytics data
         cursor_bitcoin.execute('DELETE FROM bitcoin_analytics WHERE created_at < ?', (cutoff_date,))
         deleted_analytics = cursor_bitcoin.rowcount
         conn_bitcoin.commit()
         conn_bitcoin.close()
         
-        # Connect to Trading Analyzer DB
-        conn_trading = sqlite3.connect(current_app.config.TRADING_ANALYZER_DB)
+        conn_trading = sqlite3.connect(app_config.TRADING_ANALYZER_DB)
         cursor_trading = conn_trading.cursor()
         
-        # Delete old price history
         cursor_trading.execute('DELETE FROM price_history WHERE timestamp < ?', (cutoff_date,))
         deleted_price_history = cursor_trading.rowcount
         
-        # Delete old non-active trading signals
         cursor_trading.execute('DELETE FROM trading_signals WHERE created_at < ? AND status != "ACTIVE"', (cutoff_date,))
         deleted_signals = cursor_trading.rowcount
         conn_trading.commit()
@@ -129,10 +168,8 @@ def cleanup_data():
 def reset_signals():
     """
     API endpoint to reset all trading signals and the analyzer's state.
-    This clears both in-memory and persisted signals/state.
     """
     try:
-        # Access the SimpleTradingAnalyzer instance from the Flask app context
         current_app.trading_analyzer.reset_signals_and_state()
         logger.info("[FIX] Sistema de sinais resetado completamente via API.")
         return jsonify({'status': 'success', 'message': 'Sistema resetado (incluindo persistência)'})
@@ -144,11 +181,9 @@ def reset_signals():
 @trading_bp.route('/api/control/force-save', methods=['POST'])
 def force_save():
     """
-    API endpoint to force a save of the trading analyzer's state and
-    any pending Bitcoin stream data in the processor's buffer.
+    API endpoint to force a save of the trading analyzer's state.
     """
     try:
-        # Access instances from the Flask app context
         current_app.trading_analyzer.save_analyzer_state()
         current_app.bitcoin_processor.force_process_batch()
         
@@ -158,4 +193,3 @@ def force_save():
     except Exception as e:
         logger.error(f"Erro ao salvar estado: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
-

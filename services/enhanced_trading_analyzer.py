@@ -15,14 +15,14 @@ class EnhancedTradingAnalyzer:
     """
     Enhanced Trading Analyzer with robust technical analysis and signal generation.
     Uses multiple indicators and confirmation signals for better accuracy.
-
+    
     Características principais:
     - Análise multi-indicador com confluência
     - Gestão de risco aprimorada com ATR
     - Sistema de sinais baseado em probabilidade
     - Backtesting e performance tracking
     """
-
+    
     def __init__(self, db_path: str = app_config.TRADING_ANALYZER_DB):
         self.db_path = db_path
         self.price_history = deque(maxlen=200)
@@ -31,7 +31,7 @@ class EnhancedTradingAnalyzer:
         self.analysis_count = 0
         self.signals = []
         self.last_analysis = None
-
+        
         # Parâmetros de Análise Técnica Otimizados
         self.ta_params = {
             'rsi_period': 14,
@@ -54,7 +54,7 @@ class EnhancedTradingAnalyzer:
             'min_risk_reward': 2.5,    # Melhor risk/reward
             'min_volume_ratio': 1.3,   # Volume confirmation
         }
-
+        
         # Configuração de Sinais Aprimorada
         self.signal_config = {
             'max_active_signals': 3,
@@ -64,7 +64,7 @@ class EnhancedTradingAnalyzer:
             'partial_take_profit': [0.5, 0.3, 0.2],  # 50%, 30%, 20% nos targets
             'trailing_stop_distance': 1.5,  # ATR multiplier para trailing stop
         }
-
+        
         # Pesos para confluência de indicadores
         self.indicator_weights = {
             'rsi': 0.20,
@@ -74,20 +74,17 @@ class EnhancedTradingAnalyzer:
             'sma_cross': 0.15,
             'volume': 0.10
         }
-
+        
         self.init_database()
-        # Se 'EnhancedTradingAnalyzer' herda de 'EnhancedTradingAnalyzer' e a chamada super().__init__ em EnhancedTradingAnalyzer
-        # leva a este construtor, então self.load_previous_data() será chamado na instância de EnhancedTradingAnalyzer.
-        # Por isso, o método precisa existir nesta classe (EnhancedTradingAnalyzer) para ser herdado.
         self.load_previous_data()
-
+        
     def init_database(self):
         """Initialize database with enhanced schema"""
         setup_trading_analyzer_db(self.db_path)
-
+        
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-
+        
         try:
             # Tabela para OHLC data
             cursor.execute('''
@@ -102,7 +99,7 @@ class EnhancedTradingAnalyzer:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-
+            
             # Enhanced signals table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS enhanced_signals (
@@ -130,7 +127,7 @@ class EnhancedTradingAnalyzer:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-
+            
             # Performance tracking table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS performance_metrics (
@@ -148,7 +145,7 @@ class EnhancedTradingAnalyzer:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-
+            
             # Market state tracking
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS market_state (
@@ -162,68 +159,16 @@ class EnhancedTradingAnalyzer:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-
+            
             conn.commit()
             logger.info("[ENHANCED] Enhanced database schema initialized")
-
+            
         except Exception as e:
             logger.error(f"[ENHANCED] Database initialization error: {e}")
         finally:
             conn.close()
-
-    def load_previous_data(self):
-        """Loads historical price and signal data from the database."""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-
-            # Load OHLC data
-            cursor.execute("SELECT timestamp, open, high, low, close, volume FROM ohlc_data ORDER BY timestamp ASC LIMIT 200")
-            ohlc_rows = cursor.fetchall()
-            for row in ohlc_rows:
-                timestamp = datetime.fromisoformat(row[0])
-                self.ohlc_history.append({
-                    'timestamp': timestamp,
-                    'open': row[1],
-                    'high': row[2],
-                    'low': row[3],
-                    'close': row[4],
-                    'volume': row[5]
-                })
-                # Maintain compatibility with price_history
-                self.price_history.append({
-                    'timestamp': timestamp,
-                    'price': row[4],
-                    'volume': row[5]
-                })
-                self.volume_history.append(row[5])
-
-            # Load active signals
-            # É importante garantir que a ordem das colunas no SELECT corresponda
-            # à ordem esperada na hora de reconstruir o dicionário de sinal.
-            # Idealmente, você pode buscar os nomes das colunas primeiro.
-            cursor.execute("SELECT id, timestamp, signal_type, entry_price, target_1, target_2, target_3, stop_loss, confidence, confluence_score, risk_reward_ratio, atr_value, volume_confirmation, status, entry_reason, indicators_snapshot, profit_loss, max_profit, max_drawdown, exit_reason, created_at, updated_at FROM enhanced_signals WHERE status = 'ACTIVE' OR status LIKE 'TARGET%'")
-            signal_rows = cursor.fetchall()
-            for row in signal_rows:
-                signal_dict = {
-                    'id': row[0], 'timestamp': row[1], 'signal_type': row[2],
-                    'entry_price': row[3], 'target_1': row[4], 'target_2': row[5], 'target_3': row[6],
-                    'stop_loss': row[7], 'confidence': row[8], 'confluence_score': row[9],
-                    'risk_reward_ratio': row[10], 'atr_value': row[11], 'volume_confirmation': row[12],
-                    'status': row[13], 'entry_reason': row[14], 'indicators_snapshot': row[15],
-                    'profit_loss': row[16], 'max_profit': row[17], 'max_drawdown': row[18],
-                    'exit_reason': row[19], 'created_at': row[20], 'updated_at': row[21]
-                }
-                self.signals.append(signal_dict)
-
-            logger.info("[ENHANCED] Historical data and active signals loaded.")
-
-        except sqlite3.Error as e:
-            logger.error(f"[ENHANCED] Error loading previous data: {e}")
-        finally:
-            conn.close()
-
-    def add_ohlc_data(self, timestamp: datetime, open_price: float, high: float,
+    
+    def add_ohlc_data(self, timestamp: datetime, open_price: float, high: float, 
                       low: float, close: float, volume: float = 0):
         """Add OHLC data for more precise technical analysis"""
         
@@ -1743,281 +1688,3 @@ if __name__ == "__main__":
     print(f"Data Quality: {status['data_status']['data_quality']}")
     print(f"Total Signals: {status['signal_status']['total_signals_generated']}")
     print(f"Win Rate: {status['performance_overview']['win_rate']:.1f}%")
-    # MIGRAÇÃO PARA ENHANCED TRADING ANALYZER
-
-# 1. SUBSTITUIR O ARQUIVO trading_analyzer.py
-# Substitua todo o conteúdo do arquivo services/trading_analyzer.py pelo novo código
-# e adicione esta classe de compatibilidade no final:
-
-class EnhancedTradingAnalyzer(EnhancedTradingAnalyzer):
-    """
-    Classe de compatibilidade para manter a interface anterior
-    enquanto usa toda a funcionalidade aprimorada por baixo
-    """
-    
-    def __init__(self, db_path: str = None):
-        # Usar configuração padrão se não especificada
-        if db_path is None:
-            from config import app_config
-            db_path = app_config.TRADING_ANALYZER_DB
-        
-        super().__init__(db_path)
-        
-        # Configurações mais conservadoras para compatibilidade
-        self.ta_params.update({
-            'min_confidence': 60,  # Reduzido para gerar mais sinais
-            'min_risk_reward': 2.0  # Mais conservador
-        })
-        
-        logger.info("[COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend")
-    
-    def analyze_price_patterns(self, current_price: float, volume: float = 0) -> dict:
-        """Método de compatibilidade para análise de padrões"""
-        try:
-            # Usar o novo sistema por baixo
-            analysis = self.get_comprehensive_analysis()
-            
-            # Converter para formato antigo
-            signal_analysis = analysis.get('signal_analysis', {})
-            active_signals = analysis.get('active_signals', [])
-            
-            # Determinar padrão baseado na recomendação
-            pattern_detected = None
-            action = signal_analysis.get('recommended_action', 'HOLD')
-            confidence = signal_analysis.get('confidence', 0)
-            
-            if action == 'BUY' and confidence >= 60:
-                pattern_detected = 'BULLISH_CONFLUENCE'
-            elif action == 'SELL' and confidence >= 60:
-                pattern_detected = 'BEARISH_CONFLUENCE'
-            
-            return {
-                'timestamp': datetime.now().isoformat(),
-                'current_price': current_price,
-                'pattern_detected': pattern_detected,
-                'confidence': confidence,
-                'signal_strength': 'STRONG' if confidence > 75 else 'MEDIUM' if confidence > 60 else 'WEAK',
-                'recommended_action': action,
-                'active_signals_count': len(active_signals),
-                'market_trend': analysis.get('market_analysis', {}).get('trend', 'NEUTRAL'),
-                'volume_analysis': 'HIGH' if analysis.get('technical_indicators', {}).get('Volume_Ratio', 1) > 1.5 else 'NORMAL',
-                'technical_summary': {
-                    'rsi': analysis.get('technical_indicators', {}).get('RSI', 50),
-                    'macd_signal': analysis.get('technical_indicators', {}).get('MACD_Line', 0) > analysis.get('technical_indicators', {}).get('MACD_Signal', 0),
-                    'bb_position': analysis.get('technical_indicators', {}).get('BB_Position', 0.5),
-                    'trend_strength': analysis.get('technical_indicators', {}).get('Trend_Strength', 0)
-                },
-                'enhanced_features': {
-                    'confluence_score': signal_analysis.get('confluence_score', 0),
-                    'volume_confirmed': signal_analysis.get('volume_confirmed', False),
-                    'support_resistance': {
-                        'support': analysis.get('technical_indicators', {}).get('Support', 0),
-                        'resistance': analysis.get('technical_indicators', {}).get('Resistance', 0)
-                    }
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"[COMPAT] Error in analyze_price_patterns: {e}")
-            return {
-                'timestamp': datetime.now().isoformat(),
-                'current_price': current_price,
-                'pattern_detected': None,
-                'confidence': 0,
-                'signal_strength': 'WEAK',
-                'recommended_action': 'HOLD',
-                'error': str(e)
-            }
-    
-    def get_signals_summary(self) -> dict:
-        """Método de compatibilidade para resumo de sinais"""
-        try:
-            analysis = self.get_comprehensive_analysis()
-            performance = analysis.get('performance_summary', {})
-            active_signals = analysis.get('active_signals', [])
-            
-            return {
-                'total_signals': performance.get('total_signals_generated', 0),
-                'active_signals': len(active_signals),
-                'closed_signals': performance.get('closed_signals', 0),
-                'win_rate': performance.get('win_rate', 0),
-                'last_signal_time': self.signals[-1]['created_at'] if self.signals else None,
-                'system_status': 'ACTIVE',
-                'recent_signals': [
-                    {
-                        'id': signal['id'],
-                        'type': signal['type'],
-                        'entry_price': signal['entry'],
-                        'current_pnl': signal['current_pnl'],
-                        'status': 'ACTIVE',
-                        'confidence': signal['confidence']
-                    }
-                    for signal in active_signals[-5:]  # Últimos 5 sinais ativos
-                ],
-                'enhanced_metrics': {
-                    'system_health': analysis.get('system_health', {}),
-                    'market_state': analysis.get('market_analysis', {}),
-                    'next_cooldown_minutes': analysis.get('system_health', {}).get('next_signal_cooldown_minutes', 0)
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"[COMPAT] Error in get_signals_summary: {e}")
-            return {
-                'total_signals': len(self.signals),
-                'active_signals': len([s for s in self.signals if s.get('status') == 'ACTIVE']),
-                'closed_signals': len([s for s in self.signals if s.get('status') != 'ACTIVE']),
-                'win_rate': 0,
-                'system_status': 'ERROR',
-                'error': str(e)
-            }
-    
-    def save_signal(self, signal_data: dict):
-        """Método de compatibilidade para salvar sinais"""
-        try:
-            # Converter formato antigo para novo
-            enhanced_signal = {
-                'id': signal_data.get('id', len(self.signals) + 1),
-                'timestamp': signal_data.get('timestamp', datetime.now().isoformat()),
-                'signal_type': signal_data.get('pattern_type', 'MANUAL_SIGNAL'),
-                'entry_price': signal_data.get('entry_price', 0),
-                'target_1': signal_data.get('target_price', 0),
-                'target_2': signal_data.get('target_price', 0) * 1.5,  # Gerar targets extras
-                'target_3': signal_data.get('target_price', 0) * 2.0,
-                'stop_loss': signal_data.get('stop_loss', 0),
-                'confidence': signal_data.get('confidence', 50),
-                'confluence_score': signal_data.get('confidence', 50),
-                'risk_reward_ratio': abs(signal_data.get('target_price', 0) - signal_data.get('entry_price', 0)) / 
-                                   abs(signal_data.get('entry_price', 0) - signal_data.get('stop_loss', 0))
-                                   if signal_data.get('stop_loss', 0) != signal_data.get('entry_price', 0) else 1,
-                'atr_value': signal_data.get('atr_value', 0),
-                'volume_confirmation': signal_data.get('volume_confirmation', False),
-                'status': signal_data.get('status', 'ACTIVE'),
-                'entry_reason': signal_data.get('reason', 'Legacy signal'),
-                'created_at': signal_data.get('created_at', datetime.now().isoformat()),
-                'profit_loss': signal_data.get('profit_loss', 0),
-                'max_profit': 0,
-                'max_drawdown': 0
-            }
-            
-            self.signals.append(enhanced_signal)
-            self._save_enhanced_signal(enhanced_signal)
-            
-            logger.info(f"[COMPAT] Legacy signal converted and saved: {enhanced_signal['signal_type']}")
-            
-        except Exception as e:
-            logger.error(f"[COMPAT] Error saving legacy signal: {e}")
-
-# 2. ARQUIVO DE CONFIGURAÇÃO ATUALIZADO (config.py)
-# Adicione essas configurações se não existirem:
-
-# Configurações do Enhanced Trading Analyzer
-ENHANCED_TRADING_CONFIG = {
-    'enable_enhanced_features': True,
-    'compatibility_mode': True,  # Manter compatibilidade com código antigo
-    'auto_migrate_signals': True,  # Migrar sinais antigos automaticamente
-    'enhanced_logging': True,
-    'performance_tracking': True
-}
-
-# 3. SCRIPT DE MIGRAÇÃO DE DADOS (migration_script.py)
-def migrate_old_signals_to_enhanced():
-    """
-    Script para migrar sinais antigos para o novo formato
-    """
-    import sqlite3
-    from datetime import datetime
-    
-    try:
-        # Conectar ao banco antigo
-        conn = sqlite3.connect('trading_data.db')  # Ajustar caminho
-        cursor = conn.cursor()
-        
-        # Buscar sinais antigos
-        cursor.execute('''
-            SELECT * FROM trading_signals 
-            WHERE created_at > datetime('now', '-30 days')
-        ''')
-        
-        old_signals = cursor.fetchall()
-        conn.close()
-        
-        if not old_signals:
-            print("Nenhum sinal antigo encontrado para migrar")
-            return
-        
-        # Inicializar enhanced analyzer
-        from services.trading_analyzer import EnhancedTradingAnalyzer
-        enhanced_analyzer = EnhancedTradingAnalyzer()
-        
-        migrated_count = 0
-        for signal_row in old_signals:
-            try:
-                # Converter formato (ajustar índices conforme schema antigo)
-                enhanced_signal = {
-                    'timestamp': signal_row[1],  # Ajustar índice
-                    'signal_type': f"MIGRATED_{signal_row[2]}",
-                    'entry_price': signal_row[3],
-                    'target_1': signal_row[4],
-                    'target_2': signal_row[4] * 1.5,
-                    'target_3': signal_row[4] * 2.0,
-                    'stop_loss': signal_row[5],
-                    'confidence': signal_row[6] or 50,
-                    'confluence_score': signal_row[6] or 50,
-                    'risk_reward_ratio': 2.0,  # Default
-                    'atr_value': 0,
-                    'volume_confirmation': False,
-                    'status': signal_row[7] or 'CLOSED',
-                    'entry_reason': 'Migrated from legacy system',
-                    'created_at': signal_row[8] or datetime.now().isoformat(),
-                    'profit_loss': signal_row[9] or 0,
-                    'max_profit': 0,
-                    'max_drawdown': 0
-                }
-                
-                enhanced_analyzer._save_enhanced_signal(enhanced_signal)
-                migrated_count += 1
-                
-            except Exception as e:
-                print(f"Erro migrando sinal {signal_row[0]}: {e}")
-        
-        print(f"✅ Migração concluída: {migrated_count} sinais migrados")
-        
-    except Exception as e:
-        print(f"❌ Erro na migração: {e}")
-
-# 4. TESTE DE COMPATIBILIDADE
-def test_compatibility():
-    """Teste para verificar se a migração funcionou"""
-    try:
-        from services.trading_analyzer import EnhancedTradingAnalyzer
-        
-        # Testar inicialização
-        analyzer = EnhancedTradingAnalyzer()
-        print("✅ EnhancedTradingAnalyzer inicializado com sucesso")
-        
-        # Testar métodos antigos
-        test_price = 45000
-        analysis = analyzer.analyze_price_patterns(test_price, volume=1000)
-        print(f"✅ analyze_price_patterns funcionando: {analysis['recommended_action']}")
-        
-        summary = analyzer.get_signals_summary()
-        print(f"✅ get_signals_summary funcionando: {summary['system_status']}")
-        
-        # Testar novos recursos
-        enhanced_analysis = analyzer.get_comprehensive_analysis()
-        print(f"✅ Recursos aprimorados disponíveis: {enhanced_analysis['system_health']['data_quality']}")
-        
-        print("\n🎯 MIGRAÇÃO CONCLUÍDA COM SUCESSO!")
-        print("O sistema agora usa Enhanced Trading Analyzer com compatibilidade total")
-        
-    except Exception as e:
-        print(f"❌ Erro no teste de compatibilidade: {e}")
-
-if __name__ == "__main__":
-    print("=== ENHANCED TRADING ANALYZER MIGRATION ===")
-    print("1. Executando migração de dados...")
-    migrate_old_signals_to_enhanced()
-    
-    print("\n2. Testando compatibilidade...")
-    test_compatibility()

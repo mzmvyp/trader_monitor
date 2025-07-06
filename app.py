@@ -17,7 +17,7 @@ from models.bitcoin_data import BitcoinData
 from database.setup import initialize_databases
 from database.processors import BitcoinStreamProcessor
 from services.bitcoin_streamer import BitcoinDataStreamer
-from services.trading_analyzer import SimpleTradingAnalyzer
+from services.trading_analyzer import EnhancedTradingAnalyzer
 from services.analytics_engine import BitcoinAnalyticsEngine
 
 # Import blueprints for routes
@@ -37,10 +37,9 @@ class IntegratedController:
         Initializes the Flask application and all integrated components.
         """
         self.app = Flask(__name__)
-        self.app.config.from_object(app_config) # Load configuration from config.py
+        self.app.config.from_object(app_config)
 
         # Store datetime and timedelta directly on app for easy access in routes
-        # This avoids re-importing in every route file
         self.app.datetime = datetime
         self.app.timedelta = timedelta
 
@@ -55,12 +54,11 @@ class IntegratedController:
         self.bitcoin_analytics = BitcoinAnalyticsEngine(
             db_path=app_config.BITCOIN_STREAM_DB
         )
-        self.trading_analyzer = SimpleTradingAnalyzer(
+        self.trading_analyzer = EnhancedTradingAnalyzer(
             db_path=app_config.TRADING_ANALYZER_DB
         )
         
         # Attach instances to Flask app context for access in routes
-        # This is a common pattern to make services available to blueprints
         self.app.bitcoin_streamer = self.bitcoin_streamer
         self.app.bitcoin_processor = self.bitcoin_processor
         self.app.bitcoin_analytics = self.bitcoin_analytics
@@ -70,9 +68,7 @@ class IntegratedController:
         self.trading_update_interval = app_config.TRADING_ANALYZER_UPDATE_INTERVAL_SECONDS
         
         # Register subscribers for Bitcoin data stream
-        # Data from streamer goes to processor for DB storage
         self.bitcoin_streamer.add_subscriber(self.bitcoin_processor.process_stream_data)
-        # Data from streamer also debounced and fed to trading analyzer
         self.bitcoin_streamer.add_subscriber(self._feed_trading_analyzer_debounced)
         
         self.setup_routes()
@@ -81,11 +77,6 @@ class IntegratedController:
     def _feed_trading_analyzer_debounced(self, bitcoin_data: BitcoinData):
         """
         A debounced callback function to feed Bitcoin data to the trading analyzer.
-        This prevents the analyzer from being updated too frequently,
-        as its analysis might be more computationally intensive.
-
-        Args:
-            bitcoin_data (BitcoinData): The latest Bitcoin data from the streamer.
         """
         current_time = time.time()
         
@@ -97,7 +88,7 @@ class IntegratedController:
             self.trading_analyzer.add_price_data(
                 timestamp=bitcoin_data.timestamp,
                 price=bitcoin_data.price,
-                volume=bitcoin_data.volume_24h # Use 24h volume as general volume
+                volume=bitcoin_data.volume_24h
             )
             self.last_trading_update = current_time
             logger.debug(f"[CTRL] Trading analyzer atualizado com preço: ${bitcoin_data.price:.2f}")
@@ -112,11 +103,171 @@ class IntegratedController:
         self.app.register_blueprint(main_bp)
         self.app.register_blueprint(bitcoin_bp)
         self.app.register_blueprint(trading_bp)
+        
+        # Add global API routes for compatibility
+        @self.app.route('/api/bitcoin/start-stream', methods=['POST'])
+        def start_bitcoin_stream():
+            try:
+                self.bitcoin_streamer.start_streaming()
+                logger.info("[OK] Bitcoin streaming iniciado via API.")
+                return jsonify({'status': 'started', 'message': 'Bitcoin streaming iniciado (5 min intervals)'})
+            except Exception as e:
+                logger.error(f"Erro ao iniciar streaming: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
+        @self.app.route('/api/bitcoin/stop-stream', methods=['POST'])
+        def stop_bitcoin_stream():
+            try:
+                self.bitcoin_streamer.stop_streaming()
+                logger.info("[STOP] Bitcoin streaming parado via API.")
+                return jsonify({'status': 'stopped', 'message': 'Bitcoin streaming parado'})
+            except Exception as e:
+                logger.error(f"Erro ao parar streaming: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
+        @self.app.route('/api/bitcoin/status')
+        def get_bitcoin_status():
+            try:
+                stats = self.bitcoin_streamer.get_stream_statistics()
+                return jsonify(stats)
+            except Exception as e:
+                logger.error(f"Erro ao obter status: {e}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/bitcoin/metrics')
+        def get_bitcoin_metrics():
+            try:
+                time_window_minutes = request.args.get('time_window_minutes', 30, type=int)
+                metrics = self.bitcoin_analytics.get_real_time_metrics(time_window_minutes)
+                return jsonify(metrics)
+            except Exception as e:
+                logger.error(f"Erro ao obter métricas: {e}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/bitcoin/recent-data')
+        def get_bitcoin_recent_data():
+            try:
+                limit = request.args.get('limit', 50, type=int)
+                limit = min(limit, 1000)
+                recent_data = self.bitcoin_streamer.get_recent_data(limit)
+                return jsonify([data.to_dict() for data in recent_data])
+            except Exception as e:
+                logger.error(f"Erro ao obter dados recentes: {e}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/trading/analysis')
+        def get_trading_analysis():
+            try:
+                analysis = self.trading_analyzer.get_comprehensive_analysis()
+                return jsonify(analysis)
+            except Exception as e:
+                logger.error(f"Erro ao obter análise de trading: {e}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/trading/signals')
+        def get_trading_signals():
+            try:
+                limit = request.args.get('limit', 20, type=int)
+                limit = min(limit, 100)
+                analysis = self.trading_analyzer.get_comprehensive_analysis()
+                signals = analysis.get('recent_signals', [])
+                return jsonify(signals[-limit:] if signals else [])
+            except Exception as e:
+                logger.error(f"Erro ao obter sinais de trading: {e}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/trading/active-signals')
+        def get_active_signals():
+            try:
+                analysis = self.trading_analyzer.get_comprehensive_analysis()
+                signals = analysis.get('recent_signals', [])
+                active = [s for s in signals if s.get('status') == 'ACTIVE']
+                
+                current_price = 0
+                if self.bitcoin_streamer.data_queue:
+                    current_price = self.bitcoin_streamer.data_queue[-1].price
+                
+                for signal in active:
+                    signal['current_price'] = current_price
+                        
+                return jsonify(active)
+            except Exception as e:
+                logger.error(f"Erro ao obter sinais ativos: {e}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/control/cleanup', methods=['POST'])
+        def cleanup_data():
+            try:
+                days_to_keep = request.json.get('days_to_keep', app_config.DEFAULT_DAYS_TO_KEEP_DATA) if request.json else app_config.DEFAULT_DAYS_TO_KEEP_DATA
+                
+                conn_bitcoin = sqlite3.connect(app_config.BITCOIN_STREAM_DB)
+                cursor_bitcoin = conn_bitcoin.cursor()
+                
+                cutoff_date = (datetime.now() - timedelta(days=days_to_keep)).isoformat()
+                
+                cursor_bitcoin.execute('DELETE FROM bitcoin_stream WHERE timestamp < ?', (cutoff_date,))
+                deleted_bitcoin = cursor_bitcoin.rowcount
+                
+                cursor_bitcoin.execute('DELETE FROM bitcoin_analytics WHERE created_at < ?', (cutoff_date,))
+                deleted_analytics = cursor_bitcoin.rowcount
+                conn_bitcoin.commit()
+                conn_bitcoin.close()
+                
+                conn_trading = sqlite3.connect(app_config.TRADING_ANALYZER_DB)
+                cursor_trading = conn_trading.cursor()
+                
+                cursor_trading.execute('DELETE FROM price_history WHERE timestamp < ?', (cutoff_date,))
+                deleted_price_history = cursor_trading.rowcount
+                
+                cursor_trading.execute('DELETE FROM trading_signals WHERE created_at < ? AND status != "ACTIVE"', (cutoff_date,))
+                deleted_signals = cursor_trading.rowcount
+                conn_trading.commit()
+                conn_trading.close()
+                
+                logger.info(f"[CLEAN] Limpeza concluída: {deleted_bitcoin} bitcoin, {deleted_analytics} analytics, {deleted_price_history} preços, {deleted_signals} sinais.")
+                
+                return jsonify({
+                    'status': 'success',
+                    'deleted_bitcoin_records': deleted_bitcoin,
+                    'deleted_analytics_records': deleted_analytics,
+                    'deleted_price_history': deleted_price_history,
+                    'deleted_signals': deleted_signals,
+                    'message': f'Dados anteriores a {days_to_keep} dias removidos.'
+                })
+                
+            except Exception as e:
+                logger.error(f"Erro na limpeza de dados: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
+        @self.app.route('/api/control/reset-signals', methods=['POST'])
+        def reset_signals():
+            try:
+                self.trading_analyzer.reset_signals_and_state()
+                logger.info("[FIX] Sistema de sinais resetado completamente via API.")
+                return jsonify({'status': 'success', 'message': 'Sistema resetado (incluindo persistência)'})
+                
+            except Exception as e:
+                logger.error(f"Erro ao resetar sinais: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
+        @self.app.route('/api/control/force-save', methods=['POST'])
+        def force_save():
+            try:
+                self.trading_analyzer.save_analyzer_state()
+                self.bitcoin_processor.force_process_batch()
+                
+                logger.info("[FIX] Estado salvo manualmente via API.")
+                return jsonify({'status': 'success', 'message': 'Estado atual salvo.'})
+                
+            except Exception as e:
+                logger.error(f"Erro ao salvar estado: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
         logger.info("[CTRL] Rotas registradas.")
 
     def setup_error_handlers(self):
         """
-        Sets up custom error handlers for Flask application (e.g., 404, 500).
+        Sets up custom error handlers for Flask application.
         """
         @self.app.errorhandler(404)
         def not_found(error):
@@ -125,18 +276,13 @@ class IntegratedController:
         
         @self.app.errorhandler(500)
         def internal_error(error):
-            logger.exception(f"Erro interno do servidor: {error}") # Use exception for full traceback
+            logger.exception(f"Erro interno do servidor: {error}")
             return jsonify({'error': 'Erro interno do servidor', 'message': str(error)}), 500
         logger.info("[CTRL] Manipuladores de erro configurados.")
     
     def run(self, debug: bool = False, port: int = 5000, host: str = '0.0.0.0'):
         """
         Starts the Flask development server and initiates Bitcoin data streaming.
-
-        Args:
-            debug (bool): If True, runs Flask in debug mode.
-            port (int): The port number to run the Flask app on.
-            host (str): The host address to bind the Flask app to.
         """
         logger.info("=" * 60)
         logger.info("[START] SISTEMA INTEGRADO BITCOIN + TRADING COM PERSISTÊNCIA")
@@ -156,21 +302,17 @@ class IntegratedController:
         logger.info(f"   - Iniciar Stream: http://localhost:{port}/api/bitcoin/start-stream")
         logger.info(f"   - Parar Stream: http://localhost:{port}/api/bitcoin/stop-stream")
         logger.info(f"   - Forçar Salvar Estado: http://localhost:{port}/api/control/force-save")
-        logger.info(f"   - Limpar Dados: http://localhost:{port}/api/control/cleanup (body: {{'days_to_keep': 7}})")
+        logger.info(f"   - Limpar Dados: http://localhost:{port}/api/control/cleanup")
         logger.info(f"   - Resetar Sinais: http://localhost:{port}/api/control/reset-signals")
         logger.info("")
         logger.info("[BINANCE] Usando apenas API Binance (intervalo: 5 minutos)")
         logger.info("[PERSIST] Persistência habilitada - dados preservados entre sessões")
         logger.info("=" * 60)
         
-        self.app.debug = debug # Set Flask debug mode
+        self.app.debug = debug
         
         try:
-            # Start the Bitcoin data streaming in a separate thread
-            # The streaming will run in the background while Flask serves requests
             self.bitcoin_streamer.start_streaming()
-            
-            # Run the Flask application
             self.app.run(debug=debug, port=port, host=host, threaded=True)
             
         except KeyboardInterrupt:
@@ -179,13 +321,12 @@ class IntegratedController:
         except Exception as e:
             logger.critical(f"[ERROR] Erro fatal ao iniciar aplicação: {e}")
             logger.critical(f"[ERROR] Traceback: {traceback.format_exc()}")
-            self.shutdown() # Attempt graceful shutdown even on startup errors
-            raise # Re-raise the exception after logging
+            self.shutdown()
+            raise
     
     def shutdown(self):
         """
-        Performs a graceful shutdown of the application,
-        stopping streaming and persisting any unsaved data.
+        Performs a graceful shutdown of the application.
         """
         logger.info("[FIX] Finalizando aplicação e salvando estado...")
         
@@ -193,13 +334,9 @@ class IntegratedController:
             if self.bitcoin_streamer.is_running:
                 self.bitcoin_streamer.stop_streaming()
             
-            # Ensure any buffered data in the processor is written to DB
             self.bitcoin_processor.force_process_batch()
-            
-            # Save the final state of the trading analyzer
             self.trading_analyzer.save_analyzer_state()
             
-            # Optionally save the very last price data point if needed
             if self.trading_analyzer.price_history:
                 last_price_data = self.trading_analyzer.price_history[-1]
                 self.trading_analyzer.save_price_data(
@@ -216,47 +353,39 @@ class IntegratedController:
 # ==================== UTILITY FUNCTIONS ====================
 def create_sample_data():
     """
-    Generates and inserts sample Bitcoin data and trading analysis data
-    into the databases for initial setup or testing purposes.
+    Generates and inserts sample Bitcoin data and trading analysis data.
     """
     logger.info("[SAMPLE] Criando dados de exemplo...")
     
     try:
-        # Initialize processors and analyzers to ensure their DBs are set up
         processor = BitcoinStreamProcessor(db_path=app_config.BITCOIN_STREAM_DB)
-        analyzer = SimpleTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
+        analyzer = EnhancedTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
         
         base_price = 43000.0
         num_samples = 50
         
         for i in range(num_samples):
-            timestamp = datetime.now() - timedelta(minutes=50 - i) # Simulate historical data
-            # Create a fluctuating price
+            timestamp = datetime.now() - timedelta(minutes=50 - i)
             price = base_price + (i * 10) + ((i * 17) % 100) - 50 
             
             bitcoin_data = BitcoinData(
                 timestamp=timestamp,
                 price=price,
-                volume_24h=1_000_000_000 + (i * 10_000_000), # Increasing volume
-                market_cap=800_000_000_000 + (i * 5_000_000_000), # Increasing market cap
+                volume_24h=1_000_000_000 + (i * 10_000_000),
+                market_cap=800_000_000_000 + (i * 5_000_000_000),
                 price_change_24h=((price - base_price) / base_price) * 100,
                 source='binance'
             )
             
-            # Process data through the stream processor (which also updates analytics)
             processor.process_stream_data(bitcoin_data)
-            
-            # Feed data to the trading analyzer
             analyzer.add_price_data(timestamp, price, bitcoin_data.volume_24h)
         
-        # Force process any remaining buffered data in the processor
         processor.force_process_batch()
-        # Save the final state of the analyzer after sample data generation
         analyzer.save_analyzer_state()
         
         logger.info(f"[OK] {num_samples} registros de exemplo criados e processados.")
         
-        analysis = analyzer.get_current_analysis()
+        analysis = analyzer.get_comprehensive_analysis()
         logger.info(f"[DATA] Sinais de trading de exemplo criados: {len(analysis['recent_signals'])}")
         logger.info(f"[TARGET] Sinais ativos de exemplo: {analysis['active_signals']}")
         
@@ -267,9 +396,6 @@ def create_sample_data():
 def validate_dependencies():
     """
     Checks if all required Python modules are installed.
-
-    Returns:
-        bool: True if all dependencies are met, False otherwise.
     """
     required_modules = ['flask', 'requests', 'collections', 'sqlite3', 'threading', 'datetime', 'os', 'sys', 'time']
     missing = []
@@ -290,16 +416,11 @@ def validate_dependencies():
 
 def check_trading_analyzer_initial_load():
     """
-    Performs a basic check to ensure the Trading Analyzer can be initialized
-    and load its state successfully. This helps in early detection of DB issues.
-
-    Returns:
-        bool: True if the analyzer can be initialized, False otherwise.
+    Performs a basic check to ensure the Trading Analyzer can be initialized.
     """
     try:
-        # Attempt to initialize and get analysis to trigger DB load
-        analyzer = SimpleTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
-        _ = analyzer.get_current_analysis() # Just call to ensure it works
+        analyzer = EnhancedTradingAnalyzer(db_path=app_config.TRADING_ANALYZER_DB)
+        _ = analyzer.get_comprehensive_analysis()
         logger.info("[OK] Trading Analyzer (com persistência) carregado com sucesso para verificação.")
         return True
     except Exception as e:
@@ -311,27 +432,22 @@ def check_trading_analyzer_initial_load():
 def main():
     """
     Main function to run the Bitcoin Trading System application.
-    Performs dependency validation, database initialization, and starts the controller.
     """
     print("[START] Inicializando Sistema Integrado Bitcoin + Trading com Persistência...")
     
     if not validate_dependencies():
-        return 1 # Exit if core dependencies are missing
+        return 1
     
-    # Initialize all databases (creates them if they don't exist)
     initialize_databases()
 
-    # Perform an initial check on the trading analyzer's ability to load data
     if not check_trading_analyzer_initial_load():
         logger.critical("[ERROR] Falha na verificação inicial do Trading Analyzer. Encerrando.")
         return 1
     
-    # Create sample data if the Bitcoin stream database is empty
     if not os.path.exists(app_config.BITCOIN_STREAM_DB) or os.path.getsize(app_config.BITCOIN_STREAM_DB) == 0:
         logger.info("[SAMPLE] Banco de dados de stream Bitcoin vazio ou não encontrado. Criando dados de exemplo...")
         create_sample_data()
     else:
-        # Check if there's actual data in bitcoin_stream table
         conn = sqlite3.connect(app_config.BITCOIN_STREAM_DB)
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM bitcoin_stream")
@@ -351,7 +467,7 @@ def main():
         host = app_config.FLASK_HOST
         
         controller.run(debug=debug_mode, port=port, host=host)
-        return 0 # Successful exit
+        return 0
         
     except KeyboardInterrupt:
         logger.info("[STOP] Aplicação interrompida pelo usuário.")
@@ -359,8 +475,7 @@ def main():
     except Exception as e:
         logger.critical(f"[ERROR] Erro crítico na execução principal da aplicação: {e}")
         logger.critical(f"[ERROR] Traceback: {traceback.format_exc()}")
-        return 1 # Indicate an error exit
+        return 1
 
 if __name__ == "__main__":
     sys.exit(main())
-
