@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Trading System - Dashboard Integrado</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="/static/css/main.css" rel="stylesheet">
+    
+    <style>
+        /* Estilos específicos do dashboard integrado */
+        .dashboard-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+        }
+        
+        .section-content {
+            background: white;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-tabs-custom {
+            border: none;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 0.5rem;
+        }
+        
+        .nav-tabs-custom .nav-link {
+            border: none;
+            border-radius: 8px;
+            color: var(--dark-color);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs-custom .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
+        }
+        
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-stat-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
+        }
+        
+        .quick-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .quick-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-running {
+            background: var(--success-color);
+        }
+        
+        .status-stopped {
+            background: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-rocket"></i> Bitcoin Trading System
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <div class="system-status">
+                    <span id="system-status-dot" class="status-dot status-stopped"></span>
+                    <span id="system-status-text">Sistema Parado</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="quick-stat-card">
+                <div class="quick-stat-value" id="current-price">$0.00</div>
+                <div class="quick-stat-label">Preço Bitcoin</div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-value" id="active-signals">0</div>
+                <div class="quick-stat-label">Sinais Ativos</div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-value" id="data-points">0</div>
+                <div class="quick-stat-label">Pontos de Dados</div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-value" id="success-rate">0%</div>
+                <div class="quick-stat-label">Taxa de Sucesso</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-play-circle"></i> Controles do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Pipeline Bitcoin</h6>
+                                <button id="start-bitcoin" class="btn btn-success me-2">
+                                    <i class="fas fa-play"></i> Iniciar Bitcoin
+                                </button>
+                                <button id="stop-bitcoin" class="btn btn-outline-danger">
+                                    <i class="fas fa-stop"></i> Parar Bitcoin
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Navegação</h6>
+                                <a href="/bitcoin" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-bitcoin"></i> Dashboard Bitcoin
+                                </a>
+                                <a href="/trading" class="btn btn-outline-info">
+                                    <i class="fas fa-chart-line"></i> Dashboard Trading
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <div class="row">
+            <div class="col-12">
+                <ul class="nav nav-tabs nav-tabs-custom mb-4" id="mainTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">
+                            <i class="fas fa-tachometer-alt"></i> Visão Geral
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="bitcoin-tab" data-bs-toggle="tab" href="#bitcoin">
+                            <i class="fab fa-bitcoin"></i> Bitcoin Pipeline
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="trading-tab" data-bs-toggle="tab" href="#trading">
+                            <i class="fas fa-chart-line"></i> Trading Analyzer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="analytics-tab" data-bs-toggle="tab" href="#analytics">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview">
+                        <div class="row">
+                            <!-- Real-time Chart -->
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-line"></i> Preço Bitcoin em Tempo Real
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="overviewChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- System Status -->
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-info-circle"></i> Status do Sistema
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="system-info">
+                                            <div class="loading-spinner">
+                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-bell"></i> Últimos Sinais
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="recent-signals">
+                                            <div class="loading-spinner">
+                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bitcoin Pipeline Tab -->
+                    <div class="tab-pane fade" id="bitcoin">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fab fa-bitcoin"></i> Métricas Bitcoin Pipeline
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="metric-card">
+                                                    <div class="metric-value" id="bitcoin-price">$0.00</div>
+                                                    <div class="metric-label">Preço Atual</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="metric-card">
+                                                    <div class="metric-value" id="bitcoin-change">0.00%</div>
+                                                    <div class="metric-label">Mudança 24h</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="metric-card">
+                                                    <div class="metric-value" id="bitcoin-volume">$0M</div>
+                                                    <div class="metric-label">Volume 24h</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="metric-card">
+                                                    <div class="metric-value" id="bitcoin-points">0</div>
+                                                    <div class="metric-label">Pontos Coletados</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-table"></i> Dados Recentes
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Timestamp</th>
+                                                        <th>Preço</th>
+                                                        <th>Mudança 24h</th>
+                                                        <th>Volume</th>
+                                                        <th>Fonte</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="bitcoin-data-table">
+                                                    <tr>
+                                                        <td colspan="5" class="text-center">
+                                                            <div class="loading-spinner">
+                                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trading Analyzer Tab -->
+                    <div class="tab-pane fade" id="trading">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-line"></i> Sinais de Trading
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-signals">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Padrão</th>
+                                                        <th>Entry</th>
+                                                        <th>Target</th>
+                                                        <th>Stop</th>
+                                                        <th>Status</th>
+                                                        <th>P&L</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="trading-signals-table">
+                                                    <tr>
+                                                        <td colspan="6" class="text-center">
+                                                            <div class="loading-spinner">
+                                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-tachometer-alt"></i> Indicadores
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="indicators-display">
+                                            <div class="loading-spinner">
+                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div class="tab-pane fade" id="analytics">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-pie"></i> Performance por Padrão
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container" style="height: 300px;">
+                                            <canvas id="patternStatsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-bar"></i> Volume de Sinais
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container" style="height: 300px;">
+                                            <canvas id="volumeChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-table"></i> Estatísticas Detalhadas
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Padrão</th>
+                                                        <th>Total</th>
+                                                        <th>Sucessos</th>
+                                                        <th>Falhas</th>
+                                                        <th>Taxa Sucesso</th>
+                                                        <th>Lucro Médio</th>
+                                                        <th>Perda Média</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="analytics-table">
+                                                    <tr>
+                                                        <td colspan="7" class="text-center">
+                                                            <div class="loading-spinner">
+                                                                <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Bitcoin Trading System</h5>
+                    <p>Sistema integrado de análise técnica e pipeline de dados Bitcoin</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>Desenvolvido para o Tech Challenge FIAP</p>
+                    <p><i class="fas fa-clock"></i> Última atualização: <span id="last-update">-</span></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/common.js"></script>
+    
+    <script>
+        // Estado da aplicação
+        var charts = {};
+        var updateInterval;
+        var isSystemRunning = false;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            setupEventListeners();
+            startRealTimeUpdates();
+            loadInitialData();
+        });
+
+        // Configuração dos gráficos
+        function initializeCharts() {
+            // Gráfico principal (overview)
+            var overviewCtx = document.getElementById('overviewChart').getContext('2d');
+            charts.overview = new Chart(overviewCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Preço Bitcoin (USD)',
+                        data: [],
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de estatísticas de padrões
+            var patternCtx = document.getElementById('patternStatsChart').getContext('2d');
+            charts.patterns = new Chart(patternCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#28a745', '#dc3545', '#ffc107', 
+                            '#17a2b8', '#6f42c1', '#fd7e14'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de volume de sinais
+            var volumeCtx = document.getElementById('volumeChart').getContext('2d');
+            charts.volume = new Chart(volumeCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sinais por Padrão',
+                        data: [],
+                        backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                        borderColor: '#007bff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            document.getElementById('start-bitcoin').addEventListener('click', startBitcoinStream);
+            document.getElementById('stop-bitcoin').addEventListener('click', stopBitcoinStream);
+        }
+
+        // Controles Bitcoin
+        function startBitcoinStream() {
+            makeAPICall('/api/bitcoin/start-stream', { method: 'POST' })
+                .then(function(data) {
+                    if (data.status === 'started') {
+                        isSystemRunning = true;
+                        updateSystemStatus('running');
+                        showNotification('Pipeline Bitcoin iniciado!', 'success');
+                    }
+                })
+                .catch(function(error) {
+                    showNotification('Erro ao iniciar pipeline Bitcoin', 'danger');
+                });
+        }
+
+        function stopBitcoinStream() {
+            makeAPICall('/api/bitcoin/stop-stream', { method: 'POST' })
+                .then(function(data) {
+                    if (data.status === 'stopped') {
+                        isSystemRunning = false;
+                        updateSystemStatus('stopped');
+                        showNotification('Pipeline Bitcoin parado!', 'warning');
+                    }
+                })
+                .catch(function(error) {
+                    showNotification('Erro ao parar pipeline Bitcoin', 'danger');
+                });
+        }
+
+        // Atualizar status do sistema
+        function updateSystemStatus(status) {
+            var statusDot = document.getElementById('system-status-dot');
+            var statusText = document.getElementById('system-status-text');
+            
+            if (status === 'running') {
+                statusDot.className = 'status-dot status-running';
+                statusText.textContent = 'Sistema Ativo';
+            } else {
+                statusDot.className = 'status-dot status-stopped';
+                statusText.textContent = 'Sistema Parado';
+            }
+        }
+
+        // Atualizações em tempo real
+        function startRealTimeUpdates() {
+            updateInterval = setInterval(function() {
+                updateDashboardData();
+            }, 5000);
+        }
+
+        // Atualizar dados do dashboard
+        function updateDashboardData() {
+            makeAPICall('/api/integrated/dashboard-data')
+                .then(function(data) {
+                    updateQuickStats(data);
+                    updateOverviewChart(data.bitcoin.recent_data);
+                    updateBitcoinTab(data.bitcoin);
+                    updateTradingTab(data.trading);
+                    updateSystemInfo(data.integrated_status);
+                    updateLastUpdate();
+                })
+                .catch(function(error) {
+                    console.error('Erro ao atualizar dados:', error);
+                });
+        }
+
+        // Atualizar estatísticas rápidas
+        function updateQuickStats(data) {
+            var currentPrice = data.bitcoin.recent_data.length > 0 ? 
+                data.bitcoin.recent_data[data.bitcoin.recent_data.length - 1].price : 0;
+            
+            document.getElementById('current-price').textContent = formatCurrency(currentPrice);
+            document.getElementById('active-signals').textContent = data.trading.active_signals || 0;
+            document.getElementById('data-points').textContent = data.integrated_status.total_data_points || 0;
+            
+            // Calcula taxa de sucesso
+            var stats = data.trading.pattern_stats || [];
+            var totalSuccessful = stats.reduce(function(sum, stat) { return sum + stat.successful_signals; }, 0);
+            var totalSignals = stats.reduce(function(sum, stat) { return sum + stat.total_signals; }, 0);
+            var successRate = totalSignals > 0 ? (totalSuccessful / totalSignals * 100) : 0;
+            
+            document.getElementById('success-rate').textContent = formatPercentage(successRate);
+        }
+
+        // Atualizar gráfico principal
+        function updateOverviewChart(bitcoinData) {
+            if (!bitcoinData || bitcoinData.length === 0) return;
+            
+            var labels = bitcoinData.map(function(d) {
+                return formatTime(d.timestamp);
+            });
+            var prices = bitcoinData.map(function(d) {
+                return d.price;
+            });
+            
+            charts.overview.data.labels = labels;
+            charts.overview.data.datasets[0].data = prices;
+            charts.overview.update('none');
+        }
+
+        // Atualizar tab Bitcoin
+        function updateBitcoinTab(bitcoinData) {
+            // Métricas
+            var latestData = bitcoinData.recent_data[bitcoinData.recent_data.length - 1];
+            if (latestData) {
+                document.getElementById('bitcoin-price').textContent = formatCurrency(latestData.price);
+                
+                var changeElement = document.getElementById('bitcoin-change');
+                changeElement.textContent = formatPercentage(latestData.price_change_24h);
+                changeElement.className = 'metric-value ' + (latestData.price_change_24h >= 0 ? 'price-up' : 'price-down');
+                
+                document.getElementById('bitcoin-volume').textContent = formatVolume(latestData.volume_24h);
+            }
+            
+            document.getElementById('bitcoin-points').textContent = bitcoinData.recent_data.length;
+            
+            // Tabela de dados
+            updateBitcoinTable(bitcoinData.recent_data);
+        }
+
+        // Atualizar tabela Bitcoin
+        function updateBitcoinTable(data) {
+            var tbody = document.getElementById('bitcoin-data-table');
+            var columns = [
+                { 
+                    key: 'timestamp', 
+                    formatter: function(val) { return formatDateTime(val); }
+                },
+                { 
+                    key: 'price', 
+                    formatter: function(val) { return '<strong>' + formatCurrency(val) + '</strong>'; }
+                },
+                { 
+                    key: 'price_change_24h', 
+                    formatter: function(val) {
+                        var className = val >= 0 ? 'price-up' : 'price-down';
+                        return '<span class="' + className + '">' + formatPercentage(val) + '</span>';
+                    }
+                },
+                { 
+                    key: 'volume_24h', 
+                    formatter: function(val) { return formatVolume(val); }
+                },
+                { 
+                    key: 'source', 
+                    formatter: function(val) { return '<span class="badge bg-primary">' + val + '</span>'; }
+                }
+            ];
+            
+            updateTable('bitcoin-data-table', data.slice(-10), columns);
+        }
+
+        // Atualizar tab Trading
+        function updateTradingTab(tradingData) {
+            updateTradingSignalsTable(tradingData.recent_signals || []);
+            updateIndicatorsDisplay(tradingData.indicators || {});
+            updateAnalyticsTab(tradingData.pattern_stats || []);
+        }
+
+        // Atualizar tabela de sinais
+        function updateTradingSignalsTable(signals) {
+            var tbody = document.getElementById('trading-signals-table');
+            var columns = [
+                { 
+                    key: 'pattern_type', 
+                    formatter: function(val) {
+                        return '<span class="pattern-badge bg-' + getPatternColor(val) + '">' + 
+                               formatPatternName(val) + '</span>';
+                    }
+                },
+                { 
+                    key: 'entry_price', 
+                    formatter: function(val) { return formatCurrency(val); }
+                },
+                { 
+                    key: 'target_price', 
+                    formatter: function(val) { return formatCurrency(val); }
+                },
+                { 
+                    key: 'stop_loss', 
+                    formatter: function(val) { return formatCurrency(val); }
+                },
+                { 
+                    key: 'status', 
+                    formatter: function(val) {
+                        return '<span class="status-badge ' + getStatusClass(val) + '">' + 
+                               getStatusText(val) + '</span>';
+                    }
+                },
+                { 
+                    key: 'profit_loss', 
+                    formatter: function(val) {
+                        if (!val || val === 0) return '-';
+                        return '<span class="' + getProfitLossClass(val) + '">' + 
+                               formatPercentage(val) + '</span>';
+                    }
+                }
+            ];
+            
+            updateTable('trading-signals-table', signals.slice(0, 10), columns);
+        }
+
+        // Atualizar display de indicadores
+        function updateIndicatorsDisplay(indicators) {
+            var container = document.getElementById('indicators-display');
+            var html = '';
+            
+            var indicatorKeys = ['RSI', 'MACD', 'SMA_12', 'SMA_30', 'STOCH_K'];
+            
+            for (var i = 0; i < indicatorKeys.length; i++) {
+                var key = indicatorKeys[i];
+                var value = indicators[key];
+                
+                if (value !== undefined && value !== null) {
+                    var signal = getIndicatorSignal(key, value);
+                    var signalClass = 'indicator-' + signal;
+                    
+                    html += 
+                        '<div class="indicator-item mb-2">' +
+                            '<div class="d-flex justify-content-between">' +
+                                '<span>' + key.replace('_', ' ') + '</span>' +
+                                '<span class="' + signalClass + '">' + formatIndicatorValue(key, value) + '</span>' +
+                            '</div>' +
+                        '</div>';
+                }
+            }
+            
+            if (html === '') {
+                html = '<div class="text-muted text-center">Coletando dados...</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Atualizar tab Analytics
+        function updateAnalyticsTab(patternStats) {
+            // Atualizar gráficos
+            if (patternStats.length > 0) {
+                var labels = patternStats.map(function(s) { return formatPatternName(s.pattern_type); });
+                var successRates = patternStats.map(function(s) { return s.success_rate; });
+                var totals = patternStats.map(function(s) { return s.total_signals; });
+                
+                // Gráfico de taxa de sucesso
+                charts.patterns.data.labels = labels;
+                charts.patterns.data.datasets[0].data = successRates;
+                charts.patterns.update();
+                
+                // Gráfico de volume
+                charts.volume.data.labels = labels;
+                charts.volume.data.datasets[0].data = totals;
+                charts.volume.update();
+            }
+            
+            // Atualizar tabela
+            updateAnalyticsTable(patternStats);
+        }
+
+        // Atualizar tabela de analytics
+        function updateAnalyticsTable(stats) {
+            var tbody = document.getElementById('analytics-table');
+            var columns = [
+                { 
+                    key: 'pattern_type', 
+                    formatter: function(val) { return formatPatternName(val); }
+                },
+                { key: 'total_signals' },
+                { 
+                    key: 'successful_signals', 
+                    class: 'text-success' 
+                },
+                { 
+                    key: 'failed_signals', 
+                    class: 'text-danger' 
+                },
+                { 
+                    key: 'success_rate', 
+                    formatter: function(val) {
+                        var className = val >= 60 ? 'text-success' : 'text-warning';
+                        return '<span class="' + className + '">' + formatPercentage(val) + '</span>';
+                    }
+                },
+                { 
+                    key: 'avg_profit', 
+                    formatter: function(val) { return '<span class="text-success">+' + formatPercentage(val) + '</span>'; }
+                },
+                { 
+                    key: 'avg_loss', 
+                    formatter: function(val) { return '<span class="text-danger">' + formatPercentage(val) + '</span>'; }
+                }
+            ];
+            
+            updateTable('analytics-table', stats, columns);
+        }
+
+        // Atualizar informações do sistema
+        function updateSystemInfo(status) {
+            var container = document.getElementById('system-info');
+            
+            html = 
+                '<div class="row">' +
+                    '<div class="col-12">' +
+                        '<h6>Status Operacional</h6>' +
+                        '<p><strong>Pontos de Dados:</strong> ' + status.total_data_points + '</p>' +
+                        '<p><strong>Análise Pronta:</strong> ' + (status.analysis_ready ? 'Sim' : 'Não') + '</p>' +
+                        '<p><strong>Última Atualização:</strong> ' + formatTime(status.last_update) + '</p>' +
+                    '</div>' +
+                '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        // Atualizar sinais recentes
+        function updateRecentSignals() {
+            makeAPICall('/api/trading/signals?limit=5')
+                .then(function(signals) {
+                    var container = document.getElementById('recent-signals');
+                    var html = '';
+                    
+                    if (signals.length === 0) {
+                        html = '<div class="text-muted text-center">Nenhum sinal recente</div>';
+                    } else {
+                        for (var i = 0; i < signals.length; i++) {
+                            var signal = signals[i];
+                            html += 
+                                '<div class="signal-card signal-' + signal.status.toLowerCase() + ' p-2 mb-2">' +
+                                    '<div class="d-flex justify-content-between">' +
+                                        '<small><strong>' + formatPatternName(signal.pattern_type) + '</strong></small>' +
+                                        '<small>' + getTimeElapsed(signal.created_at) + '</small>' +
+                                    '</div>' +
+                                    '<div class="d-flex justify-content-between">' +
+                                        '<small>Entry: ' + formatCurrency(signal.entry_price) + '</small>' +
+                                        '<small class="' + getStatusClass(signal.status) + '">' + getStatusText(signal.status) + '</small>' +
+                                    '</div>' +
+                                '</div>';
+                        }
+                    }
+                    
+                    container.innerHTML = html;
+                })
+                .catch(function(error) {
+                    console.error('Erro ao carregar sinais recentes:', error);
+                });
+        }
+
+        // Atualizar timestamp
+        function updateLastUpdate() {
+            document.getElementById('last-update').textContent = formatTime(new Date().toISOString());
+        }
+
+        // Carregar dados iniciais
+        function loadInitialData() {
+            updateDashboardData();
+            updateRecentSignals();
+            
+            // Atualizar sinais recentes com mais frequência
+            setInterval(updateRecentSignals, 10000);
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', function() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+    </script>
+</body>
+</html>
