@@ -1,9 +1,8 @@
-# your_project/services/enhanced_trading_analyzer.py
+# your_project/services/trading_analyzer.py
 
 import sqlite3
 import os
 import numpy as np
-import pandas as pd
 from collections import deque
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -15,30 +14,24 @@ class EnhancedTradingAnalyzer:
     """
     Enhanced Trading Analyzer with robust technical analysis and signal generation.
     Uses multiple indicators and confirmation signals for better accuracy.
-
-    Características principais:
-    - Análise multi-indicador com confluência
-    - Gestão de risco aprimorada com ATR
-    - Sistema de sinais baseado em probabilidade
-    - Backtesting e performance tracking
     """
-
+    
     def __init__(self, db_path: str = app_config.TRADING_ANALYZER_DB):
         self.db_path = db_path
         self.price_history = deque(maxlen=200)
         self.volume_history = deque(maxlen=200)
-        self.ohlc_history = deque(maxlen=200)  # Para cálculos mais precisos
+        self.ohlc_history = deque(maxlen=200)
         self.analysis_count = 0
         self.signals = []
         self.last_analysis = None
-
-        # Parâmetros de Análise Técnica Otimizados
+        
+        # Parâmetros de Análise Técnica
         self.ta_params = {
             'rsi_period': 14,
-            'rsi_overbought': 75,      # Mais restritivo
-            'rsi_oversold': 25,        # Mais restritivo
-            'sma_short': 9,            # Fibonacci
-            'sma_long': 21,            # Fibonacci
+            'rsi_overbought': 75,
+            'rsi_oversold': 25,
+            'sma_short': 9,
+            'sma_long': 21,
             'ema_short': 12,
             'ema_long': 26,
             'macd_signal': 9,
@@ -50,21 +43,21 @@ class EnhancedTradingAnalyzer:
             'stoch_oversold': 20,
             'volume_sma': 20,
             'atr_period': 14,
-            'min_confidence': 70,      # Aumentado para maior qualidade
-            'min_risk_reward': 2.5,    # Melhor risk/reward
-            'min_volume_ratio': 1.3,   # Volume confirmation
+            'min_confidence': 70,
+            'min_risk_reward': 2.5,
+            'min_volume_ratio': 1.3,
         }
-
-        # Configuração de Sinais Aprimorada
+        
+        # Configuração de Sinais
         self.signal_config = {
             'max_active_signals': 3,
-            'signal_cooldown_minutes': 120,  # 2 horas entre sinais
-            'target_multipliers': [2.0, 3.5, 5.0],  # Targets mais conservadores
+            'signal_cooldown_minutes': 120,
+            'target_multipliers': [2.0, 3.5, 5.0],
             'stop_loss_atr_multiplier': 2.0,
-            'partial_take_profit': [0.5, 0.3, 0.2],  # 50%, 30%, 20% nos targets
-            'trailing_stop_distance': 1.5,  # ATR multiplier para trailing stop
+            'partial_take_profit': [0.5, 0.3, 0.2],
+            'trailing_stop_distance': 1.5,
         }
-
+        
         # Pesos para confluência de indicadores
         self.indicator_weights = {
             'rsi': 0.20,
@@ -74,36 +67,19 @@ class EnhancedTradingAnalyzer:
             'sma_cross': 0.15,
             'volume': 0.10
         }
-
+        
         self.init_database()
-        # Se 'EnhancedTradingAnalyzer' herda de 'EnhancedTradingAnalyzer' e a chamada super().__init__ em EnhancedTradingAnalyzer
-        # leva a este construtor, então self.load_previous_data() será chamado na instância de EnhancedTradingAnalyzer.
-        # Por isso, o método precisa existir nesta classe (EnhancedTradingAnalyzer) para ser herdado.
         self.load_previous_data()
-
+    
     def init_database(self):
         """Initialize database with enhanced schema"""
         setup_trading_analyzer_db(self.db_path)
-
+        
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-
+        
         try:
-            # Tabela para OHLC data
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS ohlc_data (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT UNIQUE,
-                    open REAL,
-                    high REAL,
-                    low REAL,
-                    close REAL,
-                    volume REAL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-
-            # Enhanced signals table
+            # Additional tables for enhanced features
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS enhanced_signals (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,220 +106,190 @@ class EnhancedTradingAnalyzer:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
-
-            # Performance tracking table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS performance_metrics (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    date TEXT UNIQUE,
-                    total_signals INTEGER,
-                    winning_signals INTEGER,
-                    losing_signals INTEGER,
-                    win_rate REAL,
-                    profit_factor REAL,
-                    avg_win REAL,
-                    avg_loss REAL,
-                    max_drawdown REAL,
-                    sharpe_ratio REAL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-
-            # Market state tracking
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS market_state (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT,
-                    trend_direction TEXT,
-                    volatility_regime TEXT,
-                    volume_profile TEXT,
-                    support_level REAL,
-                    resistance_level REAL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-
+            
             conn.commit()
-            logger.info("[ENHANCED] Enhanced database schema initialized")
-
+            logger.info("[ENHANCED] Database initialized")
+            
         except Exception as e:
             logger.error(f"[ENHANCED] Database initialization error: {e}")
         finally:
             conn.close()
-
+    
     def load_previous_data(self):
-        """Loads historical price and signal data from the database."""
+        """Load previous data from database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
-
-            # Load OHLC data
-            cursor.execute("SELECT timestamp, open, high, low, close, volume FROM ohlc_data ORDER BY timestamp ASC LIMIT 200")
-            ohlc_rows = cursor.fetchall()
-            for row in ohlc_rows:
-                timestamp = datetime.fromisoformat(row[0])
-                self.ohlc_history.append({
-                    'timestamp': timestamp,
-                    'open': row[1],
-                    'high': row[2],
-                    'low': row[3],
-                    'close': row[4],
-                    'volume': row[5]
-                })
-                # Maintain compatibility with price_history
+            
+            # Load price history
+            cursor.execute("""
+                SELECT timestamp, price, volume 
+                FROM price_history 
+                ORDER BY timestamp DESC 
+                LIMIT 200
+            """)
+            
+            rows = cursor.fetchall()
+            for row in reversed(rows):
                 self.price_history.append({
-                    'timestamp': timestamp,
-                    'price': row[4],
-                    'volume': row[5]
+                    'timestamp': datetime.fromisoformat(row[0]),
+                    'price': row[1],
+                    'volume': row[2] or 0
                 })
-                self.volume_history.append(row[5])
-
+                self.volume_history.append(row[2] or 0)
+            
+            # Load analyzer state
+            cursor.execute("SELECT analysis_count, last_analysis FROM analyzer_state WHERE id = 1")
+            state = cursor.fetchone()
+            if state:
+                self.analysis_count = state[0]
+                self.last_analysis = datetime.fromisoformat(state[1]) if state[1] else None
+            
             # Load active signals
-            # É importante garantir que a ordem das colunas no SELECT corresponda
-            # à ordem esperada na hora de reconstruir o dicionário de sinal.
-            # Idealmente, você pode buscar os nomes das colunas primeiro.
-            cursor.execute("SELECT id, timestamp, signal_type, entry_price, target_1, target_2, target_3, stop_loss, confidence, confluence_score, risk_reward_ratio, atr_value, volume_confirmation, status, entry_reason, indicators_snapshot, profit_loss, max_profit, max_drawdown, exit_reason, created_at, updated_at FROM enhanced_signals WHERE status = 'ACTIVE' OR status LIKE 'TARGET%'")
+            cursor.execute("""
+                SELECT * FROM trading_signals 
+                WHERE status = 'ACTIVE' 
+                ORDER BY created_at DESC
+            """)
+            
             signal_rows = cursor.fetchall()
             for row in signal_rows:
-                signal_dict = {
-                    'id': row[0], 'timestamp': row[1], 'signal_type': row[2],
-                    'entry_price': row[3], 'target_1': row[4], 'target_2': row[5], 'target_3': row[6],
-                    'stop_loss': row[7], 'confidence': row[8], 'confluence_score': row[9],
-                    'risk_reward_ratio': row[10], 'atr_value': row[11], 'volume_confirmation': row[12],
-                    'status': row[13], 'entry_reason': row[14], 'indicators_snapshot': row[15],
-                    'profit_loss': row[16], 'max_profit': row[17], 'max_drawdown': row[18],
-                    'exit_reason': row[19], 'created_at': row[20], 'updated_at': row[21]
+                signal = {
+                    'id': row[0],
+                    'timestamp': row[1],
+                    'pattern_type': row[2],
+                    'entry_price': row[3],
+                    'target_price': row[4],
+                    'stop_loss': row[5],
+                    'confidence': row[6],
+                    'status': row[7],
+                    'created_at': row[8],
+                    'profit_loss': row[9] or 0,
+                    'activated': row[10] if len(row) > 10 else False
                 }
-                self.signals.append(signal_dict)
-
-            logger.info("[ENHANCED] Historical data and active signals loaded.")
-
-        except sqlite3.Error as e:
-            logger.error(f"[ENHANCED] Error loading previous data: {e}")
-        finally:
+                self.signals.append(signal)
+            
             conn.close()
-
-    def add_ohlc_data(self, timestamp: datetime, open_price: float, high: float,
-                      low: float, close: float, volume: float = 0):
-        """Add OHLC data for more precise technical analysis"""
-        
-        ohlc_data = {
-            'timestamp': timestamp,
-            'open': open_price,
-            'high': high,
-            'low': low,
-            'close': close,
-            'volume': volume
-        }
-        
-        self.ohlc_history.append(ohlc_data)
-        
-        # Manter compatibilidade com price_history
-        self.price_history.append({
-            'timestamp': timestamp,
-            'price': close,
-            'volume': volume
-        })
-        self.volume_history.append(volume)
-        
-        self.analysis_count += 1
-        self.last_analysis = datetime.now()
-        
-        # Save to database
-        self._save_ohlc_data(ohlc_data)
-        
-        # Analyze for signals
-        if len(self.ohlc_history) >= 50:
-            self._comprehensive_market_analysis()
+            logger.info(f"[ENHANCED] Loaded {len(self.price_history)} price points and {len(self.signals)} signals")
+            
+        except Exception as e:
+            logger.error(f"[ENHANCED] Error loading previous data: {e}")
+    
+    def add_price_data(self, timestamp, price, volume=0):
+        """Add new price data for analysis"""
+        try:
+            # Add to history
+            self.price_history.append({
+                'timestamp': timestamp,
+                'price': price,
+                'volume': volume
+            })
+            self.volume_history.append(volume)
+            
+            # Simulate OHLC data for compatibility
+            self.ohlc_history.append({
+                'timestamp': timestamp,
+                'open': price,
+                'high': price * 1.001,
+                'low': price * 0.999,
+                'close': price,
+                'volume': volume
+            })
+            
+            # Save to database
+            self.save_price_data(timestamp, price, volume)
+            
+            # Increment analysis count
+            self.analysis_count += 1
+            self.last_analysis = datetime.now()
+            
+            # Run analysis if we have enough data
+            if len(self.price_history) >= 50:
+                self._comprehensive_market_analysis()
+            
+            # Save state
+            self.save_analyzer_state()
+            
+        except Exception as e:
+            logger.error(f"[ENHANCED] Error adding price data: {e}")
     
     def _comprehensive_market_analysis(self):
-        """Análise completa do mercado com múltiplos timeframes"""
+        """Análise completa do mercado"""
         try:
-            current_price = self.ohlc_history[-1]['close']
+            current_price = self.price_history[-1]['price'] if self.price_history else 0
             
-            # 1. Calcular todos os indicadores
+            # Calculate indicators
             indicators = self._calculate_comprehensive_indicators()
             
-            # 2. Determinar estado do mercado
+            # Analyze market state
             market_state = self._analyze_market_state(indicators)
             
-            # 3. Calcular confluência de sinais
+            # Calculate signal confluence
             signal_analysis = self._calculate_signal_confluence(indicators, market_state)
             
-            # 4. Avaliar geração de sinais
+            # Generate signal if conditions are met
             if self._should_generate_signal(signal_analysis):
                 self._generate_high_quality_signal(signal_analysis, current_price, indicators)
             
-            # 5. Atualizar sinais existentes
+            # Update active signals
             self._update_active_signals(current_price, indicators)
-            
-            # 6. Calcular métricas de performance
-            self._update_performance_metrics()
             
         except Exception as e:
             logger.error(f"[ENHANCED] Error in comprehensive analysis: {e}")
     
     def _calculate_comprehensive_indicators(self) -> Dict:
-        """Calcula indicadores técnicos abrangentes"""
-        if len(self.ohlc_history) < 30:
+        """Calculate all technical indicators"""
+        if len(self.price_history) < 30:
             return {}
         
-        # Extrair dados
-        closes = np.array([d['close'] for d in self.ohlc_history])
-        highs = np.array([d['high'] for d in self.ohlc_history])
-        lows = np.array([d['low'] for d in self.ohlc_history])
-        volumes = np.array([d['volume'] for d in self.ohlc_history])
-        
-        indicators = {}
-        
         try:
-            # RSI melhorado
-            indicators['rsi'] = self._calculate_rsi_improved(closes, self.ta_params['rsi_period'])
-            indicators['rsi_divergence'] = self._detect_rsi_divergence(closes)
+            # Extract price data
+            prices = np.array([p['price'] for p in self.price_history])
+            volumes = np.array([v for v in self.volume_history])
+            
+            indicators = {}
             
             # Moving Averages
-            indicators['sma_9'] = self._calculate_sma(closes, 9)
-            indicators['sma_21'] = self._calculate_sma(closes, 21)
-            indicators['sma_50'] = self._calculate_sma(closes, 50) if len(closes) >= 50 else closes[-1]
-            indicators['ema_12'] = self._calculate_ema_improved(closes, 12)
-            indicators['ema_26'] = self._calculate_ema_improved(closes, 26)
+            indicators['sma_9'] = self._calculate_sma(prices, 9)
+            indicators['sma_21'] = self._calculate_sma(prices, 21)
+            indicators['sma_50'] = self._calculate_sma(prices, 50) if len(prices) >= 50 else prices[-1]
+            indicators['ema_12'] = self._calculate_ema(prices, 12)
+            indicators['ema_26'] = self._calculate_ema(prices, 26)
             
-            # MACD aprimorado
-            macd_line, signal_line, histogram = self._calculate_macd_improved(closes)
+            # RSI
+            indicators['rsi'] = self._calculate_rsi(prices, self.ta_params['rsi_period'])
+            
+            # MACD
+            macd_line, signal_line, histogram = self._calculate_macd(prices)
             indicators['macd_line'] = macd_line
             indicators['macd_signal'] = signal_line
             indicators['macd_histogram'] = histogram
-            indicators['macd_divergence'] = self._detect_macd_divergence(closes, histogram)
             
             # Bollinger Bands
-            bb_upper, bb_middle, bb_lower, bb_width = self._calculate_bollinger_bands_improved(closes)
+            bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(prices)
             indicators['bb_upper'] = bb_upper
             indicators['bb_middle'] = bb_middle
             indicators['bb_lower'] = bb_lower
-            indicators['bb_position'] = (closes[-1] - bb_lower) / (bb_upper - bb_lower) if bb_upper != bb_lower else 0.5
-            indicators['bb_squeeze'] = bb_width < np.mean([self._calculate_bollinger_width(closes, i) for i in range(10, 21)])
+            indicators['bb_position'] = (prices[-1] - bb_lower) / (bb_upper - bb_lower) if bb_upper != bb_lower else 0.5
             
-            # Stochastic aprimorado
-            stoch_k, stoch_d = self._calculate_stochastic_improved(highs, lows, closes)
+            # Stochastic
+            stoch_k, stoch_d = self._calculate_stochastic(prices)
             indicators['stoch_k'] = stoch_k
             indicators['stoch_d'] = stoch_d
-            indicators['stoch_divergence'] = self._detect_stochastic_divergence(closes, stoch_k)
-            
-            # ATR e volatilidade
-            indicators['atr'] = self._calculate_atr_improved(highs, lows, closes)
-            indicators['volatility_regime'] = self._classify_volatility_regime(indicators['atr'], closes)
             
             # Volume analysis
             indicators['volume_sma'] = self._calculate_sma(volumes, 20)
             indicators['volume_ratio'] = volumes[-1] / indicators['volume_sma'] if indicators['volume_sma'] > 0 else 1
-            indicators['volume_trend'] = self._analyze_volume_trend(volumes)
             
-            # Support/Resistance
-            indicators['support'], indicators['resistance'] = self._calculate_support_resistance(highs, lows, closes)
+            # Support/Resistance levels
+            indicators['support'], indicators['resistance'] = self._calculate_support_resistance(prices)
             
-            # Trend analysis
-            indicators['trend_strength'] = self._calculate_trend_strength(closes)
+            # Trend strength
+            indicators['trend_strength'] = self._calculate_trend_strength(prices)
             indicators['trend_direction'] = self._determine_trend_direction(indicators)
+            
+            # ATR (simplified)
+            indicators['atr'] = self._calculate_atr(prices)
             
             return indicators
             
@@ -351,8 +297,27 @@ class EnhancedTradingAnalyzer:
             logger.error(f"[ENHANCED] Error calculating indicators: {e}")
             return {}
     
-    def _calculate_rsi_improved(self, prices: np.ndarray, period: int = 14) -> float:
-        """RSI melhorado com Wilder's smoothing"""
+    def _calculate_sma(self, data: np.ndarray, period: int) -> float:
+        """Calculate Simple Moving Average"""
+        if len(data) < period:
+            return float(np.mean(data))
+        return float(np.mean(data[-period:]))
+    
+    def _calculate_ema(self, data: np.ndarray, period: int) -> float:
+        """Calculate Exponential Moving Average"""
+        if len(data) < period:
+            return float(np.mean(data))
+        
+        alpha = 2.0 / (period + 1.0)
+        ema = float(data[0])
+        
+        for price in data[1:]:
+            ema = alpha * price + (1 - alpha) * ema
+        
+        return ema
+    
+    def _calculate_rsi(self, prices: np.ndarray, period: int = 14) -> float:
+        """Calculate Relative Strength Index"""
         if len(prices) < period + 1:
             return 50.0
         
@@ -360,14 +325,8 @@ class EnhancedTradingAnalyzer:
         gains = np.where(deltas > 0, deltas, 0)
         losses = np.where(deltas < 0, -deltas, 0)
         
-        # Wilder's smoothing
-        alpha = 1.0 / period
-        avg_gain = gains[0]
-        avg_loss = losses[0]
-        
-        for i in range(1, len(gains)):
-            avg_gain = alpha * gains[i] + (1 - alpha) * avg_gain
-            avg_loss = alpha * losses[i] + (1 - alpha) * avg_loss
+        avg_gain = np.mean(gains[-period:])
+        avg_loss = np.mean(losses[-period:])
         
         if avg_loss == 0:
             return 100.0
@@ -376,157 +335,152 @@ class EnhancedTradingAnalyzer:
         rsi = 100.0 - (100.0 / (1.0 + rs))
         return rsi
     
-    def _calculate_ema_improved(self, prices: np.ndarray, period: int) -> float:
-        """EMA melhorado com inicialização SMA"""
-        if len(prices) < period:
-            return float(np.mean(prices))
-        
-        # Inicializar com SMA
-        sma = np.mean(prices[:period])
-        alpha = 2.0 / (period + 1.0)
-        ema = sma
-        
-        for price in prices[period:]:
-            ema = alpha * price + (1 - alpha) * ema
-        
-        return float(ema)
-    
-    def _calculate_macd_improved(self, prices: np.ndarray) -> Tuple[float, float, float]:
-        """MACD melhorado com EMAs precisas"""
+    def _calculate_macd(self, prices: np.ndarray) -> Tuple[float, float, float]:
+        """Calculate MACD"""
         if len(prices) < 26:
             return 0.0, 0.0, 0.0
         
-        ema_12 = self._calculate_ema_improved(prices, 12)
-        ema_26 = self._calculate_ema_improved(prices, 26)
-        macd_line = ema_12 - ema_26
+        ema_12 = self._calculate_ema(prices, 12)
+        ema_26 = self._calculate_ema(prices, 26)
         
-        # Signal line (EMA de 9 períodos do MACD)
-        # Simplificado para esta implementação
-        signal_line = macd_line * 0.9  # Aproximação
+        macd_line = ema_12 - ema_26
+        # Simplified signal line calculation
+        signal_line = macd_line * 0.9
         histogram = macd_line - signal_line
         
         return macd_line, signal_line, histogram
     
-    def _calculate_bollinger_bands_improved(self, prices: np.ndarray, period: int = 20, std_dev: float = 2.0) -> Tuple[float, float, float, float]:
-        """Bollinger Bands melhoradas com largura"""
+    def _calculate_bollinger_bands(self, prices: np.ndarray, period: int = 20, std_dev: float = 2.0) -> Tuple[float, float, float]:
+        """Calculate Bollinger Bands"""
         if len(prices) < period:
             price = float(prices[-1])
-            return price, price, price, 0.0
+            return price, price, price
         
-        recent_prices = prices[-period:]
-        middle = float(np.mean(recent_prices))
-        std = float(np.std(recent_prices, ddof=1))
+        sma = self._calculate_sma(prices, period)
+        std = float(np.std(prices[-period:]))
         
-        upper = middle + (std * std_dev)
-        lower = middle - (std * std_dev)
-        width = (upper - lower) / middle  # Largura normalizada
+        upper = sma + (std * std_dev)
+        lower = sma - (std * std_dev)
         
-        return upper, middle, lower, width
+        return upper, sma, lower
     
-    def _calculate_stochastic_improved(self, highs: np.ndarray, lows: np.ndarray, closes: np.ndarray, k_period: int = 14, d_period: int = 3) -> Tuple[float, float]:
-        """Stochastic melhorado com %K e %D precisos"""
-        if len(closes) < k_period:
+    def _calculate_stochastic(self, prices: np.ndarray, period: int = 14) -> Tuple[float, float]:
+        """Calculate Stochastic Oscillator"""
+        if len(prices) < period:
             return 50.0, 50.0
         
-        recent_highs = highs[-k_period:]
-        recent_lows = lows[-k_period:]
-        current_close = closes[-1]
+        recent_prices = prices[-period:]
+        lowest = float(np.min(recent_prices))
+        highest = float(np.max(recent_prices))
+        current = float(prices[-1])
         
-        highest_high = float(np.max(recent_highs))
-        lowest_low = float(np.min(recent_lows))
+        if highest == lowest:
+            return 50.0, 50.0
         
-        if highest_high == lowest_low:
-            stoch_k = 50.0
-        else:
-            stoch_k = ((current_close - lowest_low) / (highest_high - lowest_low)) * 100.0
+        k = ((current - lowest) / (highest - lowest)) * 100
+        d = k  # Simplified
         
-        # %D é a média móvel de %K
-        if len(closes) >= k_period + d_period - 1:
-            k_values = []
-            for i in range(d_period):
-                idx = -k_period - d_period + 1 + i
-                if abs(idx) <= len(closes):
-                    h = highs[idx:idx+k_period] if idx+k_period <= 0 else highs[idx:]
-                    l = lows[idx:idx+k_period] if idx+k_period <= 0 else lows[idx:]
-                    c = closes[idx+k_period-1] if idx+k_period-1 < 0 else closes[-1]
-                    
-                    hh = float(np.max(h)) if len(h) > 0 else highest_high
-                    ll = float(np.min(l)) if len(l) > 0 else lowest_low
-                    
-                    if hh != ll:
-                        k_val = ((c - ll) / (hh - ll)) * 100.0
-                        k_values.append(k_val)
-            
-            stoch_d = float(np.mean(k_values)) if k_values else stoch_k
-        else:
-            stoch_d = stoch_k
-        
-        return stoch_k, stoch_d
+        return k, d
     
-    def _calculate_atr_improved(self, highs: np.ndarray, lows: np.ndarray, closes: np.ndarray, period: int = 14) -> float:
-        """ATR melhorado com True Range preciso"""
-        if len(closes) < 2:
-            return float(closes[-1] * 0.02)  # 2% default
+    def _calculate_support_resistance(self, prices: np.ndarray) -> Tuple[float, float]:
+        """Calculate support and resistance levels"""
+        if len(prices) < 20:
+            current_price = prices[-1]
+            return current_price * 0.98, current_price * 1.02
         
-        true_ranges = []
-        for i in range(1, len(closes)):
-            high_low = highs[i] - lows[i]
-            high_close_prev = abs(highs[i] - closes[i-1])
-            low_close_prev = abs(lows[i] - closes[i-1])
-            
-            true_range = max(high_low, high_close_prev, low_close_prev)
-            true_ranges.append(true_range)
+        recent_prices = prices[-20:]
         
-        if len(true_ranges) < period:
-            return float(np.mean(true_ranges))
+        # Simple pivot point calculation
+        high = float(np.max(recent_prices))
+        low = float(np.min(recent_prices))
+        close = float(prices[-1])
         
-        # Wilder's smoothing para ATR
-        atr = np.mean(true_ranges[:period])
-        alpha = 1.0 / period
+        pivot = (high + low + close) / 3
+        support = pivot - (high - low) * 0.382
+        resistance = pivot + (high - low) * 0.382
         
-        for tr in true_ranges[period:]:
-            atr = alpha * tr + (1 - alpha) * atr
+        return support, resistance
+    
+    def _calculate_trend_strength(self, prices: np.ndarray) -> float:
+        """Calculate trend strength (0-1)"""
+        if len(prices) < 20:
+            return 0.5
         
-        return float(atr)
+        # Simple ADX approximation
+        recent_prices = prices[-20:]
+        
+        # Calculate directional movement
+        up_moves = []
+        down_moves = []
+        
+        for i in range(1, len(recent_prices)):
+            up_move = max(0, recent_prices[i] - recent_prices[i-1])
+            down_move = max(0, recent_prices[i-1] - recent_prices[i])
+            up_moves.append(up_move)
+            down_moves.append(down_move)
+        
+        avg_up = np.mean(up_moves)
+        avg_down = np.mean(down_moves)
+        
+        if avg_up + avg_down == 0:
+            return 0.5
+        
+        adx = abs(avg_up - avg_down) / (avg_up + avg_down)
+        return min(adx, 1.0)
+    
+    def _calculate_atr(self, prices: np.ndarray, period: int = 14) -> float:
+        """Calculate Average True Range (simplified)"""
+        if len(prices) < 2:
+            return float(prices[-1] * 0.02)
+        
+        # Simplified ATR using price changes
+        changes = np.abs(np.diff(prices))
+        if len(changes) < period:
+            return float(np.mean(changes))
+        
+        return float(np.mean(changes[-period:]))
+    
+    def _determine_trend_direction(self, indicators: Dict) -> str:
+        """Determine trend direction"""
+        sma_9 = indicators.get('sma_9', 0)
+        sma_21 = indicators.get('sma_21', 0)
+        sma_50 = indicators.get('sma_50', 0)
+        
+        if sma_9 > sma_21 > sma_50:
+            return 'STRONG_BULL'
+        elif sma_9 > sma_21:
+            return 'BULL'
+        elif sma_9 < sma_21 < sma_50:
+            return 'STRONG_BEAR'
+        elif sma_9 < sma_21:
+            return 'BEAR'
+        else:
+            return 'NEUTRAL'
     
     def _analyze_market_state(self, indicators: Dict) -> Dict:
-        """Analisa o estado atual do mercado"""
+        """Analyze current market state"""
         if not indicators:
             return {'trend': 'NEUTRAL', 'volatility': 'NORMAL', 'volume': 'NORMAL'}
         
-        # Trend Analysis
-        trend = 'NEUTRAL'
-        if indicators.get('sma_9', 0) > indicators.get('sma_21', 0):
-            if indicators.get('trend_strength', 0) > 0.6:
-                trend = 'STRONG_BULL'
-            else:
-                trend = 'BULL'
-        elif indicators.get('sma_9', 0) < indicators.get('sma_21', 0):
-            if indicators.get('trend_strength', 0) > 0.6:
-                trend = 'STRONG_BEAR'
-            else:
-                trend = 'BEAR'
+        # Trend analysis
+        trend = indicators.get('trend_direction', 'NEUTRAL')
         
-        # Volatility Analysis
-        volatility = indicators.get('volatility_regime', 'NORMAL')
-        
-        # Volume Analysis
-        volume_state = 'NORMAL'
+        # Volume analysis
         volume_ratio = indicators.get('volume_ratio', 1)
-        if volume_ratio > 1.5:
-            volume_state = 'HIGH'
-        elif volume_ratio < 0.7:
-            volume_state = 'LOW'
+        volume_state = 'HIGH' if volume_ratio > 1.5 else 'LOW' if volume_ratio < 0.7 else 'NORMAL'
+        
+        # Volatility (simplified)
+        volatility = 'NORMAL'
         
         return {
             'trend': trend,
             'volatility': volatility,
             'volume': volume_state,
-            'bb_squeeze': indicators.get('bb_squeeze', False)
+            'bb_squeeze': False  # Simplified
         }
     
     def _calculate_signal_confluence(self, indicators: Dict, market_state: Dict) -> Dict:
-        """Calcula confluência de sinais com pesos"""
+        """Calculate signal confluence with weights"""
         if not indicators:
             return {'action': 'HOLD', 'confidence': 0, 'confluence_score': 0}
         
@@ -546,49 +500,47 @@ class EnhancedTradingAnalyzer:
         total_weight += self.indicator_weights['rsi']
         
         # MACD Analysis
-        macd_line = indicators.get('macd_line', 0)
-        macd_signal = indicators.get('macd_signal', 0)
-        if macd_line > macd_signal and macd_line > 0:
+        macd_histogram = indicators.get('macd_histogram', 0)
+        if macd_histogram > 0:
             bull_score += self.indicator_weights['macd']
-            reasons.append("MACD bullish crossover")
-        elif macd_line < macd_signal and macd_line < 0:
+            reasons.append("MACD bullish")
+        else:
             bear_score += self.indicator_weights['macd']
-            reasons.append("MACD bearish crossover")
+            reasons.append("MACD bearish")
         total_weight += self.indicator_weights['macd']
         
         # Bollinger Bands
         bb_position = indicators.get('bb_position', 0.5)
-        if bb_position < 0.1:  # Muito próximo da banda inferior
+        if bb_position < 0.2:
             bull_score += self.indicator_weights['bb']
-            reasons.append("BB oversold position")
-        elif bb_position > 0.9:  # Muito próximo da banda superior
+            reasons.append("Near lower BB")
+        elif bb_position > 0.8:
             bear_score += self.indicator_weights['bb']
-            reasons.append("BB overbought position")
+            reasons.append("Near upper BB")
         total_weight += self.indicator_weights['bb']
         
         # Stochastic
         stoch_k = indicators.get('stoch_k', 50)
-        stoch_d = indicators.get('stoch_d', 50)
-        if stoch_k < self.ta_params['stoch_oversold'] and stoch_k > stoch_d:
+        if stoch_k < self.ta_params['stoch_oversold']:
             bull_score += self.indicator_weights['stoch']
-            reasons.append("Stochastic oversold crossover")
-        elif stoch_k > self.ta_params['stoch_overbought'] and stoch_k < stoch_d:
+            reasons.append("Stochastic oversold")
+        elif stoch_k > self.ta_params['stoch_overbought']:
             bear_score += self.indicator_weights['stoch']
-            reasons.append("Stochastic overbought crossover")
+            reasons.append("Stochastic overbought")
         total_weight += self.indicator_weights['stoch']
         
         # SMA Cross
         sma_9 = indicators.get('sma_9', 0)
         sma_21 = indicators.get('sma_21', 0)
-        if sma_9 > sma_21 and market_state['trend'] in ['BULL', 'STRONG_BULL']:
+        if sma_9 > sma_21:
             bull_score += self.indicator_weights['sma_cross']
-            reasons.append("SMA bullish alignment")
-        elif sma_9 < sma_21 and market_state['trend'] in ['BEAR', 'STRONG_BEAR']:
+            reasons.append("SMA bullish cross")
+        else:
             bear_score += self.indicator_weights['sma_cross']
-            reasons.append("SMA bearish alignment")
+            reasons.append("SMA bearish cross")
         total_weight += self.indicator_weights['sma_cross']
         
-        # Volume Confirmation
+        # Volume confirmation
         volume_ratio = indicators.get('volume_ratio', 1)
         if volume_ratio > self.ta_params['min_volume_ratio']:
             if bull_score > bear_score:
@@ -598,11 +550,11 @@ class EnhancedTradingAnalyzer:
             reasons.append(f"Volume confirmation ({volume_ratio:.1f}x)")
         total_weight += self.indicator_weights['volume']
         
-        # Calcular scores finais
+        # Calculate final scores
         bull_percentage = (bull_score / total_weight * 100) if total_weight > 0 else 0
         bear_percentage = (bear_score / total_weight * 100) if total_weight > 0 else 0
         
-        # Determinar ação
+        # Determine action
         action = 'HOLD'
         confidence = 0
         confluence_score = max(bull_percentage, bear_percentage)
@@ -625,79 +577,67 @@ class EnhancedTradingAnalyzer:
         }
     
     def _should_generate_signal(self, signal_analysis: Dict) -> bool:
-        """Determina se deve gerar um sinal baseado em critérios rigorosos"""
+        """Check if we should generate a signal"""
         if signal_analysis['action'] == 'HOLD':
             return False
         
         if signal_analysis['confidence'] < self.ta_params['min_confidence']:
             return False
         
-        # Verificar cooldown
-        if not self._can_generate_signal():
-            return False
+        # Check cooldown
+        if self.signals:
+            last_signal = self.signals[-1]
+            last_signal_time = datetime.fromisoformat(last_signal['created_at'])
+            if datetime.now() - last_signal_time < timedelta(minutes=self.signal_config['signal_cooldown_minutes']):
+                return False
         
-        # Verificar número máximo de sinais ativos
+        # Check max active signals
         active_signals = [s for s in self.signals if s.get('status') == 'ACTIVE']
         if len(active_signals) >= self.signal_config['max_active_signals']:
             return False
         
-        # Volume confirmation obrigatório
+        # Volume confirmation required
         if not signal_analysis.get('volume_confirmed', False):
-            logger.debug("[ENHANCED] Signal rejected: insufficient volume confirmation")
             return False
         
         return True
     
     def _generate_high_quality_signal(self, signal_analysis: Dict, current_price: float, indicators: Dict):
-        """Gera sinal de alta qualidade com gestão de risco adequada"""
+        """Generate high quality signal with risk management"""
         try:
             atr = indicators.get('atr', current_price * 0.02)
             action = signal_analysis['action']
             
             if action == 'BUY':
-                # Stop loss baseado em ATR + support level
-                support = indicators.get('support', current_price - (atr * 2))
-                stop_loss = min(support, current_price - (atr * self.signal_config['stop_loss_atr_multiplier']))
-                
-                # Targets múltiplos
+                stop_loss = current_price - (atr * self.signal_config['stop_loss_atr_multiplier'])
                 risk = current_price - stop_loss
                 target_1 = current_price + (risk * self.signal_config['target_multipliers'][0])
                 target_2 = current_price + (risk * self.signal_config['target_multipliers'][1])
                 target_3 = current_price + (risk * self.signal_config['target_multipliers'][2])
-                
                 signal_type = 'CONFLUENCE_BUY'
-                
-            elif action == 'SELL':
-                # Stop loss baseado em ATR + resistance level
-                resistance = indicators.get('resistance', current_price + (atr * 2))
-                stop_loss = max(resistance, current_price + (atr * self.signal_config['stop_loss_atr_multiplier']))
-                
-                # Targets múltiplos
+            else:
+                stop_loss = current_price + (atr * self.signal_config['stop_loss_atr_multiplier'])
                 risk = stop_loss - current_price
                 target_1 = current_price - (risk * self.signal_config['target_multipliers'][0])
                 target_2 = current_price - (risk * self.signal_config['target_multipliers'][1])
                 target_3 = current_price - (risk * self.signal_config['target_multipliers'][2])
-                
                 signal_type = 'CONFLUENCE_SELL'
-            else:
-                return
             
-            # Calcular risk/reward para target principal
+            # Calculate risk/reward
             risk_amount = abs(current_price - stop_loss)
             reward_amount = abs(target_1 - current_price)
             risk_reward_ratio = reward_amount / risk_amount if risk_amount > 0 else 0
             
-            # Validar risk/reward
             if risk_reward_ratio < self.ta_params['min_risk_reward']:
-                logger.debug(f"[ENHANCED] Signal rejected: poor R/R ratio {risk_reward_ratio:.2f}")
                 return
             
-            # Criar sinal aprimorado
             signal = {
                 'id': len(self.signals) + 1,
                 'timestamp': datetime.now().isoformat(),
+                'pattern_type': signal_type,
                 'signal_type': signal_type,
                 'entry_price': current_price,
+                'target_price': target_1,  # For compatibility
                 'target_1': target_1,
                 'target_2': target_2,
                 'target_3': target_3,
@@ -709,397 +649,163 @@ class EnhancedTradingAnalyzer:
                 'volume_confirmation': signal_analysis['volume_confirmed'],
                 'status': 'ACTIVE',
                 'entry_reason': ' | '.join(signal_analysis['reasons']),
-                'indicators_snapshot': str(indicators),
+                'created_at': datetime.now().isoformat(),
                 'profit_loss': 0,
                 'max_profit': 0,
-                'max_drawdown': 0,
-                'created_at': datetime.now().isoformat()
+                'max_drawdown': 0
             }
             
             self.signals.append(signal)
-            self._save_enhanced_signal(signal)
+            self._save_signal(signal)
             
-            logger.info(f"[ENHANCED] 🎯 NEW HIGH-QUALITY SIGNAL:")
-            logger.info(f"  Type: {signal_type}")
-            logger.info(f"  Entry: ${current_price:,.2f}")
-            logger.info(f"  Targets: ${target_1:,.2f} | ${target_2:,.2f} | ${target_3:,.2f}")
-            logger.info(f"  Stop: ${stop_loss:,.2f}")
-            logger.info(f"  R/R: {risk_reward_ratio:.1f}:1 | Confidence: {signal_analysis['confidence']:.1f}%")
-            logger.info(f"  Reasons: {signal['entry_reason']}")
+            logger.info(f"[ENHANCED] New signal: {signal_type} @ ${current_price:.2f}")
             
         except Exception as e:
             logger.error(f"[ENHANCED] Error generating signal: {e}")
     
     def _update_active_signals(self, current_price: float, indicators: Dict):
-        """Atualiza sinais ativos com trailing stops e partial profits"""
+        """Update active signals"""
         for signal in self.signals:
             if signal.get('status') != 'ACTIVE':
                 continue
             
             try:
                 entry_price = signal['entry_price']
-                is_buy_signal = signal['signal_type'].endswith('_BUY')
+                is_buy = 'BUY' in signal.get('signal_type', signal.get('pattern_type', ''))
                 
-                # Calcular profit/loss atual
-                if is_buy_signal:
-                    current_pnl = ((current_price - entry_price) / entry_price) * 100
+                # Calculate current P&L
+                if is_buy:
+                    pnl = ((current_price - entry_price) / entry_price) * 100
                 else:
-                    current_pnl = ((entry_price - current_price) / entry_price) * 100
+                    pnl = ((entry_price - current_price) / entry_price) * 100
                 
-                signal['profit_loss'] = round(current_pnl, 2)
-                signal['max_profit'] = max(signal.get('max_profit', 0), current_pnl)
-                signal['max_drawdown'] = min(signal.get('max_drawdown', 0), current_pnl)
+                signal['profit_loss'] = round(pnl, 2)
+                signal['max_profit'] = max(signal.get('max_profit', 0), pnl)
+                signal['max_drawdown'] = min(signal.get('max_drawdown', 0), pnl)
                 
-                # Verificar targets e stop loss
-                self._check_signal_exits(signal, current_price, indicators)
+                # Check exit conditions
+                self._check_signal_exits(signal, current_price)
                 
             except Exception as e:
                 logger.error(f"[ENHANCED] Error updating signal {signal.get('id')}: {e}")
     
-    def _check_signal_exits(self, signal: Dict, current_price: float, indicators: Dict):
-        """Verifica saídas do sinal (targets, stop loss, trailing stop)"""
-        entry_price = signal['entry_price']
-        is_buy_signal = signal['signal_type'].endswith('_BUY')
+    def _check_signal_exits(self, signal: Dict, current_price: float):
+        """Check if signal should be exited"""
+        is_buy = 'BUY' in signal.get('signal_type', signal.get('pattern_type', ''))
         
-        if is_buy_signal:
-            # Verificar targets (BUY)
-            if current_price >= signal['target_3']:
-                self._exit_signal(signal, current_price, 'TARGET_3_HIT', 'All targets achieved')
-            elif current_price >= signal['target_2']:
-                if 'TARGET_2_PARTIAL' not in signal.get('exit_reason', ''):
-                    self._partial_exit(signal, current_price, 'TARGET_2_PARTIAL', 0.7)  # 70% out
-            elif current_price >= signal['target_1']:
-                if 'TARGET_1_PARTIAL' not in signal.get('exit_reason', ''):
-                    self._partial_exit(signal, current_price, 'TARGET_1_PARTIAL', 0.5)  # 50% out
-            
-            # Verificar stop loss
+        if is_buy:
+            # Check targets
+            if 'target_3' in signal and current_price >= signal['target_3']:
+                self._exit_signal(signal, 'TARGET_3_HIT')
+            elif 'target_2' in signal and current_price >= signal['target_2']:
+                self._exit_signal(signal, 'TARGET_2_HIT')
+            elif current_price >= signal.get('target_price', signal.get('target_1', 0)):
+                self._exit_signal(signal, 'HIT_TARGET')
+            # Check stop loss
             elif current_price <= signal['stop_loss']:
-                self._exit_signal(signal, current_price, 'STOP_LOSS_HIT', 'Stop loss triggered')
-            
-            # Trailing stop (se em lucro)
-            elif current_price > entry_price * 1.02:  # 2% de lucro mínimo
-                atr = indicators.get('atr', entry_price * 0.02)
-                trailing_stop = current_price - (atr * self.signal_config['trailing_stop_distance'])
-                if trailing_stop > signal['stop_loss']:
-                    signal['stop_loss'] = trailing_stop
-                    logger.debug(f"[ENHANCED] Trailing stop updated: ${trailing_stop:.2f}")
-        
-        else:  # SELL signal
-            # Verificar targets (SELL)
-            if current_price <= signal['target_3']:
-                self._exit_signal(signal, current_price, 'TARGET_3_HIT', 'All targets achieved')
-            elif current_price <= signal['target_2']:
-                if 'TARGET_2_PARTIAL' not in signal.get('exit_reason', ''):
-                    self._partial_exit(signal, current_price, 'TARGET_2_PARTIAL', 0.7)
-            elif current_price <= signal['target_1']:
-                if 'TARGET_1_PARTIAL' not in signal.get('exit_reason', ''):
-                    self._partial_exit(signal, current_price, 'TARGET_1_PARTIAL', 0.5)
-            
-            # Verificar stop loss
+                self._exit_signal(signal, 'HIT_STOP')
+        else:
+            # Check targets (SELL)
+            if 'target_3' in signal and current_price <= signal['target_3']:
+                self._exit_signal(signal, 'TARGET_3_HIT')
+            elif 'target_2' in signal and current_price <= signal['target_2']:
+                self._exit_signal(signal, 'TARGET_2_HIT')
+            elif current_price <= signal.get('target_price', signal.get('target_1', 0)):
+                self._exit_signal(signal, 'HIT_TARGET')
+            # Check stop loss
             elif current_price >= signal['stop_loss']:
-                self._exit_signal(signal, current_price, 'STOP_LOSS_HIT', 'Stop loss triggered')
-            
-            # Trailing stop (se em lucro)
-            elif current_price < entry_price * 0.98:  # 2% de lucro mínimo
-                atr = indicators.get('atr', entry_price * 0.02)
-                trailing_stop = current_price + (atr * self.signal_config['trailing_stop_distance'])
-                if trailing_stop < signal['stop_loss']:
-                    signal['stop_loss'] = trailing_stop
-                    logger.debug(f"[ENHANCED] Trailing stop updated: ${trailing_stop:.2f}")
+                self._exit_signal(signal, 'HIT_STOP')
     
-    def _partial_exit(self, signal: Dict, exit_price: float, reason: str, percentage: float):
-        """Executa saída parcial do sinal"""
-        current_reason = signal.get('exit_reason', '')
-        if reason not in current_reason:
-            signal['exit_reason'] = f"{current_reason} | {reason}" if current_reason else reason
-            
-            pnl = signal['profit_loss']
-            logger.info(f"[ENHANCED] 📈 PARTIAL EXIT ({percentage*100:.0f}%): "
-                       f"Signal #{signal['id']} @ ${exit_price:.2f} | PnL: {pnl:.2f}%")
-    
-    def _exit_signal(self, signal: Dict, exit_price: float, exit_type: str, reason: str):
-        """Executa saída completa do sinal"""
+    def _exit_signal(self, signal: Dict, exit_type: str):
+        """Exit a signal"""
         signal['status'] = exit_type
-        signal['exit_reason'] = reason
         signal['updated_at'] = datetime.now().isoformat()
         
-        pnl = signal['profit_loss']
-        max_profit = signal.get('max_profit', 0)
-        max_drawdown = signal.get('max_drawdown', 0)
+        logger.info(f"[ENHANCED] Signal #{signal['id']} closed: {exit_type} | PnL: {signal['profit_loss']:.2f}%")
         
-        logger.info(f"[ENHANCED] 🏁 SIGNAL CLOSED:")
-        logger.info(f"  Signal #{signal['id']} | Type: {signal['signal_type']}")
-        logger.info(f"  Entry: ${signal['entry_price']:,.2f} → Exit: ${exit_price:,.2f}")
-        logger.info(f"  Final PnL: {pnl:.2f}% | Max Profit: {max_profit:.2f}% | Max DD: {max_drawdown:.2f}%")
-        logger.info(f"  Reason: {reason}")
-        
-        # Atualizar no banco de dados
-        self._update_signal_in_db(signal)
+        # Update in database
+        self._update_signal_status(signal)
     
-    # Métodos auxiliares para detectar divergências
-    def _detect_rsi_divergence(self, prices: np.ndarray) -> bool:
-        """Detecta divergência no RSI"""
-        if len(prices) < 30:
-            return False
-        
-        # Implementação simplificada
-        recent_highs = np.array([prices[i] for i in range(-10, 0) if i < 0 and abs(i) <= len(prices)])
-        if len(recent_highs) < 5:
-            return False
-        
-        price_trend = np.polyfit(range(len(recent_highs)), recent_highs, 1)[0]
-        
-        # RSI trend (simplificado)
-        rsi_values = [self._calculate_rsi_improved(prices[:i+1]) for i in range(-10, 0) if abs(i) <= len(prices)]
-        if len(rsi_values) < 5:
-            return False
-        
-        rsi_trend = np.polyfit(range(len(rsi_values)), rsi_values, 1)[0]
-        
-        # Divergência: preço sobe mas RSI desce (ou vice-versa)
-        return (price_trend > 0 and rsi_trend < 0) or (price_trend < 0 and rsi_trend > 0)
-    
-    def _detect_macd_divergence(self, prices: np.ndarray, histogram: float) -> bool:
-        """Detecta divergência no MACD"""
-        # Implementação simplificada para esta versão
-        return False
-    
-    def _detect_stochastic_divergence(self, prices: np.ndarray, stoch_k: float) -> bool:
-        """Detecta divergência no Stochastic"""
-        # Implementação simplificada para esta versão
-        return False
-    
-    def _calculate_bollinger_width(self, prices: np.ndarray, lookback: int) -> float:
-        """Calcula largura das Bollinger Bands"""
-        if len(prices) < lookback:
-            return 0.0
-        
-        recent_prices = prices[-lookback:]
-        std = np.std(recent_prices, ddof=1)
-        mean = np.mean(recent_prices)
-        
-        return (std * 4) / mean  # Largura normalizada
-    
-    def _classify_volatility_regime(self, atr: float, prices: np.ndarray) -> str:
-        """Classifica regime de volatilidade"""
-        if len(prices) < 50:
-            return 'NORMAL'
-        
-        # Calcular ATR histórico
-        historical_atr = []
-        for i in range(20, len(prices)):
-            price_slice = prices[i-20:i]
-            historical_atr.append(np.std(price_slice) / np.mean(price_slice))
-        
-        if not historical_atr:
-            return 'NORMAL'
-        
-        avg_atr = np.mean(historical_atr)
-        current_vol = atr / prices[-1]
-        
-        if current_vol > avg_atr * 1.5:
-            return 'HIGH'
-        elif current_vol < avg_atr * 0.5:
-            return 'LOW'
-        else:
-            return 'NORMAL'
-    
-    def _analyze_volume_trend(self, volumes: np.ndarray) -> str:
-        """Analisa tendência do volume"""
-        if len(volumes) < 10:
-            return 'NEUTRAL'
-        
-        recent_volumes = volumes[-10:]
-        trend = np.polyfit(range(len(recent_volumes)), recent_volumes, 1)[0]
-        
-        if trend > np.mean(recent_volumes) * 0.1:
-            return 'INCREASING'
-        elif trend < -np.mean(recent_volumes) * 0.1:
-            return 'DECREASING'
-        else:
-            return 'NEUTRAL'
-    
-    def _calculate_support_resistance(self, highs: np.ndarray, lows: np.ndarray, closes: np.ndarray) -> Tuple[float, float]:
-        """Calcula níveis de suporte e resistência"""
-        if len(closes) < 20:
-            current_price = closes[-1]
-            return current_price * 0.98, current_price * 1.02
-        
-        # Usar pivot points simplificados
-        recent_highs = highs[-20:]
-        recent_lows = lows[-20:]
-        recent_closes = closes[-20:]
-        
-        # Pivot Point
-        pivot = (recent_highs[-1] + recent_lows[-1] + recent_closes[-1]) / 3
-        
-        # Suporte e Resistência básicos
-        support = pivot - (recent_highs[-1] - recent_lows[-1]) * 0.382  # Fibonacci 38.2%
-        resistance = pivot + (recent_highs[-1] - recent_lows[-1]) * 0.382
-        
-        return float(support), float(resistance)
-    
-    def _calculate_trend_strength(self, prices: np.ndarray) -> float:
-        """Calcula força da tendência (0-1)"""
-        if len(prices) < 20:
-            return 0.5
-        
-        # Usar ADX simplificado
-        recent_prices = prices[-20:]
-        
-        # Calcular movimentos direcionais
-        up_moves = []
-        down_moves = []
-        
-        for i in range(1, len(recent_prices)):
-            up_move = recent_prices[i] - recent_prices[i-1] if recent_prices[i] > recent_prices[i-1] else 0
-            down_move = recent_prices[i-1] - recent_prices[i] if recent_prices[i] < recent_prices[i-1] else 0
-            
-            up_moves.append(up_move)
-            down_moves.append(down_move)
-        
-        avg_up = np.mean(up_moves)
-        avg_down = np.mean(down_moves)
-        
-        if avg_up + avg_down == 0:
-            return 0.5
-        
-        di_diff = abs(avg_up - avg_down)
-        di_sum = avg_up + avg_down
-        
-        adx = di_diff / di_sum
-        return min(adx, 1.0)
-    
-    def _determine_trend_direction(self, indicators: Dict) -> str:
-        """Determina direção da tendência"""
-        sma_9 = indicators.get('sma_9', 0)
-        sma_21 = indicators.get('sma_21', 0)
-        sma_50 = indicators.get('sma_50', 0)
-        
-        if sma_9 > sma_21 > sma_50:
-            return 'STRONG_BULL'
-        elif sma_9 > sma_21:
-            return 'BULL'
-        elif sma_9 < sma_21 < sma_50:
-            return 'STRONG_BEAR'
-        elif sma_9 < sma_21:
-            return 'BEAR'
-        else:
-            return 'NEUTRAL'
-    
-    def _can_generate_signal(self) -> bool:
-        """Verifica se pode gerar novo sinal (cooldown)"""
-        if not self.signals:
-            return True
-        
-        last_signal_time = datetime.fromisoformat(self.signals[-1]['created_at'])
-        time_diff = datetime.now() - last_signal_time
-        
-        return time_diff.total_seconds() >= (self.signal_config['signal_cooldown_minutes'] * 60)
-    
-    def _update_performance_metrics(self):
-        """Atualiza métricas de performance"""
+    def save_price_data(self, timestamp, price, volume):
+        """Save price data to database"""
         try:
-            today = datetime.now().date().isoformat()
-            
-            # Contar sinais de hoje
-            today_signals = [s for s in self.signals 
-                           if s.get('created_at', '').startswith(today)]
-            
-            if not today_signals:
-                return
-            
-            winning_signals = len([s for s in today_signals 
-                                 if s.get('status', '').startswith('TARGET')])
-            losing_signals = len([s for s in today_signals 
-                                if s.get('status') == 'STOP_LOSS_HIT'])
-            
-            total_signals = len(today_signals)
-            win_rate = (winning_signals / total_signals * 100) if total_signals > 0 else 0
-            
-            # Calcular profit factor
-            total_wins = sum([s.get('profit_loss', 0) for s in today_signals 
-                            if s.get('profit_loss', 0) > 0])
-            total_losses = abs(sum([s.get('profit_loss', 0) for s in today_signals 
-                                   if s.get('profit_loss', 0) < 0]))
-            
-            profit_factor = (total_wins / total_losses) if total_losses > 0 else float('inf')
-            
-            # Salvar métricas
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            cursor.execute('''
-                INSERT OR REPLACE INTO performance_metrics 
-                (date, total_signals, winning_signals, losing_signals, 
-                 win_rate, profit_factor, avg_win, avg_loss, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-            ''', (
-                today, total_signals, winning_signals, losing_signals,
-                win_rate, profit_factor, 
-                total_wins / winning_signals if winning_signals > 0 else 0,
-                total_losses / losing_signals if losing_signals > 0 else 0
-            ))
+            cursor.execute("""
+                INSERT INTO price_history (timestamp, price, volume)
+                VALUES (?, ?, ?)
+            """, (timestamp.isoformat(), price, volume))
             
             conn.commit()
             conn.close()
             
         except Exception as e:
-            logger.error(f"[ENHANCED] Error updating performance metrics: {e}")
+            logger.error(f"[ENHANCED] Error saving price data: {e}")
     
-    # Métodos de persistência de dados
-    def _save_ohlc_data(self, ohlc_data: Dict):
-        """Salva dados OHLC no banco"""
+    def save_analyzer_state(self):
+        """Save analyzer state to database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            cursor.execute('''
-                INSERT OR REPLACE INTO ohlc_data 
-                (timestamp, open, high, low, close, volume)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (
-                ohlc_data['timestamp'].isoformat(),
-                ohlc_data['open'], ohlc_data['high'], ohlc_data['low'],
-                ohlc_data['close'], ohlc_data['volume']
-            ))
-            
-            # Manter apenas dados recentes
-            cursor.execute('''
-                DELETE FROM ohlc_data 
-                WHERE id NOT IN (
-                    SELECT id FROM ohlc_data 
-                    ORDER BY timestamp DESC 
-                    LIMIT 1000
-                )
-            ''')
+            cursor.execute("""
+                INSERT OR REPLACE INTO analyzer_state (id, analysis_count, last_analysis)
+                VALUES (1, ?, ?)
+            """, (self.analysis_count, self.last_analysis.isoformat() if self.last_analysis else None))
             
             conn.commit()
             conn.close()
             
         except Exception as e:
-            logger.error(f"[ENHANCED] Error saving OHLC data: {e}")
+            logger.error(f"[ENHANCED] Error saving analyzer state: {e}")
     
-    def _save_enhanced_signal(self, signal: Dict):
-        """Salva sinal aprimorado no banco"""
+    def _save_signal(self, signal):
+        """Save signal to database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            cursor.execute('''
+            cursor.execute("""
+                INSERT INTO trading_signals 
+                (timestamp, pattern_type, entry_price, target_price, stop_loss, 
+                 confidence, status, created_at, profit_loss, activated)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                signal['timestamp'],
+                signal['pattern_type'],
+                signal['entry_price'],
+                signal.get('target_price', signal.get('target_1', 0)),
+                signal['stop_loss'],
+                signal['confidence'],
+                signal['status'],
+                signal['created_at'],
+                signal['profit_loss'],
+                signal.get('activated', False)
+            ))
+            
+            # Also save to enhanced_signals table
+            cursor.execute("""
                 INSERT INTO enhanced_signals 
                 (timestamp, signal_type, entry_price, target_1, target_2, target_3,
                  stop_loss, confidence, confluence_score, risk_reward_ratio, atr_value,
-                 volume_confirmation, status, entry_reason, indicators_snapshot,
-                 profit_loss, max_profit, max_drawdown, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                signal['timestamp'], signal['signal_type'], signal['entry_price'],
-                signal['target_1'], signal['target_2'], signal['target_3'],
-                signal['stop_loss'], signal['confidence'], signal['confluence_score'],
-                signal['risk_reward_ratio'], signal['atr_value'], signal['volume_confirmation'],
-                signal['status'], signal['entry_reason'], signal['indicators_snapshot'],
-                signal['profit_loss'], signal['max_profit'], signal['max_drawdown'],
+                 volume_confirmation, status, entry_reason, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                signal['timestamp'],
+                signal.get('signal_type', signal['pattern_type']),
+                signal['entry_price'],
+                signal.get('target_1', signal.get('target_price', 0)),
+                signal.get('target_2', 0),
+                signal.get('target_3', 0),
+                signal['stop_loss'],
+                signal['confidence'],
+                signal.get('confluence_score', 0),
+                signal.get('risk_reward_ratio', 0),
+                signal.get('atr_value', 0),
+                signal.get('volume_confirmation', False),
+                signal['status'],
+                signal.get('entry_reason', ''),
                 signal['created_at']
             ))
             
@@ -1107,283 +813,125 @@ class EnhancedTradingAnalyzer:
             conn.close()
             
         except Exception as e:
-            logger.error(f"[ENHANCED] Error saving enhanced signal: {e}")
+            logger.error(f"[ENHANCED] Error saving signal: {e}")
     
-    def _update_signal_in_db(self, signal: Dict):
-        """Atualiza sinal no banco de dados"""
+    def _update_signal_status(self, signal):
+        """Update signal status in database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            cursor.execute('''
-                UPDATE enhanced_signals 
-                SET status = ?, profit_loss = ?, max_profit = ?, max_drawdown = ?,
-                    exit_reason = ?, updated_at = datetime('now')
+            cursor.execute("""
+                UPDATE trading_signals 
+                SET status = ?, profit_loss = ?
                 WHERE id = ?
-            ''', (
-                signal['status'], signal['profit_loss'], 
-                signal.get('max_profit', 0), signal.get('max_drawdown', 0),
-                signal.get('exit_reason', ''), signal['id']
-            ))
+            """, (signal['status'], signal['profit_loss'], signal['id']))
             
             conn.commit()
             conn.close()
             
         except Exception as e:
-            logger.error(f"[ENHANCED] Error updating signal in DB: {e}")
+            logger.error(f"[ENHANCED] Error updating signal status: {e}")
     
-    # Métodos públicos para análise e relatórios
     def get_comprehensive_analysis(self) -> Dict:
-        """Retorna análise técnica completa atual"""
-        if len(self.ohlc_history) < 20:
-            return {
-                'status': 'INSUFFICIENT_DATA',
-                'message': 'Aguardando mais dados para análise completa',
-                'data_points': len(self.ohlc_history)
-            }
-        
-        current_ohlc = self.ohlc_history[-1]
-        indicators = self._calculate_comprehensive_indicators()
-        market_state = self._analyze_market_state(indicators)
-        signal_analysis = self._calculate_signal_confluence(indicators, market_state)
-        
-        # Performance stats
-        active_signals = [s for s in self.signals if s.get('status') == 'ACTIVE']
-        closed_signals = [s for s in self.signals if s.get('status') not in ['ACTIVE']]
-        
-        winning_trades = len([s for s in closed_signals if s.get('profit_loss', 0) > 0])
-        total_closed = len(closed_signals)
-        win_rate = (winning_trades / total_closed * 100) if total_closed > 0 else 0
-        
-        return {
-            'timestamp': datetime.now().isoformat(),
-            'current_price': current_ohlc['close'],
-            'ohlc': {
-                'open': current_ohlc['open'],
-                'high': current_ohlc['high'],
-                'low': current_ohlc['low'],
-                'close': current_ohlc['close'],
-                'volume': current_ohlc['volume']
-            },
-            'technical_indicators': {
-                'RSI': round(indicators.get('rsi', 50), 2),
-                'RSI_Signal': 'OVERSOLD' if indicators.get('rsi', 50) < 30 else 'OVERBOUGHT' if indicators.get('rsi', 50) > 70 else 'NEUTRAL',
-                'MACD_Line': round(indicators.get('macd_line', 0), 4),
-                'MACD_Signal': round(indicators.get('macd_signal', 0), 4),
-                'MACD_Histogram': round(indicators.get('macd_histogram', 0), 4),
-                'BB_Position': round(indicators.get('bb_position', 0.5), 3),
-                'BB_Squeeze': indicators.get('bb_squeeze', False),
-                'Stoch_K': round(indicators.get('stoch_k', 50), 2),
-                'Stoch_D': round(indicators.get('stoch_d', 50), 2),
-                'ATR': round(indicators.get('atr', 0), 2),
-                'Volume_Ratio': round(indicators.get('volume_ratio', 1), 2),
-                'Support': round(indicators.get('support', 0), 2),
-                'Resistance': round(indicators.get('resistance', 0), 2),
-                'Trend_Strength': round(indicators.get('trend_strength', 0), 3)
-            },
-            'market_analysis': {
-                'trend': market_state.get('trend', 'NEUTRAL'),
-                'volatility': market_state.get('volatility', 'NORMAL'),
-                'volume_state': market_state.get('volume', 'NORMAL'),
-                'bb_squeeze_active': market_state.get('bb_squeeze', False)
-            },
-            'signal_analysis': {
-                'recommended_action': signal_analysis.get('action', 'HOLD'),
-                'confidence': round(signal_analysis.get('confidence', 0), 1),
-                'confluence_score': round(signal_analysis.get('confluence_score', 0), 1),
-                'bull_score': round(signal_analysis.get('bull_score', 0), 1),
-                'bear_score': round(signal_analysis.get('bear_score', 0), 1),
-                'volume_confirmed': signal_analysis.get('volume_confirmed', False),
-                'reasons': signal_analysis.get('reasons', [])
-            },
-            'active_signals': [
-                {
-                    'id': s['id'],
-                    'type': s['signal_type'],
-                    'entry': s['entry_price'],
-                    'targets': [s['target_1'], s['target_2'], s['target_3']],
-                    'stop_loss': s['stop_loss'],
-                    'current_pnl': round(s.get('profit_loss', 0), 2),
-                    'max_profit': round(s.get('max_profit', 0), 2),
-                    'risk_reward': s['risk_reward_ratio'],
-                    'confidence': s['confidence'],
-                    'age_hours': (datetime.now() - datetime.fromisoformat(s['created_at'])).total_seconds() / 3600
-                }
-                for s in active_signals
-            ],
-            'performance_summary': {
-                'total_signals_generated': len(self.signals),
-                'active_signals': len(active_signals),
-                'closed_signals': total_closed,
-                'win_rate': round(win_rate, 1),
-                'analysis_count': self.analysis_count,
-                'system_uptime_hours': (datetime.now() - (self.last_analysis or datetime.now())).total_seconds() / 3600 if self.last_analysis else 0
-            },
-            'system_health': {
-                'data_quality': 'GOOD' if len(self.ohlc_history) >= 50 else 'FAIR',
-                'indicator_status': 'ACTIVE' if indicators else 'CALCULATING',
-                'last_analysis': self.last_analysis.isoformat() if self.last_analysis else None,
-                'next_signal_cooldown_minutes': max(0, self.signal_config['signal_cooldown_minutes'] - 
-                    ((datetime.now() - datetime.fromisoformat(self.signals[-1]['created_at'])).total_seconds() / 60) 
-                    if self.signals else 0)
-            }
-        }
-    
-    def get_performance_report(self, days: int = 30) -> Dict:
-        """Gera relatório de performance detalhado"""
+        """Get comprehensive analysis including all indicators and signals"""
         try:
-            cutoff_date = datetime.now() - timedelta(days=days)
-            
-            # Filtrar sinais do período
-            recent_signals = [
-                s for s in self.signals 
-                if datetime.fromisoformat(s.get('created_at', '1970-01-01')) >= cutoff_date
-            ]
-            
-            if not recent_signals:
+            if len(self.price_history) < 20:
                 return {
-                    'period_days': days,
-                    'message': f'Nenhum sinal gerado nos últimos {days} dias'
+                    'status': 'INSUFFICIENT_DATA',
+                    'message': 'Aguardando mais dados para análise completa',
+                    'data_points': len(self.price_history)
                 }
             
-            # Calcular estatísticas
-            closed_signals = [s for s in recent_signals if s.get('status') not in ['ACTIVE']]
-            winning_signals = [s for s in closed_signals if s.get('profit_loss', 0) > 0]
-            losing_signals = [s for s in closed_signals if s.get('profit_loss', 0) < 0]
+            current_price = self.price_history[-1]['price'] if self.price_history else 0
+            indicators = self._calculate_comprehensive_indicators()
+            market_state = self._analyze_market_state(indicators)
+            signal_analysis = self._calculate_signal_confluence(indicators, market_state)
             
-            total_trades = len(closed_signals)
-            win_count = len(winning_signals)
-            loss_count = len(losing_signals)
-            win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
+            # Active signals
+            active_signals = [s for s in self.signals if s.get('status') == 'ACTIVE']
             
-            # Profit/Loss calculations
-            total_profit = sum([s.get('profit_loss', 0) for s in winning_signals])
-            total_loss = sum([s.get('profit_loss', 0) for s in losing_signals])
-            net_profit = total_profit + total_loss  # total_loss já é negativo
-            
-            avg_win = total_profit / win_count if win_count > 0 else 0
-            avg_loss = total_loss / loss_count if loss_count > 0 else 0
-            profit_factor = abs(total_profit / total_loss) if total_loss != 0 else float('inf')
-            
-            # Risk metrics
-            max_drawdown = min([s.get('max_drawdown', 0) for s in recent_signals]) if recent_signals else 0
-            max_profit = max([s.get('max_profit', 0) for s in recent_signals]) if recent_signals else 0
-            
-            # Signal type analysis
-            signal_types = {}
-            for signal in recent_signals:
-                sig_type = signal.get('signal_type', 'UNKNOWN')
-                if sig_type not in signal_types:
-                    signal_types[sig_type] = {'count': 0, 'wins': 0, 'total_pnl': 0}
-                
-                signal_types[sig_type]['count'] += 1
-                if signal.get('profit_loss', 0) > 0:
-                    signal_types[sig_type]['wins'] += 1
-                signal_types[sig_type]['total_pnl'] += signal.get('profit_loss', 0)
+            # Format indicators for display
+            technical_indicators = {}
+            if indicators:
+                technical_indicators = {
+                    'RSI': round(indicators.get('rsi', 50), 2),
+                    'RSI_Signal': 'OVERSOLD' if indicators.get('rsi', 50) < 30 else 'OVERBOUGHT' if indicators.get('rsi', 50) > 70 else 'NEUTRAL',
+                    'MACD_Line': round(indicators.get('macd_line', 0), 4),
+                    'MACD_Signal': round(indicators.get('macd_signal', 0), 4),
+                    'MACD_Histogram': round(indicators.get('macd_histogram', 0), 4),
+                    'BB_Position': round(indicators.get('bb_position', 0.5), 3),
+                    'Stoch_K': round(indicators.get('stoch_k', 50), 2),
+                    'Stoch_D': round(indicators.get('stoch_d', 50), 2),
+                    'ATR': round(indicators.get('atr', 0), 2),
+                    'Volume_Ratio': round(indicators.get('volume_ratio', 1), 2),
+                    'Support': round(indicators.get('support', 0), 2),
+                    'Resistance': round(indicators.get('resistance', 0), 2),
+                    'Trend_Strength': round(indicators.get('trend_strength', 0), 3),
+                    'SMA_9': round(indicators.get('sma_9', 0), 2),
+                    'SMA_21': round(indicators.get('sma_21', 0), 2),
+                    'EMA_12': round(indicators.get('ema_12', 0), 2),
+                    'EMA_26': round(indicators.get('ema_26', 0), 2)
+                }
             
             return {
-                'period_days': days,
-                'analysis_period': f"{cutoff_date.date()} até {datetime.now().date()}",
-                'overall_performance': {
-                    'total_signals': len(recent_signals),
-                    'closed_trades': total_trades,
-                    'active_trades': len(recent_signals) - total_trades,
-                    'win_rate': round(win_rate, 2),
-                    'profit_factor': round(profit_factor, 2),
-                    'net_profit_pct': round(net_profit, 2),
-                    'total_profit_pct': round(total_profit, 2),
-                    'total_loss_pct': round(total_loss, 2)
+                'timestamp': datetime.now().isoformat(),
+                'current_price': current_price,
+                'technical_indicators': technical_indicators,
+                'market_analysis': market_state,
+                'signal_analysis': {
+                    'recommended_action': signal_analysis.get('action', 'HOLD'),
+                    'confidence': round(signal_analysis.get('confidence', 0), 1),
+                    'confluence_score': round(signal_analysis.get('confluence_score', 0), 1),
+                    'bull_score': round(signal_analysis.get('bull_score', 0), 1),
+                    'bear_score': round(signal_analysis.get('bear_score', 0), 1),
+                    'volume_confirmed': signal_analysis.get('volume_confirmed', False),
+                    'reasons': signal_analysis.get('reasons', [])
                 },
-                'trade_statistics': {
-                    'winning_trades': win_count,
-                    'losing_trades': loss_count,
-                    'average_win_pct': round(avg_win, 2),
-                    'average_loss_pct': round(avg_loss, 2),
-                    'largest_win_pct': round(max([s.get('profit_loss', 0) for s in winning_signals]) if winning_signals else 0, 2),
-                    'largest_loss_pct': round(min([s.get('profit_loss', 0) for s in losing_signals]) if losing_signals else 0, 2),
-                    'max_consecutive_wins': self._calculate_max_consecutive(recent_signals, 'wins'),
-                    'max_consecutive_losses': self._calculate_max_consecutive(recent_signals, 'losses')
-                },
-                'risk_metrics': {
-                    'max_drawdown_pct': round(max_drawdown, 2),
-                    'max_profit_pct': round(max_profit, 2),
-                    'average_risk_reward': round(np.mean([s.get('risk_reward_ratio', 0) for s in recent_signals]), 2),
-                    'sharpe_ratio': self._calculate_sharpe_ratio(recent_signals),
-                    'volatility': round(np.std([s.get('profit_loss', 0) for s in closed_signals]), 2) if closed_signals else 0
-                },
-                'signal_type_breakdown': {
-                    sig_type: {
-                        'total_signals': data['count'],
-                        'win_rate': round((data['wins'] / data['count'] * 100), 2) if data['count'] > 0 else 0,
-                        'total_pnl': round(data['total_pnl'], 2),
-                        'avg_pnl': round(data['total_pnl'] / data['count'], 2) if data['count'] > 0 else 0
-                    }
-                    for sig_type, data in signal_types.items()
-                },
-                'recent_signals': [
+                'active_signals': [
                     {
                         'id': s['id'],
-                        'created': s.get('created_at', ''),
-                        'type': s.get('signal_type', ''),
-                        'entry': s.get('entry_price', 0),
-                        'status': s.get('status', ''),
-                        'pnl': round(s.get('profit_loss', 0), 2),
-                        'confidence': s.get('confidence', 0),
-                        'risk_reward': s.get('risk_reward_ratio', 0)
+                        'type': s.get('signal_type', s.get('pattern_type', '')),
+                        'entry': s['entry_price'],
+                        'targets': [
+                            s.get('target_1', s.get('target_price', 0)),
+                            s.get('target_2', 0),
+                            s.get('target_3', 0)
+                        ],
+                        'stop_loss': s['stop_loss'],
+                        'current_pnl': round(s.get('profit_loss', 0), 2),
+                        'max_profit': round(s.get('max_profit', 0), 2),
+                        'risk_reward': s.get('risk_reward_ratio', 0),
+                        'confidence': s['confidence'],
+                        'created_at': s['created_at']
                     }
-                    for s in recent_signals[-10:]  # Últimos 10 sinais
-                ]
+                    for s in active_signals
+                ],
+                'performance_summary': {
+                    'total_signals_generated': len(self.signals),
+                    'active_signals': len(active_signals),
+                    'closed_signals': len([s for s in self.signals if s.get('status') != 'ACTIVE']),
+                    'win_rate': self._calculate_win_rate(),
+                    'analysis_count': self.analysis_count
+                },
+                'system_health': {
+                    'data_quality': 'GOOD' if len(self.price_history) >= 50 else 'FAIR',
+                    'indicator_status': 'ACTIVE' if indicators else 'CALCULATING',
+                    'last_analysis': self.last_analysis.isoformat() if self.last_analysis else None
+                }
             }
             
         except Exception as e:
-            logger.error(f"[ENHANCED] Error generating performance report: {e}")
+            logger.error(f"[ENHANCED] Error getting comprehensive analysis: {e}")
             return {'error': str(e)}
     
-    def _calculate_max_consecutive(self, signals: List[Dict], win_or_loss: str) -> int:
-        """Calcula máximo de vitórias ou derrotas consecutivas"""
-        if not signals:
-            return 0
-        
-        max_consecutive = 0
-        current_consecutive = 0
-        
-        for signal in signals:
-            if signal.get('status') not in ['TARGET_1_HIT', 'TARGET_2_HIT', 'TARGET_3_HIT', 'STOP_LOSS_HIT']:
-                continue
-            
-            is_win = signal.get('profit_loss', 0) > 0
-            
-            if (win_or_loss == 'wins' and is_win) or (win_or_loss == 'losses' and not is_win):
-                current_consecutive += 1
-                max_consecutive = max(max_consecutive, current_consecutive)
-            else:
-                current_consecutive = 0
-        
-        return max_consecutive
-    
-    def _calculate_sharpe_ratio(self, signals: List[Dict]) -> float:
-        """Calcula Sharpe Ratio simplificado"""
-        if not signals:
-            return 0.0
-        
-        returns = [s.get('profit_loss', 0) for s in signals if s.get('status') not in ['ACTIVE']]
-        
-        if len(returns) < 2:
-            return 0.0
-        
-        mean_return = np.mean(returns)
-        std_return = np.std(returns, ddof=1)
-        
-        if std_return == 0:
-            return 0.0
-        
-        # Assumindo risk-free rate de 0% para simplificar
-        sharpe = mean_return / std_return
-        return round(sharpe, 3)
+    def get_current_analysis(self) -> Dict:
+        """Compatibility method - redirects to comprehensive analysis"""
+        return self.get_comprehensive_analysis()
     
     def get_market_scanner(self) -> Dict:
-        """Scanner de mercado para identificar oportunidades"""
-        if len(self.ohlc_history) < 30:
+        """Market scanner for opportunities"""
+        if len(self.price_history) < 30:
             return {
                 'status': 'INSUFFICIENT_DATA',
                 'message': 'Dados insuficientes para scanner'
@@ -1393,10 +941,9 @@ class EnhancedTradingAnalyzer:
         market_state = self._analyze_market_state(indicators)
         signal_analysis = self._calculate_signal_confluence(indicators, market_state)
         
-        # Oportunidades identificadas
         opportunities = []
         
-        # 1. Oversold/Overbought extremos
+        # Check for extreme RSI
         rsi = indicators.get('rsi', 50)
         if rsi < 20:
             opportunities.append({
@@ -1407,22 +954,13 @@ class EnhancedTradingAnalyzer:
             })
         elif rsi > 80:
             opportunities.append({
-                'type': 'EXTREME_OVERBOUGHT', 
+                'type': 'EXTREME_OVERBOUGHT',
                 'description': f'RSI extremamente overbought ({rsi:.1f})',
                 'priority': 'HIGH',
                 'action': 'SELL_WATCH'
             })
         
-        # 2. Bollinger Band squeeze
-        if indicators.get('bb_squeeze', False):
-            opportunities.append({
-                'type': 'BB_SQUEEZE',
-                'description': 'Bollinger Bands em squeeze - breakout iminente',
-                'priority': 'MEDIUM',
-                'action': 'BREAKOUT_WATCH'
-            })
-        
-        # 3. Volume spike
+        # Volume spike
         volume_ratio = indicators.get('volume_ratio', 1)
         if volume_ratio > 2.0:
             opportunities.append({
@@ -1432,12 +970,12 @@ class EnhancedTradingAnalyzer:
                 'action': 'MOMENTUM_WATCH'
             })
         
-        # 4. Support/Resistance proximity
-        current_price = self.ohlc_history[-1]['close']
+        # Near support/resistance
+        current_price = self.price_history[-1]['price']
         support = indicators.get('support', 0)
         resistance = indicators.get('resistance', 0)
         
-        if support > 0 and abs(current_price - support) / current_price < 0.01:  # 1% do suporte
+        if support > 0 and abs(current_price - support) / current_price < 0.01:
             opportunities.append({
                 'type': 'NEAR_SUPPORT',
                 'description': f'Preço próximo ao suporte (${support:.2f})',
@@ -1445,7 +983,7 @@ class EnhancedTradingAnalyzer:
                 'action': 'BOUNCE_WATCH'
             })
         
-        if resistance > 0 and abs(current_price - resistance) / current_price < 0.01:  # 1% da resistência
+        if resistance > 0 and abs(current_price - resistance) / current_price < 0.01:
             opportunities.append({
                 'type': 'NEAR_RESISTANCE',
                 'description': f'Preço próximo à resistência (${resistance:.2f})',
@@ -1453,7 +991,7 @@ class EnhancedTradingAnalyzer:
                 'action': 'REJECTION_WATCH'
             })
         
-        # 5. High confluence signals
+        # High confluence
         if signal_analysis.get('confluence_score', 0) > 80:
             opportunities.append({
                 'type': 'HIGH_CONFLUENCE',
@@ -1474,41 +1012,160 @@ class EnhancedTradingAnalyzer:
                 'support': round(support, 2),
                 'resistance': round(resistance, 2),
                 'atr': round(indicators.get('atr', 0), 2)
-            },
-            'scanner_recommendations': self._generate_scanner_recommendations(opportunities, signal_analysis)
+            }
         }
     
-    def _generate_scanner_recommendations(self, opportunities: List[Dict], signal_analysis: Dict) -> List[str]:
-        """Gera recomendações baseadas no scanner"""
-        recommendations = []
-        
-        high_priority_opps = [opp for opp in opportunities if opp['priority'] == 'HIGH']
-        
-        if high_priority_opps:
-            if len(high_priority_opps) > 1:
-                recommendations.append("⚠️ ATENÇÃO: Múltiplas oportunidades de alta prioridade detectadas!")
+    def get_performance_report(self, days: int = 30) -> Dict:
+        """Generate performance report"""
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
             
-            for opp in high_priority_opps:
-                recommendations.append(f"🎯 {opp['description']} - Ação: {opp['action']}")
+            # Filter signals in period
+            recent_signals = [
+                s for s in self.signals 
+                if datetime.fromisoformat(s.get('created_at', '1970-01-01')) >= cutoff_date
+            ]
+            
+            if not recent_signals:
+                return {
+                    'period_days': days,
+                    'message': f'Nenhum sinal nos últimos {days} dias'
+                }
+            
+            # Calculate statistics
+            closed_signals = [s for s in recent_signals if s.get('status') != 'ACTIVE']
+            winning_signals = [s for s in closed_signals if s.get('profit_loss', 0) > 0]
+            losing_signals = [s for s in closed_signals if s.get('profit_loss', 0) < 0]
+            
+            total_trades = len(closed_signals)
+            win_count = len(winning_signals)
+            loss_count = len(losing_signals)
+            win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
+            
+            # Profit/Loss
+            total_profit = sum([s.get('profit_loss', 0) for s in winning_signals])
+            total_loss = sum([s.get('profit_loss', 0) for s in losing_signals])
+            net_profit = total_profit + total_loss
+            
+            avg_win = total_profit / win_count if win_count > 0 else 0
+            avg_loss = total_loss / loss_count if loss_count > 0 else 0
+            profit_factor = abs(total_profit / total_loss) if total_loss != 0 else float('inf')
+            
+            # Signal type analysis
+            signal_types = {}
+            for signal in recent_signals:
+                sig_type = signal.get('signal_type', signal.get('pattern_type', 'UNKNOWN'))
+                if sig_type not in signal_types:
+                    signal_types[sig_type] = {'count': 0, 'wins': 0, 'total_pnl': 0}
+                
+                signal_types[sig_type]['count'] += 1
+                if signal.get('profit_loss', 0) > 0:
+                    signal_types[sig_type]['wins'] += 1
+                signal_types[sig_type]['total_pnl'] += signal.get('profit_loss', 0)
+            
+            return {
+                'period_days': days,
+                'analysis_period': f"{cutoff_date.date()} até {datetime.now().date()}",
+                'overall_performance': {
+                    'total_signals': len(recent_signals),
+                    'closed_trades': total_trades,
+                    'active_trades': len(recent_signals) - total_trades,
+                    'win_rate': round(win_rate, 2),
+                    'profit_factor': round(profit_factor, 2) if profit_factor != float('inf') else 999,
+                    'net_profit_pct': round(net_profit, 2)
+                },
+                'trade_statistics': {
+                    'winning_trades': win_count,
+                    'losing_trades': loss_count,
+                    'average_win_pct': round(avg_win, 2),
+                    'average_loss_pct': round(avg_loss, 2)
+                },
+                'signal_type_breakdown': {
+                    sig_type: {
+                        'total_signals': data['count'],
+                        'win_rate': round((data['wins'] / data['count'] * 100), 2) if data['count'] > 0 else 0,
+                        'total_pnl': round(data['total_pnl'], 2),
+                        'avg_pnl': round(data['total_pnl'] / data['count'], 2) if data['count'] > 0 else 0
+                    }
+                    for sig_type, data in signal_types.items()
+                },
+                'recent_signals': [
+                    {
+                        'id': s['id'],
+                        'created': s.get('created_at', ''),
+                        'type': s.get('signal_type', s.get('pattern_type', '')),
+                        'entry': s.get('entry_price', 0),
+                        'status': s.get('status', ''),
+                        'pnl': round(s.get('profit_loss', 0), 2),
+                        'confidence': s.get('confidence', 0)
+                    }
+                    for s in recent_signals[-10:]
+                ]
+            }
+            
+        except Exception as e:
+            logger.error(f"[ENHANCED] Error generating performance report: {e}")
+            return {'error': str(e)}
+    
+    def get_system_status(self) -> Dict:
+        """Get system status"""
+        return {
+            'system_info': {
+                'version': '2.0.0-enhanced',
+                'status': 'ACTIVE',
+                'total_analysis': self.analysis_count,
+                'database_path': self.db_path
+            },
+            'data_status': {
+                'price_data_points': len(self.price_history),
+                'volume_data_points': len(self.volume_history),
+                'data_quality': 'GOOD' if len(self.price_history) >= 50 else 'FAIR',
+                'last_data_timestamp': self.price_history[-1]['timestamp'].isoformat() if self.price_history else None
+            },
+            'signal_status': {
+                'total_signals_generated': len(self.signals),
+                'active_signals': len([s for s in self.signals if s.get('status') == 'ACTIVE']),
+                'closed_signals': len([s for s in self.signals if s.get('status') != 'ACTIVE']),
+                'last_signal_time': self.signals[-1]['created_at'] if self.signals else None
+            },
+            'performance_overview': {
+                'win_rate': self._calculate_win_rate(),
+                'total_pnl': round(sum([s.get('profit_loss', 0) for s in self.signals]), 2)
+            }
+        }
+    
+    def _calculate_win_rate(self) -> float:
+        """Calculate overall win rate"""
+        closed_signals = [s for s in self.signals if s.get('status') != 'ACTIVE']
+        if not closed_signals:
+            return 0.0
         
-        # Recomendações baseadas na confluência
-        confidence = signal_analysis.get('confidence', 0)
-        if confidence > 70:
-            action = signal_analysis.get('action', 'HOLD')
-            recommendations.append(f"📊 Sinal de alta confiança: {action} (Confiança: {confidence:.1f}%)")
-        
-        # Recomendações de gestão de risco
-        active_signals = len([s for s in self.signals if s.get('status') == 'ACTIVE'])
-        if active_signals >= self.signal_config['max_active_signals']:
-            recommendations.append("🛑 Limite máximo de sinais ativos atingido - aguardar fechamentos")
-        
-        if not recommendations:
-            recommendations.append("📈 Mercado estável - aguardando oportunidades de alta qualidade")
-        
-        return recommendations
+        winning_signals = len([s for s in closed_signals if s.get('profit_loss', 0) > 0])
+        return round((winning_signals / len(closed_signals) * 100), 2)
+    
+    def reset_signals_and_state(self):
+        """Reset all signals and state"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("DELETE FROM trading_signals")
+            cursor.execute("DELETE FROM enhanced_signals")
+            cursor.execute("DELETE FROM analyzer_state")
+            
+            conn.commit()
+            conn.close()
+            
+            self.signals = []
+            self.analysis_count = 0
+            
+            logger.info("[ENHANCED] Signals and state reset")
+            
+        except Exception as e:
+            logger.error(f"[ENHANCED] Error resetting signals: {e}")
     
     def export_signals_to_csv(self, filename: str = None) -> str:
-        """Exporta sinais para CSV"""
+        """Export signals to CSV"""
         if not filename:
             filename = f"trading_signals_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         
@@ -1517,18 +1174,31 @@ class EnhancedTradingAnalyzer:
             
             with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
                 fieldnames = [
-                    'id', 'timestamp', 'signal_type', 'entry_price', 'target_1', 'target_2', 'target_3',
-                    'stop_loss', 'confidence', 'confluence_score', 'risk_reward_ratio', 'atr_value',
-                    'volume_confirmation', 'status', 'profit_loss', 'max_profit', 'max_drawdown',
-                    'entry_reason', 'exit_reason', 'created_at', 'updated_at'
+                    'id', 'timestamp', 'signal_type', 'entry_price', 
+                    'target_1', 'target_2', 'target_3', 'stop_loss',
+                    'confidence', 'risk_reward_ratio', 'status', 'profit_loss',
+                    'created_at'
                 ]
                 
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
                 
                 for signal in self.signals:
-                    # Filtrar apenas campos que existem no CSV
-                    csv_signal = {field: signal.get(field, '') for field in fieldnames}
+                    csv_signal = {
+                        'id': signal.get('id', ''),
+                        'timestamp': signal.get('timestamp', ''),
+                        'signal_type': signal.get('signal_type', signal.get('pattern_type', '')),
+                        'entry_price': signal.get('entry_price', ''),
+                        'target_1': signal.get('target_1', signal.get('target_price', '')),
+                        'target_2': signal.get('target_2', ''),
+                        'target_3': signal.get('target_3', ''),
+                        'stop_loss': signal.get('stop_loss', ''),
+                        'confidence': signal.get('confidence', ''),
+                        'risk_reward_ratio': signal.get('risk_reward_ratio', ''),
+                        'status': signal.get('status', ''),
+                        'profit_loss': signal.get('profit_loss', ''),
+                        'created_at': signal.get('created_at', '')
+                    }
                     writer.writerow(csv_signal)
             
             logger.info(f"[ENHANCED] Signals exported to {filename}")
@@ -1537,487 +1207,3 @@ class EnhancedTradingAnalyzer:
         except Exception as e:
             logger.error(f"[ENHANCED] Error exporting signals: {e}")
             return ""
-    
-    def get_system_status(self) -> Dict:
-        """Retorna status completo do sistema"""
-        return {
-            'system_info': {
-                'version': '2.0.0-enhanced',
-                'status': 'ACTIVE',
-                'uptime_hours': (datetime.now() - (self.last_analysis or datetime.now())).total_seconds() / 3600 if self.last_analysis else 0,
-                'total_analysis': self.analysis_count,
-                'database_path': self.db_path
-            },
-            'data_status': {
-                'ohlc_data_points': len(self.ohlc_history),
-                'price_data_points': len(self.price_history),
-                'volume_data_points': len(self.volume_history),
-                'data_quality': 'EXCELLENT' if len(self.ohlc_history) >= 100 else 'GOOD' if len(self.ohlc_history) >= 50 else 'FAIR',
-                'last_data_timestamp': self.ohlc_history[-1]['timestamp'].isoformat() if self.ohlc_history else None
-            },
-            'signal_status': {
-                'total_signals_generated': len(self.signals),
-                'active_signals': len([s for s in self.signals if s.get('status') == 'ACTIVE']),
-                'closed_signals': len([s for s in self.signals if s.get('status') not in ['ACTIVE']]),
-                'last_signal_time': self.signals[-1]['created_at'] if self.signals else None,
-                'next_signal_cooldown_minutes': max(0, self.signal_config['signal_cooldown_minutes'] - 
-                    ((datetime.now() - datetime.fromisoformat(self.signals[-1]['created_at'])).total_seconds() / 60) 
-                    if self.signals else 0)
-            },
-            'configuration': {
-                'technical_parameters': self.ta_params,
-                'signal_configuration': self.signal_config,
-                'indicator_weights': self.indicator_weights
-            },
-            'performance_overview': {
-                'win_rate': self._calculate_overall_win_rate(),
-                'profit_factor': self._calculate_overall_profit_factor(),
-                'total_pnl': round(sum([s.get('profit_loss', 0) for s in self.signals]), 2),
-                'active_pnl': round(sum([s.get('profit_loss', 0) for s in self.signals if s.get('status') == 'ACTIVE']), 2)
-            }
-        }
-    
-    def _calculate_overall_win_rate(self) -> float:
-        """Calcula win rate geral"""
-        closed_signals = [s for s in self.signals if s.get('status') not in ['ACTIVE']]
-        if not closed_signals:
-            return 0.0
-        
-        winning_signals = len([s for s in closed_signals if s.get('profit_loss', 0) > 0])
-        return round((winning_signals / len(closed_signals) * 100), 2)
-    
-    def _calculate_overall_profit_factor(self) -> float:
-        """Calcula profit factor geral"""
-        closed_signals = [s for s in self.signals if s.get('status') not in ['ACTIVE']]
-        if not closed_signals:
-            return 0.0
-        
-        total_wins = sum([s.get('profit_loss', 0) for s in closed_signals if s.get('profit_loss', 0) > 0])
-        total_losses = abs(sum([s.get('profit_loss', 0) for s in closed_signals if s.get('profit_loss', 0) < 0]))
-        
-        if total_losses == 0:
-            return float('inf') if total_wins > 0 else 0.0
-        
-        return round(total_wins / total_losses, 2)
-    
-    # Método de compatibilidade com versão anterior
-    def add_price_data(self, timestamp, price, volume=0):
-        """Método de compatibilidade - converte para OHLC"""
-        logger.warning("[ENHANCED] Using compatibility method - recommend switching to add_ohlc_data()")
-        
-        # Simular OHLC com apenas o preço de fechamento
-        self.add_ohlc_data(
-            timestamp=timestamp,
-            open_price=price,
-            high=price * 1.001,  # Simular high/low pequenos
-            low=price * 0.999,
-            close=price,
-            volume=volume
-        )
-    
-    def get_current_analysis(self):
-        """Método de compatibilidade"""
-        return self.get_comprehensive_analysis()
-
-# Classe para backtesting (bonus)
-class EnhancedBacktester:
-    """
-    Sistema de backtesting para validar estratégias
-    """
-    
-    def __init__(self, analyzer: EnhancedTradingAnalyzer):
-        self.analyzer = analyzer
-        self.results = []
-    
-    def run_backtest(self, historical_data: List[Dict], initial_capital: float = 10000) -> Dict:
-        """Executa backtesting com dados históricos"""
-        capital = initial_capital
-        positions = []
-        trades = []
-        
-        for i, data_point in enumerate(historical_data):
-            # Simular adição de dados
-            self.analyzer.add_ohlc_data(
-                timestamp=data_point['timestamp'],
-                open_price=data_point['open'],
-                high=data_point['high'],
-                low=data_point['low'],
-                close=data_point['close'],
-                volume=data_point.get('volume', 0)
-            )
-            
-            # Verificar sinais gerados
-            new_signals = [s for s in self.analyzer.signals if s.get('created_at', '') == data_point['timestamp'].isoformat()]
-            
-            for signal in new_signals:
-                if len(positions) < 3:  # Máximo 3 posições
-                    positions.append({
-                        'signal': signal,
-                        'entry_price': signal['entry_price'],
-                        'size': capital * 0.02,  # 2% do capital por trade
-                        'entry_time': data_point['timestamp']
-                    })
-        
-        return {
-            'initial_capital': initial_capital,
-            'final_capital': capital,
-            'total_return': ((capital - initial_capital) / initial_capital) * 100,
-            'total_trades': len(trades),
-            'winning_trades': len([t for t in trades if t['pnl'] > 0]),
-            'max_drawdown': 0,  # Calcular
-            'sharpe_ratio': 0   # Calcular
-        }
-
-# Utilitários de configuração
-def create_default_config() -> Dict:
-    """Cria configuração padrão do sistema"""
-    return {
-        'ta_params': {
-            'rsi_period': 14,
-            'rsi_overbought': 75,
-            'rsi_oversold': 25,
-            'min_confidence': 70,
-            'min_risk_reward': 2.5
-        },
-        'signal_config': {
-            'max_active_signals': 3,
-            'signal_cooldown_minutes': 120,
-            'target_multipliers': [2.0, 3.5, 5.0]
-        },
-        'risk_management': {
-            'max_portfolio_risk': 0.06,  # 6% do capital total
-            'position_size': 0.02,       # 2% por posição
-            'stop_loss_atr_multiplier': 2.0
-        }
-    }
-
-def validate_config(config: Dict) -> bool:
-    """Valida configuração do sistema"""
-    required_keys = ['ta_params', 'signal_config', 'risk_management']
-    return all(key in config for key in required_keys)
-
-# Exemplo de uso e teste
-if __name__ == "__main__":
-    # Inicializar analyzer
-    analyzer = EnhancedTradingAnalyzer()
-    
-    # Simular dados de teste
-    import random
-    base_price = 45000
-    
-    for i in range(100):
-        timestamp = datetime.now() - timedelta(hours=100-i)
-        
-        # Simular movimento de preço
-        change = random.uniform(-0.02, 0.02)
-        base_price *= (1 + change)
-        
-        # Simular OHLC
-        open_price = base_price
-        high = base_price * (1 + abs(change) * 0.5)
-        low = base_price * (1 - abs(change) * 0.5)
-        close = base_price
-        volume = random.uniform(100, 1000)
-        
-        analyzer.add_ohlc_data(timestamp, open_price, high, low, close, volume)
-    
-    # Obter análise
-    analysis = analyzer.get_comprehensive_analysis()
-    print("=== ENHANCED TRADING ANALYZER TEST ===")
-    print(f"Current Price: ${analysis['current_price']:,.2f}")
-    print(f"Recommended Action: {analysis['signal_analysis']['recommended_action']}")
-    print(f"Confidence: {analysis['signal_analysis']['confidence']:.1f}%")
-    print(f"Active Signals: {len(analysis['active_signals'])}")
-    print(f"System Health: {analysis['system_health']['data_quality']}")
-    
-    # Obter scanner
-    scanner = analyzer.get_market_scanner()
-    print(f"\n=== MARKET SCANNER ===")
-    print(f"Opportunities Found: {scanner['opportunities_found']}")
-    for opp in scanner['opportunities']:
-        print(f"- {opp['description']} [{opp['priority']}]")
-    
-    print("\n=== SYSTEM STATUS ===")
-    status = analyzer.get_system_status()
-    print(f"Version: {status['system_info']['version']}")
-    print(f"Data Quality: {status['data_status']['data_quality']}")
-    print(f"Total Signals: {status['signal_status']['total_signals_generated']}")
-    print(f"Win Rate: {status['performance_overview']['win_rate']:.1f}%")
-    # MIGRAÇÃO PARA ENHANCED TRADING ANALYZER
-
-# 1. SUBSTITUIR O ARQUIVO trading_analyzer.py
-# Substitua todo o conteúdo do arquivo services/trading_analyzer.py pelo novo código
-# e adicione esta classe de compatibilidade no final:
-
-class EnhancedTradingAnalyzer(EnhancedTradingAnalyzer):
-    """
-    Classe de compatibilidade para manter a interface anterior
-    enquanto usa toda a funcionalidade aprimorada por baixo
-    """
-    
-    def __init__(self, db_path: str = None):
-        # Usar configuração padrão se não especificada
-        if db_path is None:
-            from config import app_config
-            db_path = app_config.TRADING_ANALYZER_DB
-        
-        super().__init__(db_path)
-        
-        # Configurações mais conservadoras para compatibilidade
-        self.ta_params.update({
-            'min_confidence': 60,  # Reduzido para gerar mais sinais
-            'min_risk_reward': 2.0  # Mais conservador
-        })
-        
-        logger.info("[COMPAT] EnhancedTradingAnalyzer iniciado com Enhanced backend")
-    
-    def analyze_price_patterns(self, current_price: float, volume: float = 0) -> dict:
-        """Método de compatibilidade para análise de padrões"""
-        try:
-            # Usar o novo sistema por baixo
-            analysis = self.get_comprehensive_analysis()
-            
-            # Converter para formato antigo
-            signal_analysis = analysis.get('signal_analysis', {})
-            active_signals = analysis.get('active_signals', [])
-            
-            # Determinar padrão baseado na recomendação
-            pattern_detected = None
-            action = signal_analysis.get('recommended_action', 'HOLD')
-            confidence = signal_analysis.get('confidence', 0)
-            
-            if action == 'BUY' and confidence >= 60:
-                pattern_detected = 'BULLISH_CONFLUENCE'
-            elif action == 'SELL' and confidence >= 60:
-                pattern_detected = 'BEARISH_CONFLUENCE'
-            
-            return {
-                'timestamp': datetime.now().isoformat(),
-                'current_price': current_price,
-                'pattern_detected': pattern_detected,
-                'confidence': confidence,
-                'signal_strength': 'STRONG' if confidence > 75 else 'MEDIUM' if confidence > 60 else 'WEAK',
-                'recommended_action': action,
-                'active_signals_count': len(active_signals),
-                'market_trend': analysis.get('market_analysis', {}).get('trend', 'NEUTRAL'),
-                'volume_analysis': 'HIGH' if analysis.get('technical_indicators', {}).get('Volume_Ratio', 1) > 1.5 else 'NORMAL',
-                'technical_summary': {
-                    'rsi': analysis.get('technical_indicators', {}).get('RSI', 50),
-                    'macd_signal': analysis.get('technical_indicators', {}).get('MACD_Line', 0) > analysis.get('technical_indicators', {}).get('MACD_Signal', 0),
-                    'bb_position': analysis.get('technical_indicators', {}).get('BB_Position', 0.5),
-                    'trend_strength': analysis.get('technical_indicators', {}).get('Trend_Strength', 0)
-                },
-                'enhanced_features': {
-                    'confluence_score': signal_analysis.get('confluence_score', 0),
-                    'volume_confirmed': signal_analysis.get('volume_confirmed', False),
-                    'support_resistance': {
-                        'support': analysis.get('technical_indicators', {}).get('Support', 0),
-                        'resistance': analysis.get('technical_indicators', {}).get('Resistance', 0)
-                    }
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"[COMPAT] Error in analyze_price_patterns: {e}")
-            return {
-                'timestamp': datetime.now().isoformat(),
-                'current_price': current_price,
-                'pattern_detected': None,
-                'confidence': 0,
-                'signal_strength': 'WEAK',
-                'recommended_action': 'HOLD',
-                'error': str(e)
-            }
-    
-    def get_signals_summary(self) -> dict:
-        """Método de compatibilidade para resumo de sinais"""
-        try:
-            analysis = self.get_comprehensive_analysis()
-            performance = analysis.get('performance_summary', {})
-            active_signals = analysis.get('active_signals', [])
-            
-            return {
-                'total_signals': performance.get('total_signals_generated', 0),
-                'active_signals': len(active_signals),
-                'closed_signals': performance.get('closed_signals', 0),
-                'win_rate': performance.get('win_rate', 0),
-                'last_signal_time': self.signals[-1]['created_at'] if self.signals else None,
-                'system_status': 'ACTIVE',
-                'recent_signals': [
-                    {
-                        'id': signal['id'],
-                        'type': signal['type'],
-                        'entry_price': signal['entry'],
-                        'current_pnl': signal['current_pnl'],
-                        'status': 'ACTIVE',
-                        'confidence': signal['confidence']
-                    }
-                    for signal in active_signals[-5:]  # Últimos 5 sinais ativos
-                ],
-                'enhanced_metrics': {
-                    'system_health': analysis.get('system_health', {}),
-                    'market_state': analysis.get('market_analysis', {}),
-                    'next_cooldown_minutes': analysis.get('system_health', {}).get('next_signal_cooldown_minutes', 0)
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"[COMPAT] Error in get_signals_summary: {e}")
-            return {
-                'total_signals': len(self.signals),
-                'active_signals': len([s for s in self.signals if s.get('status') == 'ACTIVE']),
-                'closed_signals': len([s for s in self.signals if s.get('status') != 'ACTIVE']),
-                'win_rate': 0,
-                'system_status': 'ERROR',
-                'error': str(e)
-            }
-    
-    def save_signal(self, signal_data: dict):
-        """Método de compatibilidade para salvar sinais"""
-        try:
-            # Converter formato antigo para novo
-            enhanced_signal = {
-                'id': signal_data.get('id', len(self.signals) + 1),
-                'timestamp': signal_data.get('timestamp', datetime.now().isoformat()),
-                'signal_type': signal_data.get('pattern_type', 'MANUAL_SIGNAL'),
-                'entry_price': signal_data.get('entry_price', 0),
-                'target_1': signal_data.get('target_price', 0),
-                'target_2': signal_data.get('target_price', 0) * 1.5,  # Gerar targets extras
-                'target_3': signal_data.get('target_price', 0) * 2.0,
-                'stop_loss': signal_data.get('stop_loss', 0),
-                'confidence': signal_data.get('confidence', 50),
-                'confluence_score': signal_data.get('confidence', 50),
-                'risk_reward_ratio': abs(signal_data.get('target_price', 0) - signal_data.get('entry_price', 0)) / 
-                                   abs(signal_data.get('entry_price', 0) - signal_data.get('stop_loss', 0))
-                                   if signal_data.get('stop_loss', 0) != signal_data.get('entry_price', 0) else 1,
-                'atr_value': signal_data.get('atr_value', 0),
-                'volume_confirmation': signal_data.get('volume_confirmation', False),
-                'status': signal_data.get('status', 'ACTIVE'),
-                'entry_reason': signal_data.get('reason', 'Legacy signal'),
-                'created_at': signal_data.get('created_at', datetime.now().isoformat()),
-                'profit_loss': signal_data.get('profit_loss', 0),
-                'max_profit': 0,
-                'max_drawdown': 0
-            }
-            
-            self.signals.append(enhanced_signal)
-            self._save_enhanced_signal(enhanced_signal)
-            
-            logger.info(f"[COMPAT] Legacy signal converted and saved: {enhanced_signal['signal_type']}")
-            
-        except Exception as e:
-            logger.error(f"[COMPAT] Error saving legacy signal: {e}")
-
-# 2. ARQUIVO DE CONFIGURAÇÃO ATUALIZADO (config.py)
-# Adicione essas configurações se não existirem:
-
-# Configurações do Enhanced Trading Analyzer
-ENHANCED_TRADING_CONFIG = {
-    'enable_enhanced_features': True,
-    'compatibility_mode': True,  # Manter compatibilidade com código antigo
-    'auto_migrate_signals': True,  # Migrar sinais antigos automaticamente
-    'enhanced_logging': True,
-    'performance_tracking': True
-}
-
-# 3. SCRIPT DE MIGRAÇÃO DE DADOS (migration_script.py)
-def migrate_old_signals_to_enhanced():
-    """
-    Script para migrar sinais antigos para o novo formato
-    """
-    import sqlite3
-    from datetime import datetime
-    
-    try:
-        # Conectar ao banco antigo
-        conn = sqlite3.connect('trading_data.db')  # Ajustar caminho
-        cursor = conn.cursor()
-        
-        # Buscar sinais antigos
-        cursor.execute('''
-            SELECT * FROM trading_signals 
-            WHERE created_at > datetime('now', '-30 days')
-        ''')
-        
-        old_signals = cursor.fetchall()
-        conn.close()
-        
-        if not old_signals:
-            print("Nenhum sinal antigo encontrado para migrar")
-            return
-        
-        # Inicializar enhanced analyzer
-        from services.trading_analyzer import EnhancedTradingAnalyzer
-        enhanced_analyzer = EnhancedTradingAnalyzer()
-        
-        migrated_count = 0
-        for signal_row in old_signals:
-            try:
-                # Converter formato (ajustar índices conforme schema antigo)
-                enhanced_signal = {
-                    'timestamp': signal_row[1],  # Ajustar índice
-                    'signal_type': f"MIGRATED_{signal_row[2]}",
-                    'entry_price': signal_row[3],
-                    'target_1': signal_row[4],
-                    'target_2': signal_row[4] * 1.5,
-                    'target_3': signal_row[4] * 2.0,
-                    'stop_loss': signal_row[5],
-                    'confidence': signal_row[6] or 50,
-                    'confluence_score': signal_row[6] or 50,
-                    'risk_reward_ratio': 2.0,  # Default
-                    'atr_value': 0,
-                    'volume_confirmation': False,
-                    'status': signal_row[7] or 'CLOSED',
-                    'entry_reason': 'Migrated from legacy system',
-                    'created_at': signal_row[8] or datetime.now().isoformat(),
-                    'profit_loss': signal_row[9] or 0,
-                    'max_profit': 0,
-                    'max_drawdown': 0
-                }
-                
-                enhanced_analyzer._save_enhanced_signal(enhanced_signal)
-                migrated_count += 1
-                
-            except Exception as e:
-                print(f"Erro migrando sinal {signal_row[0]}: {e}")
-        
-        print(f"✅ Migração concluída: {migrated_count} sinais migrados")
-        
-    except Exception as e:
-        print(f"❌ Erro na migração: {e}")
-
-# 4. TESTE DE COMPATIBILIDADE
-def test_compatibility():
-    """Teste para verificar se a migração funcionou"""
-    try:
-        from services.trading_analyzer import EnhancedTradingAnalyzer
-        
-        # Testar inicialização
-        analyzer = EnhancedTradingAnalyzer()
-        print("✅ EnhancedTradingAnalyzer inicializado com sucesso")
-        
-        # Testar métodos antigos
-        test_price = 45000
-        analysis = analyzer.analyze_price_patterns(test_price, volume=1000)
-        print(f"✅ analyze_price_patterns funcionando: {analysis['recommended_action']}")
-        
-        summary = analyzer.get_signals_summary()
-        print(f"✅ get_signals_summary funcionando: {summary['system_status']}")
-        
-        # Testar novos recursos
-        enhanced_analysis = analyzer.get_comprehensive_analysis()
-        print(f"✅ Recursos aprimorados disponíveis: {enhanced_analysis['system_health']['data_quality']}")
-        
-        print("\n🎯 MIGRAÇÃO CONCLUÍDA COM SUCESSO!")
-        print("O sistema agora usa Enhanced Trading Analyzer com compatibilidade total")
-        
-    except Exception as e:
-        print(f"❌ Erro no teste de compatibilidade: {e}")
-
-if __name__ == "__main__":
-    print("=== ENHANCED TRADING ANALYZER MIGRATION ===")
-    print("1. Executando migração de dados...")
-    migrate_old_signals_to_enhanced()
-    
-    print("\n2. Testando compatibilidade...")
-    test_compatibility()

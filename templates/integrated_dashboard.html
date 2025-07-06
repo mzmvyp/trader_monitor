@@ -1148,7 +1148,7 @@
 
             async updateBitcoinData() {
                 try {
-                    const response = await fetch('/api/bitcoin/current');
+                    const response = await fetch('/api/integrated/status');
                     const data = await response.json();
                     
                     if (data.price) {
