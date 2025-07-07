@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bitcoin Trading System - Enhanced Analytics Dashboard</title>
-
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.30.0/date_fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     <script src="{{ url_for('static', filename='js/dashboard-updates.js') }}"></script>
-
+    
     
     <style>
         :root {
@@ -624,8 +623,13 @@
     
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
     <script>
-        // Funções utilitárias como formatCurrency e formatPercentage devem vir de common.js.
-        // NENHUMA DEFINIÇÃO DE FUNÇÃO DUPLICADA AQUI.
+        // Destruir gráfico existente antes de criar novo
+        function destroyExistingChart(canvasId) {
+            const existingChart = Chart.getChart(canvasId);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+        }
 
         var EnhancedDashboard = function() {
             this.chart = null;
@@ -652,6 +656,9 @@
             };
 
             this.initializeChart = function() {
+                // Destruir gráfico existente
+                destroyExistingChart('overviewChart');
+                
                 const ctx = document.getElementById('overviewChart').getContext('2d');
                 this.chart = new Chart(ctx, {
                     type: 'line',
@@ -698,6 +705,130 @@
                 });
             };
 
+            // NOVA FUNÇÃO: Atualizar indicadores técnicos (VERSÃO CORRIGIDA)
+            this.updateTechnicalIndicators = function() {
+                makeAPICall('/trading/api/indicators')
+                    .then(data => {
+                        if (data && data.indicators) {
+                            console.log('[INDICATORS] Dados recebidos:', data);
+                            const container = document.getElementById('technical-indicators');
+                            if (!container) {
+                                console.warn('Container technical-indicators não encontrado');
+                                return;
+                            }
+                            
+                            container.innerHTML = ''; // Limpar conteúdo existente
+                            
+                            Object.keys(data.indicators).forEach(indicatorName => {
+                                const indicator = data.indicators[indicatorName];
+                                const card = document.createElement('div');
+                                card.className = 'indicator-card';
+                                
+                                let signalClass = 'signal-neutral';
+                                if (indicator.signal === 'buy') signalClass = 'signal-bullish';
+                                else if (indicator.signal === 'sell') signalClass = 'signal-bearish';
+                                
+                                // CORREÇÃO: Verificar se value é um número antes de usar toFixed
+                                let formattedValue = 'N/A';
+                                if (indicator.value !== null && indicator.value !== undefined) {
+                                    if (typeof indicator.value === 'number' && !isNaN(indicator.value)) {
+                                        formattedValue = indicator.value.toFixed(2);
+                                    } else if (typeof indicator.value === 'string') {
+                                        // Tentar converter string para número
+                                        const numValue = parseFloat(indicator.value);
+                                        if (!isNaN(numValue)) {
+                                            formattedValue = numValue.toFixed(2);
+                                        } else {
+                                            formattedValue = indicator.value; // Usar string como está
+                                        }
+                                    } else {
+                                        formattedValue = String(indicator.value); // Converter para string
+                                    }
+                                }
+                                
+                                card.innerHTML = `
+                                    <div class="indicator-name">${indicatorName}</div>
+                                    <div class="indicator-value">${formattedValue}</div>
+                                    <div class="indicator-signal ${signalClass}">${indicator.interpretation || 'N/A'}</div>
+                                `;
+                                
+                                container.appendChild(card);
+                            });
+                            
+                            console.log('Indicadores técnicos atualizados com sucesso');
+                        } else {
+                            console.warn('Dados de indicadores inválidos:', data);
+                            const container = document.getElementById('technical-indicators');
+                            if (container) {
+                                container.innerHTML = '<div class="text-center text-warning">Dados de indicadores inválidos</div>';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar indicadores:', error);
+                        const container = document.getElementById('technical-indicators');
+                        if (container) {
+                            container.innerHTML = '<div class="text-center text-danger">Erro ao carregar indicadores</div>';
+                        }
+                    });
+            };
+
+            // NOVA FUNÇÃO: Atualizar market scanner
+            this.updateMarketScanner = function() {
+                makeAPICall('/trading/api/market-scanner')
+                    .then(data => {
+                        if (data) {
+                            console.log('[SCANNER] Dados recebidos:', data);
+                            const container = document.getElementById('market-opportunities');
+                            container.innerHTML = ''; // Limpar conteúdo existente
+                            
+                            if (data.opportunities && data.opportunities.length > 0) {
+                                data.opportunities.forEach(opportunity => {
+                                    const card = document.createElement('div');
+                                    card.className = `opportunity-card opportunity-${opportunity.priority || 'low'}`;
+                                    
+                                    card.innerHTML = `
+                                        <h6>${opportunity.type || 'Oportunidade'}</h6>
+                                        <p>${opportunity.description || 'Sem descrição disponível'}</p>
+                                        <small>Confiança: ${opportunity.confidence || 0}%</small>
+                                    `;
+                                    
+                                    container.appendChild(card);
+                                });
+                            } else {
+                                container.innerHTML = '<div class="text-center">Nenhuma oportunidade encontrada no momento</div>';
+                            }
+                        } else {
+                            console.warn('Dados do scanner inválidos:', data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar scanner:', error);
+                        document.getElementById('market-opportunities').innerHTML = 
+                            '<div class="text-center text-danger">Erro ao carregar scanner de mercado</div>';
+                    });
+            };
+
+            // NOVA FUNÇÃO: Atualizar sinais recentes
+            this.updateRecentSignals = function() {
+                makeAPICall('/trading/api/signals?limit=10')
+                    .then(data => {
+                        if (data && data.recent_signals) {
+                            console.log('[SIGNALS] Dados recebidos:', data);
+                            this.updateSignalAnalysis(data.recent_signals);
+                        } else {
+                            console.warn('Dados de sinais inválidos:', data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar sinais:', error);
+                        const tbody = document.getElementById('recent-signals-body');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar sinais</td></tr>';
+                        }
+                    });
+            };
+
             this.updateSignalAnalysis = function(recentSignals) {
                 console.log('Atualizando tabela de sinais recentes com:', recentSignals);
                 const signalsTableBody = document.getElementById('recent-signals-body');
@@ -740,27 +871,71 @@
                     const cell = row.insertCell();
                     cell.colSpan = 4; // Ajuste o colSpan para o número total de colunas da sua tabela
                     cell.textContent = 'Nenhum sinal recente disponível.';
+                    cell.className = 'text-center text-muted';
                     console.log('Nenhum sinal para atualizar a tabela.');
                 }
             };
 
             this.updateComprehensiveAnalysis = function(data) { // 'data' aqui já é a análise completa
                 console.log('Comprehensive analysis data:', data); // Já é a análise completa
-                // if (data && data.trading) { // ESTA LINHA NÃO É MAIS NECESSÁRIA SE 'data' JÁ É A ANÁLISE
-                    const analysis = data; // MUDE ESTA LINHA: 'data' JÁ É O OBJETO analysis completo
+                const analysis = data; // 'data' JÁ É O OBJETO analysis completo
+                
+                // Update key performance indicators se existirem
+                if (analysis.performance_summary) {
+                    const totalPnlEl = document.getElementById('total-pnl');
+                    const winRateEl = document.getElementById('win-rate-system');
                     
-                    // Update key performance indicators
-                    document.getElementById('total-pnl').textContent = formatCurrency(analysis.performance_summary.total_pnl);
-                    document.getElementById('pnl-percentage').textContent = formatPercentage(analysis.performance_summary.pnl_percentage);
-                    document.getElementById('win-rate').textContent = formatPercentage(analysis.performance_summary.win_rate);
-                    document.getElementById('total-trades').textContent = formatNumber(analysis.performance_summary.total_trades, 0);
-                    
-                    // ... o resto da função permanece igual ...
+                    if (totalPnlEl) totalPnlEl.textContent = formatCurrency(analysis.performance_summary.total_pnl || 0);
+                    if (winRateEl) winRateEl.textContent = formatPercentage(analysis.performance_summary.win_rate || 0);
+                }
 
-                    // Se você tiver um 'else' para o 'if (data && data.trading)', remova-o ou ajuste-o
-                // } else { // Remova este bloco se você removeu o 'if' acima
-                //     console.warn("Invalid data for comprehensive analysis:", data);
-                // }
+                // Update system info
+                if (analysis.system_health) {
+                    const dataQualityEl = document.getElementById('data-quality');
+                    const modelStatusEl = document.getElementById('model-status');
+                    const lastAnalysisEl = document.getElementById('last-analysis');
+                    const dataPointsEl = document.getElementById('data-points');
+                    
+                    if (dataQualityEl) dataQualityEl.textContent = analysis.system_health.data_quality || 'Good';
+                    if (modelStatusEl) modelStatusEl.textContent = analysis.system_health.model_status || 'Operational';
+                    if (lastAnalysisEl) lastAnalysisEl.textContent = new Date(analysis.timestamp || Date.now()).toLocaleString('pt-BR');
+                    if (dataPointsEl) dataPointsEl.textContent = analysis.system_health.data_points || '0';
+                }
+
+                // Update quick stats
+                if (analysis.active_signals) {
+                    const activeSignalsEl = document.getElementById('active-signals');
+                    if (activeSignalsEl) activeSignalsEl.textContent = analysis.active_signals.length || 0;
+                }
+
+                if (analysis.market_analysis && analysis.market_analysis.confidence) {
+                    const confidenceLevelEl = document.getElementById('confidence-level');
+                    const confidenceFillEl = document.querySelector('.confidence-fill');
+                    
+                    if (confidenceLevelEl) {
+                        const confidence = Math.round(analysis.market_analysis.confidence * 100);
+                        confidenceLevelEl.textContent = confidence + '%';
+                        
+                        if (confidenceFillEl) {
+                            confidenceFillEl.style.width = confidence + '%';
+                            // Update confidence bar color based on level
+                            confidenceFillEl.className = 'confidence-fill ' + 
+                                (confidence >= 70 ? 'confidence-high' : 
+                                 confidence >= 40 ? 'confidence-medium' : 'confidence-low');
+                        }
+                    }
+                }
+            };
+
+            this.updateChart = function(data) {
+                if (this.chart && data && data.length > 0) {
+                    const labels = data.map(item => new Date(item.timestamp));
+                    const prices = data.map(item => item.price);
+                    
+                    this.chart.data.labels = labels;
+                    this.chart.data.datasets[0].data = prices;
+                    this.chart.update('none');
+                }
             };
 
             this.updateData = function() {
@@ -769,9 +944,11 @@
                     .then(data => {
                         // Ensure data is not null or undefined
                         if (data) {
-                            console.log('[DATA] Integrated status data:', data); // Use console.log para depurar
+                            console.log('[DATA] Integrated status data:', data);
                             updateQuickStats(data);
-                            this.updateChart(data.bitcoin.recent_data);
+                            if (data.bitcoin && data.bitcoin.recent_data) {
+                                this.updateChart(data.bitcoin.recent_data);
+                            }
                             updateDebugInfo(data.integrated_status);
                         } else {
                             console.warn("Received empty or invalid integrated status data.");
@@ -786,8 +963,7 @@
                 makeAPICall('/trading/api/analysis')
                     .then(analysisData => {
                         if (analysisData) {
-                            console.log('[DATA] Comprehensive analysis data (from /trading/api/analysis):', analysisData); // Use console.log
-                            // Pass the correct analysisData to updateComprehensiveAnalysis
+                            console.log('[DATA] Comprehensive analysis data:', analysisData);
                             this.updateComprehensiveAnalysis(analysisData);
                         } else {
                             console.warn("Received empty or invalid comprehensive analysis data.");
@@ -797,13 +973,27 @@
                         console.error('Error fetching comprehensive analysis data:', error);
                         showNotification('Erro ao carregar dados de análise de trading.', 'danger');
                     });
+
+                // Update specific tab content based on active tab
+                const activeTab = document.querySelector('.nav-link.active');
+                if (activeTab) {
+                    const tabId = activeTab.getAttribute('href');
+                    
+                    if (tabId === '#indicators') {
+                        this.updateTechnicalIndicators();
+                    } else if (tabId === '#scanner') {
+                        this.updateMarketScanner();
+                    } else if (tabId === '#signals') {
+                        this.updateRecentSignals();
+                    }
+                }
             };
 
             this.setupEventListeners = function() {
                 document.getElementById('start-bitcoin').addEventListener('click', async () => {
                     showNotification('Iniciando streaming de Bitcoin...', 'info');
                     try {
-                        const response = await makeAPICall('/bitcoin/api/start-stream', 'POST', {});
+                        const response = await makeAPICall('/bitcoin/api/start-stream', { method: 'POST' });
                         if (response.status === 'started') {
                             showNotification('Streaming de Bitcoin iniciado!', 'success');
                         } else {
@@ -818,7 +1008,7 @@
                 document.getElementById('stop-bitcoin').addEventListener('click', async () => {
                     showNotification('Parando streaming de Bitcoin...', 'info');
                     try {
-                        const response = await makeAPICall('/bitcoin/api/stop-stream', 'POST', {});
+                        const response = await makeAPICall('/bitcoin/api/stop-stream', { method: 'POST' });
                         if (response.status === 'stopped') {
                             showNotification('Streaming de Bitcoin parado!', 'info');
                         } else {
@@ -829,6 +1019,21 @@
                         showNotification('Erro de conexão com o servidor ao parar streaming.', 'danger');
                     }
                 });
+
+                // Add tab change listeners para atualizar conteúdo específico
+                document.addEventListener('shown.bs.tab', (event) => {
+                    const tabId = event.target.getAttribute('href');
+                    console.log('Tab changed to:', tabId);
+                    
+                    // Atualizar conteúdo específico da aba
+                    if (tabId === '#indicators') {
+                        this.updateTechnicalIndicators();
+                    } else if (tabId === '#scanner') {
+                        this.updateMarketScanner();
+                    } else if (tabId === '#signals') {
+                        this.updateRecentSignals();
+                    }
+                });
             };
 
             // Public method to start all updates
@@ -836,7 +1041,27 @@
                 this.initializeChart();
                 this.setupEventListeners();
                 this.updateData(); // Initial data load
-                setInterval(() => this.updateData(), 5000); // Update every 5 seconds
+                
+                // Update general data every 5 seconds
+                setInterval(() => {
+                    this.updateData();
+                }, 5000);
+                
+                // Update tab-specific content every 10 seconds
+                setInterval(() => {
+                    const activeTab = document.querySelector('.nav-link.active');
+                    if (activeTab) {
+                        const tabId = activeTab.getAttribute('href');
+                        
+                        if (tabId === '#indicators') {
+                            this.updateTechnicalIndicators();
+                        } else if (tabId === '#scanner') {
+                            this.updateMarketScanner();
+                        } else if (tabId === '#signals') {
+                            this.updateRecentSignals();
+                        }
+                    }
+                }, 10000);
             };
         };
 
@@ -850,22 +1075,20 @@
 
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            // Configurar error handling melhorado
+            window.addEventListener('error', function(event) {
+                if (!event.error || event.error === null) return;
+                if (event.error.message && event.error.message.includes('Canvas is already in use')) {
+                    console.warn('Chart.js canvas error (handled)');
+                    return;
+                }
+                console.error('Global error:', event.error);
+            });
+
             window.enhancedDashboard = new EnhancedDashboard();
             window.enhancedDashboard.startUpdates(); // Start all updates
             updateLastUpdate();
             setInterval(updateLastUpdate, 60000); // Update every minute
-        });
-
-        // Handle tab changes
-        document.addEventListener('shown.bs.tab', function(event) {
-            // No need to explicitly call updateData here if startUpdates handles intervals
-            // However, if specific tabs need immediate refresh on switch, add logic here
-            if (window.enhancedDashboard) {
-                // For example, if 'indicators' or 'signals' tab needs immediate refresh:
-                // if (event.target.getAttribute('href') === '#indicators' || event.target.getAttribute('href') === '#signals') {
-                //     window.enhancedDashboard.updateComprehensiveAnalysis();
-                // }
-            }
         });
     </script>
 </body>
