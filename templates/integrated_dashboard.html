@@ -13,7 +13,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard-updates.js') }}"></script>
     
     
     <style>
@@ -706,72 +705,48 @@
             };
 
             // NOVA FUNÇÃO: Atualizar indicadores técnicos (VERSÃO CORRIGIDA)
-            this.updateTechnicalIndicators = function() {
-                makeAPICall('/trading/api/indicators')
-                    .then(data => {
-                        if (data && data.indicators) {
-                            console.log('[INDICATORS] Dados recebidos:', data);
-                            const container = document.getElementById('technical-indicators');
-                            if (!container) {
-                                console.warn('Container technical-indicators não encontrado');
-                                return;
-                            }
-                            
-                            container.innerHTML = ''; // Limpar conteúdo existente
-                            
-                            Object.keys(data.indicators).forEach(indicatorName => {
-                                const indicator = data.indicators[indicatorName];
-                                const card = document.createElement('div');
-                                card.className = 'indicator-card';
-                                
-                                let signalClass = 'signal-neutral';
-                                if (indicator.signal === 'buy') signalClass = 'signal-bullish';
-                                else if (indicator.signal === 'sell') signalClass = 'signal-bearish';
-                                
-                                // CORREÇÃO: Verificar se value é um número antes de usar toFixed
-                                let formattedValue = 'N/A';
-                                if (indicator.value !== null && indicator.value !== undefined) {
-                                    if (typeof indicator.value === 'number' && !isNaN(indicator.value)) {
-                                        formattedValue = indicator.value.toFixed(2);
-                                    } else if (typeof indicator.value === 'string') {
-                                        // Tentar converter string para número
-                                        const numValue = parseFloat(indicator.value);
-                                        if (!isNaN(numValue)) {
-                                            formattedValue = numValue.toFixed(2);
-                                        } else {
-                                            formattedValue = indicator.value; // Usar string como está
-                                        }
-                                    } else {
-                                        formattedValue = String(indicator.value); // Converter para string
-                                    }
-                                }
-                                
-                                card.innerHTML = `
-                                    <div class="indicator-name">${indicatorName}</div>
-                                    <div class="indicator-value">${formattedValue}</div>
-                                    <div class="indicator-signal ${signalClass}">${indicator.interpretation || 'N/A'}</div>
-                                `;
-                                
-                                container.appendChild(card);
-                            });
-                            
-                            console.log('Indicadores técnicos atualizados com sucesso');
+           this.updateTechnicalIndicators = function() {
+    makeAPICall('/trading/api/indicators')
+        .then(data => {
+            if (data && data.indicators) {
+                const container = document.getElementById('technical-indicators');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                Object.keys(data.indicators).forEach(indicatorName => {
+                    const indicator = data.indicators[indicatorName];
+                    const card = document.createElement('div');
+                    card.className = 'indicator-card';
+                    
+                    let signalClass = 'signal-neutral';
+                    if (indicator.signal === 'buy') signalClass = 'signal-bullish';
+                    else if (indicator.signal === 'sell') signalClass = 'signal-bearish';
+                    
+                    // CORREÇÃO: Verificar tipo antes de usar toFixed
+                    let formattedValue = 'N/A';
+                    if (indicator.value !== null && indicator.value !== undefined) {
+                        if (typeof indicator.value === 'number') {
+                            formattedValue = indicator.value.toFixed(2);
                         } else {
-                            console.warn('Dados de indicadores inválidos:', data);
-                            const container = document.getElementById('technical-indicators');
-                            if (container) {
-                                container.innerHTML = '<div class="text-center text-warning">Dados de indicadores inválidos</div>';
-                            }
+                            formattedValue = String(indicator.value);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Erro ao carregar indicadores:', error);
-                        const container = document.getElementById('technical-indicators');
-                        if (container) {
-                            container.innerHTML = '<div class="text-center text-danger">Erro ao carregar indicadores</div>';
-                        }
-                    });
-            };
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="indicator-name">${indicatorName}</div>
+                        <div class="indicator-value">${formattedValue}</div>
+                        <div class="indicator-signal ${signalClass}">${indicator.interpretation || 'N/A'}</div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar indicadores:', error);
+        });
+};
 
             // NOVA FUNÇÃO: Atualizar market scanner
             this.updateMarketScanner = function() {
@@ -927,67 +902,185 @@
                 }
             };
 
-            this.updateChart = function(data) {
-                if (this.chart && data && data.length > 0) {
-                    const labels = data.map(item => new Date(item.timestamp));
-                    const prices = data.map(item => item.price);
-                    
-                    this.chart.data.labels = labels;
-                    this.chart.data.datasets[0].data = prices;
-                    this.chart.update('none');
-                }
-            };
+         this.updateChart = function(data) {
+    try {
+        if (!this.chart) {
+            console.warn('Chart not initialized yet');
+            return;
+        }
+        
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            console.warn('Invalid chart data:', data);
+            return;
+        }
+        
+        // Handle different data formats
+        const labels = [];
+        const prices = [];
+        
+        data.forEach(item => {
+            if (item && item.timestamp && (item.price || item.value)) {
+                labels.push(new Date(item.timestamp));
+                prices.push(item.price || item.value);
+            }
+        });
+        
+        if (labels.length > 0 && prices.length > 0) {
+            this.chart.data.labels = labels;
+            this.chart.data.datasets[0].data = prices;
+            this.chart.update('none');
+            console.log(`Chart updated with ${prices.length} data points`);
+            
+            // Update data points display
+            const dataPointsEl = document.getElementById('data-points');
+            if (dataPointsEl) {
+                dataPointsEl.textContent = prices.length;
+            }
+        } else {
+            console.warn('No valid data points found for chart');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao atualizar chart:', error);
+    }
+};
+            
+this.generateFallbackData = function() {
+    console.log('Generating fallback data for chart');
+    const now = new Date();
+    const sampleData = [];
+    const basePrice = 45000;
+    
+    for (let i = 0; i < 20; i++) {
+        const timestamp = new Date(now.getTime() - (20 - i) * 60000);
+        const price = basePrice + Math.random() * 2000 - 1000;
+        sampleData.push({ 
+            timestamp: timestamp.toISOString(), 
+            price: price 
+        });
+    }
+    
+    this.updateChart(sampleData);
+    document.getElementById('current-price').textContent = formatCurrency(sampleData[sampleData.length - 1].price);
+    
+    // Update data points display
+    const dataPointsEl = document.getElementById('data-points');
+    if (dataPointsEl) {
+        dataPointsEl.textContent = sampleData.length;
+    }
+};
 
-            this.updateData = function() {
-                // Fetch general integrated status data (for quick stats, Bitcoin chart, etc.)
-                makeAPICall('/api/integrated/status')
-                    .then(data => {
-                        // Ensure data is not null or undefined
-                        if (data) {
-                            console.log('[DATA] Integrated status data:', data);
-                            updateQuickStats(data);
-                            if (data.bitcoin && data.bitcoin.recent_data) {
-                                this.updateChart(data.bitcoin.recent_data);
-                            }
-                            updateDebugInfo(data.integrated_status);
-                        } else {
-                            console.warn("Received empty or invalid integrated status data.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching integrated status data:', error);
-                        showNotification('Erro ao carregar dados de status integrado.', 'danger');
-                    });
+this.updateData = function() {
+    // Fetch main status data (from main_routes)
+    makeAPICall('/api/status')
+    .then(data => {
+        if (data) {
+            console.log('[DATA] Main status data:', data);
+            // Update quick stats inline instead of calling updateQuickStats
+            if (data.bitcoin && data.bitcoin.current_price) {
+                document.getElementById('current-price').textContent = formatCurrency(data.bitcoin.current_price);
+            }
+            if (data.trading && data.trading.active_signals !== undefined) {
+                document.getElementById('active-signals').textContent = data.trading.active_signals;
+            }
+            updateDebugInfo(data);
+        }
+    })
+        .catch(error => {
+            console.error('Error fetching main status:', error);
+        });
 
-                // Fetch comprehensive trading analysis data separately
-                makeAPICall('/trading/api/analysis')
-                    .then(analysisData => {
-                        if (analysisData) {
-                            console.log('[DATA] Comprehensive analysis data:', analysisData);
-                            this.updateComprehensiveAnalysis(analysisData);
-                        } else {
-                            console.warn("Received empty or invalid comprehensive analysis data.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching comprehensive analysis data:', error);
-                        showNotification('Erro ao carregar dados de análise de trading.', 'danger');
-                    });
-
-                // Update specific tab content based on active tab
-                const activeTab = document.querySelector('.nav-link.active');
-                if (activeTab) {
-                    const tabId = activeTab.getAttribute('href');
-                    
-                    if (tabId === '#indicators') {
-                        this.updateTechnicalIndicators();
-                    } else if (tabId === '#scanner') {
-                        this.updateMarketScanner();
-                    } else if (tabId === '#signals') {
-                        this.updateRecentSignals();
+    // Fetch Bitcoin recent data (from bitcoin_routes)
+    makeAPICall('/bitcoin/api/recent-data')
+        .then(data => {
+            if (data && (data.recent_data || data.data)) {
+                console.log('[DATA] Bitcoin recent data:', data);
+                const chartData = data.recent_data || data.data;
+                this.updateChart(chartData);
+                
+                // Update current price if available
+                if (chartData.length > 0) {
+                    const latestPrice = chartData[chartData.length - 1].price;
+                    if (latestPrice) {
+                        document.getElementById('current-price').textContent = formatCurrency(latestPrice);
                     }
                 }
-            };
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching Bitcoin recent data:', error);
+            // Try stream status as fallback
+            this.tryStreamStatus();
+        });
+
+    // Fetch comprehensive trading analysis data
+    makeAPICall('/trading/api/analysis')
+        .then(analysisData => {
+            if (analysisData) {
+                console.log('[DATA] Comprehensive analysis data:', analysisData);
+                this.updateComprehensiveAnalysis(analysisData);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching comprehensive analysis data:', error);
+        });
+};
+
+// Adicionar função de fallback para stream status
+this.tryStreamStatus = function() {
+    makeAPICall('/bitcoin/api/stream-status')
+        .then(data => {
+            if (data) {
+                console.log('[DATA] Stream status data:', data);
+                // Extract any available data for chart
+                if (data.current_price) {
+                    document.getElementById('current-price').textContent = formatCurrency(data.current_price);
+                }
+                if (data.recent_prices && Array.isArray(data.recent_prices)) {
+                    // Convert to chart format
+                    const chartData = data.recent_prices.map((price, index) => ({
+                        timestamp: new Date(Date.now() - (data.recent_prices.length - index) * 60000).toISOString(),
+                        price: price
+                    }));
+                    this.updateChart(chartData);
+                }
+            }
+        })
+        .catch(error => {
+            console.warn('Stream status also failed:', error);
+            this.generateFallbackData();
+        });
+};
+
+// Adicionar esta nova função após updateData
+this.tryAlternativeEndpoints = function() {
+    // Try different endpoints to get Bitcoin data
+    const endpoints = [
+        '/bitcoin/api/recent-data',
+        '/api/bitcoin/status', 
+        '/bitcoin/recent'
+    ];
+    
+    for (const endpoint of endpoints) {
+        makeAPICall(endpoint)
+            .then(data => {
+                if (data) {
+                    console.log(`[DATA] Success from ${endpoint}:`, data);
+                    if (data.price || data.current_price) {
+                        const price = data.price || data.current_price;
+                        document.getElementById('current-price').textContent = formatCurrency(price);
+                    }
+                    if (data.recent_data || data.data) {
+                        this.updateChart(data.recent_data || data.data);
+                    }
+                    return; // Stop trying other endpoints
+                }
+            })
+            .catch(error => {
+                console.warn(`Failed to fetch from ${endpoint}:`, error);
+            });
+    }
+};
 
             this.setupEventListeners = function() {
                 document.getElementById('start-bitcoin').addEventListener('click', async () => {

@@ -12,6 +12,20 @@ function formatNumber(num, decimals) {
     });
 }
 
+// Adicionar esta função no início do common.js
+function debugLog(message, data = null) {
+    if (typeof console !== 'undefined' && console.log) {
+        if (data) {
+            console.log(`[DEBUG] ${message}:`, data);
+        } else {
+            console.log(`[DEBUG] ${message}`);
+        }
+    }
+}
+
+// Tornar global
+window.debugLog = debugLog;
+
 // Formatação de moeda
 function formatCurrency(amount) {
     if (amount === null || amount === undefined) return '$0.00';

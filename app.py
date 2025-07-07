@@ -157,7 +157,7 @@ class IntegratedController:
                 logger.error(f"Erro ao obter métricas: {e}")
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/bitcoin/recent-data')
+        @self.app.route('/bitcoin/api/recent-data')
         def get_bitcoin_recent_data():
             try:
                 limit = request.args.get('limit', 50, type=int)
