@@ -4,7 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bitcoin Trading System - Enhanced Analytics Dashboard</title>
+    <script>
+    console.log('=== DASHBOARD INITIALIZATION START ===');
+    console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+    console.log('Bootstrap loaded:', typeof bootstrap !== 'undefined');
+    console.log('Date-fns loaded:', typeof dateFns !== 'undefined');
     
+    // Capturar TODOS os erros, incluindo os silenciosos
+    window.addEventListener('error', function(event) {
+        console.error('🔴 GLOBAL ERROR CAPTURED:', {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            error: event.error,
+            stack: event.error?.stack
+        });
+    });
+
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error('🔴 UNHANDLED PROMISE REJECTION:', event.reason);
+    });
+
+    // Log quando DOM carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('✅ DOM LOADED');
+        console.log('Elements check:');
+        console.log('- overviewChart:', !!document.getElementById('overviewChart'));
+        console.log('- current-price:', !!document.getElementById('current-price'));
+        console.log('- data-points:', !!document.getElementById('data-points'));
+    });
+
+    // Verificar elementos de erro na página
+function checkErrorElements() {
+    const errorSelectors = [
+        '.alert-danger',
+        '.error-message', 
+        '.notification',
+        '[id*="error"]',
+        '[class*="error"]',
+        '.toast'
+    ];
+    
+    errorSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        if (elements.length > 0) {
+            console.log(`❌ Found error elements with selector "${selector}":`, elements);
+            elements.forEach((el, index) => {
+                console.log(`   ${index + 1}. Text: "${el.textContent.trim()}"`, el);
+            });
+        }
+    });
+}
+
+// Chamar a verificação depois que DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(checkErrorElements, 1000); // Aguardar 1 segundo
+});
+
+// Interceptar possíveis sistemas de notificação
+const originalAlert = window.alert;
+window.alert = function(message) {
+    console.log('🔔 ALERT INTERCEPTED:', message);
+    return originalAlert.call(this, message);
+};
+
+// Verificar se há algum sistema de toast/notification
+if (typeof Notification !== 'undefined') {
+    console.log('Browser notifications available');
+}
+
+// Verificar Bootstrap toast
+if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+    console.log('Bootstrap Toast available');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[INIT] 🚀 Starting dashboard initialization...');
+    
+    try {
+        // Verificar dependências
+        console.log('[INIT] Checking dependencies...');
+        console.log('- Chart.js:', typeof Chart);
+        console.log('- fetch:', typeof fetch);
+        console.log('- Promise:', typeof Promise);
+        
+        // Verificar elementos essenciais
+        const essentialElements = [
+            'overviewChart',
+            'current-price', 
+            'data-points',
+            'active-signals'
+        ];
+        
+        essentialElements.forEach(id => {
+            const element = document.getElementById(id);
+            console.log(`- Element #${id}:`, element ? '✅ Found' : '❌ Missing');
+        });
+        
+        // Inicializar dashboard
+        console.log('[INIT] Creating dashboard instance...');
+        window.enhancedDashboard = new EnhancedDashboard();
+        
+        console.log('[INIT] Starting dashboard updates...');
+        window.enhancedDashboard.startUpdates();
+        
+        console.log('[INIT] ✅ Dashboard initialization completed successfully');
+        
+    } catch (error) {
+        console.error('[INIT] 🔴 FATAL ERROR during initialization:', error);
+        console.error('[INIT] Stack trace:', error.stack);
+        
+        // Tentar mostrar erro na tela
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+            <div class="alert alert-danger m-3">
+                <strong>Erro de Inicialização:</strong> ${error.message}
+                <br><small>Verifique o console para mais detalhes</small>
+            </div>
+        `;
+        document.body.prepend(errorDiv);
+    }
+});
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -13,7 +136,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    
     
     <style>
         :root {
@@ -348,6 +470,12 @@
             padding: 2rem 0;
             margin-top: 3rem;
         }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -620,15 +748,97 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
     <script>
+        // ==================== DEFINIÇÕES GLOBAIS ====================
+        
+        // Verificar se funções necessárias existem
+        if (typeof formatCurrency === 'undefined') {
+            function formatCurrency(value) {
+                try {
+                    if (value === null || value === undefined || isNaN(value)) {
+                        return '$0.00';
+                    }
+                    return '$' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                } catch (error) {
+                    return '$0.00';
+                }
+            }
+            window.formatCurrency = formatCurrency;
+        }
+
+        if (typeof formatPercentage === 'undefined') {
+            function formatPercentage(value, decimals = 1) {
+                try {
+                    if (value === null || value === undefined || isNaN(value)) {
+                        return '0%';
+                    }
+                    return Number(value).toFixed(decimals) + '%';
+                } catch (error) {
+                    return '0%';
+                }
+            }
+            window.formatPercentage = formatPercentage;
+        }
+
+        if (typeof updateDebugInfo === 'undefined') {
+            function updateDebugInfo(data) {
+                console.log('[DEBUG] updateDebugInfo called with:', data);
+                try {
+                    if (!data) return;
+                    
+                    const dataQualityEl = document.getElementById('data-quality');
+                    const modelStatusEl = document.getElementById('model-status');
+                    
+                    if (dataQualityEl && data.data_quality) {
+                        dataQualityEl.textContent = data.data_quality;
+                    }
+                    
+                    if (modelStatusEl && data.model_status) {
+                        modelStatusEl.textContent = data.model_status;
+                    }
+                } catch (error) {
+                    console.warn("Erro em updateDebugInfo:", error);
+                }
+            }
+            window.updateDebugInfo = updateDebugInfo;
+        }
+
+        if (typeof makeAPICall === 'undefined') {
+            async function makeAPICall(url, options = {}) {
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'Content-Type': 'application/json' },
+                        ...options
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    console.error(`API call failed for ${url}:`, error);
+                    throw error;
+                }
+            }
+            window.makeAPICall = makeAPICall;
+        }
+
+        if (typeof showNotification === 'undefined') {
+            function showNotification(message, type = 'info') {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+            window.showNotification = showNotification;
+        }
+
         // Destruir gráfico existente antes de criar novo
         function destroyExistingChart(canvasId) {
             const existingChart = Chart.getChart(canvasId);
             if (existingChart) {
                 existingChart.destroy();
+                console.log('[CHART] Existing chart destroyed');
             }
         }
+
+        // ==================== DASHBOARD CLASS ====================
 
         var EnhancedDashboard = function() {
             this.chart = null;
@@ -655,107 +865,200 @@
             };
 
             this.initializeChart = function() {
-                // Destruir gráfico existente
-                destroyExistingChart('overviewChart');
-                
-                const ctx = document.getElementById('overviewChart').getContext('2d');
-                this.chart = new Chart(ctx, {
-                    type: 'line',
-                    data: this.chartData,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
+                try {
+                    console.log('[CHART] Initializing chart...');
+                    destroyExistingChart('overviewChart');
+                    
+                    const canvas = document.getElementById('overviewChart');
+                    if (!canvas) {
+                        console.error('[CHART] Canvas element not found');
+                        return;
+                    }
+                    
+                    const ctx = canvas.getContext('2d');
+                    this.chart = new Chart(ctx, {
+                        type: 'line',
+                        data: this.chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                }
                             },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'minute',
-                                    tooltipFormat: 'MMM D, YYYY h:mm:ss a',
-                                    displayFormats: {
-                                        minute: 'h:mm a'
+                            scales: {
+                                x: {
+                                    type: 'time',
+                                    time: {
+                                        unit: 'minute',
+                                        tooltipFormat: 'MMM D, YYYY h:mm:ss a',
+                                        displayFormats: {
+                                            minute: 'h:mm a'
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Tempo'
                                     }
                                 },
-                                title: {
-                                    display: true,
-                                    text: 'Tempo'
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Preço (USD)'
+                                    }
                                 }
                             },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Preço (USD)'
-                                }
+                            animation: {
+                                duration: 0
                             }
-                        },
-                        animation: {
-                            duration: 0 // Disable animation for real-time updates
                         }
-                    }
-                });
+                    });
+                    
+                    console.log('[CHART] Chart initialized successfully');
+                } catch (error) {
+                    console.error('[CHART] Error initializing chart:', error);
+                }
             };
 
-            // NOVA FUNÇÃO: Atualizar indicadores técnicos (VERSÃO CORRIGIDA)
-           this.updateTechnicalIndicators = function() {
-    makeAPICall('/trading/api/indicators')
-        .then(data => {
-            if (data && data.indicators) {
-                const container = document.getElementById('technical-indicators');
-                if (!container) return;
-                
-                container.innerHTML = '';
-                
-                Object.keys(data.indicators).forEach(indicatorName => {
-                    const indicator = data.indicators[indicatorName];
-                    const card = document.createElement('div');
-                    card.className = 'indicator-card';
+            this.updateChart = function(data) {
+                try {
+                    console.log('[CHART] updateChart called with:', data?.length, 'items');
                     
-                    let signalClass = 'signal-neutral';
-                    if (indicator.signal === 'buy') signalClass = 'signal-bullish';
-                    else if (indicator.signal === 'sell') signalClass = 'signal-bearish';
-                    
-                    // CORREÇÃO: Verificar tipo antes de usar toFixed
-                    let formattedValue = 'N/A';
-                    if (indicator.value !== null && indicator.value !== undefined) {
-                        if (typeof indicator.value === 'number') {
-                            formattedValue = indicator.value.toFixed(2);
-                        } else {
-                            formattedValue = String(indicator.value);
-                        }
+                    if (!this.chart) {
+                        console.error('[CHART] Chart not initialized yet');
+                        return;
                     }
                     
-                    card.innerHTML = `
-                        <div class="indicator-name">${indicatorName}</div>
-                        <div class="indicator-value">${formattedValue}</div>
-                        <div class="indicator-signal ${signalClass}">${indicator.interpretation || 'N/A'}</div>
-                    `;
                     
-                    container.appendChild(card);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao carregar indicadores:', error);
-        });
-};
+                    console.log('[CHART] Sample data item:', data[0]);
+                    
+                    // Handle different data formats
+                    const labels = [];
+                    const prices = [];
+                    
+                    data.forEach((item, index) => {
+                        if (item && item.timestamp && (item.price || item.value)) {
+                            labels.push(new Date(item.timestamp));
+                            prices.push(item.price || item.value);
+                        } else {
+                            console.warn(`[CHART] Invalid item at index ${index}:`, item);
+                        }
+                    });
+                    
+                    console.log(`[CHART] Processed ${labels.length} labels and ${prices.length} prices`);
+                    
+                    if (labels.length > 0 && prices.length > 0) {
+                        this.chart.data.labels = labels;
+                        this.chart.data.datasets[0].data = prices;
+                        this.chart.update('none');
+                        console.log(`✅ [CHART] Chart updated successfully with ${prices.length} data points`);
+                        
+                        // Update data points display
+                        const dataPointsEl = document.getElementById('data-points');
+                        if (dataPointsEl) {
+                            dataPointsEl.textContent = prices.length;
+                            console.log(`[CHART] Data points display updated: ${prices.length}`);
+                        }
+                    } else {
+                        console.error('❌ [CHART] No valid data points found for chart');
+                    }
+                    
+                } catch (error) {
+                    console.error('[CHART] Erro ao atualizar chart:', error);
+                }
+            };
 
-            // NOVA FUNÇÃO: Atualizar market scanner
+            this.generateFallbackData = function() {
+                console.log('[FALLBACK] Generating fallback data for chart');
+                const now = new Date();
+                const sampleData = [];
+                const basePrice = 109000; // Use uma base mais próxima do Bitcoin atual
+                
+                for (let i = 0; i < 20; i++) {
+                    const timestamp = new Date(now.getTime() - (20 - i) * 60000);
+                    const price = basePrice + (Math.random() - 0.5) * 4000; // Variação de ±2000
+                    sampleData.push({ 
+                        timestamp: timestamp.toISOString(), 
+                        price: Math.round(price * 100) / 100 // 2 decimais
+                    });
+                }
+                
+                console.log('[FALLBACK] Generated', sampleData.length, 'sample points');
+                this.updateChart(sampleData);
+                document.getElementById('current-price').textContent = formatCurrency(sampleData[sampleData.length - 1].price);
+                
+                // Update data points display
+                const dataPointsEl = document.getElementById('data-points');
+                if (dataPointsEl) {
+                    dataPointsEl.textContent = sampleData.length;
+                }
+            };
+
+            this.updateTechnicalIndicators = function() {
+                makeAPICall('/trading/api/indicators')
+                    .then(data => {
+                        if (data && data.indicators) {
+                            console.log('[INDICATORS] Data received:', Object.keys(data.indicators).length, 'indicators');
+                            const container = document.getElementById('technical-indicators');
+                            if (!container) return;
+                            
+                            container.innerHTML = '';
+                            
+                            Object.keys(data.indicators).forEach(indicatorName => {
+                                const indicator = data.indicators[indicatorName];
+                                const card = document.createElement('div');
+                                card.className = 'indicator-card';
+                                
+                                let signalClass = 'signal-neutral';
+                                if (indicator.signal === 'buy') signalClass = 'signal-bullish';
+                                else if (indicator.signal === 'sell') signalClass = 'signal-bearish';
+                                
+                                // Verificar tipo antes de usar toFixed
+                                let formattedValue = 'N/A';
+                                if (indicator.value !== null && indicator.value !== undefined) {
+                                    if (typeof indicator.value === 'number') {
+                                        formattedValue = indicator.value.toFixed(2);
+                                    } else {
+                                        formattedValue = String(indicator.value);
+                                    }
+                                }
+                                
+                                card.innerHTML = `
+                                    <div class="indicator-name">${indicatorName}</div>
+                                    <div class="indicator-value">${formattedValue}</div>
+                                    <div class="indicator-signal ${signalClass}">${indicator.interpretation || 'N/A'}</div>
+                                `;
+                                
+                                container.appendChild(card);
+                            });
+                            
+                            console.log('[INDICATORS] Updated successfully');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[INDICATORS] Error loading indicators:', error);
+                        const container = document.getElementById('technical-indicators');
+                        if (container) {
+                            container.innerHTML = '<div class="text-center text-danger">Erro ao carregar indicadores</div>';
+                        }
+                    });
+            };
+
             this.updateMarketScanner = function() {
                 makeAPICall('/trading/api/market-scanner')
                     .then(data => {
                         if (data) {
-                            console.log('[SCANNER] Dados recebidos:', data);
+                            console.log('[SCANNER] Data received:', data);
                             const container = document.getElementById('market-opportunities');
-                            container.innerHTML = ''; // Limpar conteúdo existente
+                            if (!container) return;
+                            
+                            container.innerHTML = '';
                             
                             if (data.opportunities && data.opportunities.length > 0) {
                                 data.opportunities.forEach(opportunity => {
@@ -773,30 +1076,29 @@
                             } else {
                                 container.innerHTML = '<div class="text-center">Nenhuma oportunidade encontrada no momento</div>';
                             }
-                        } else {
-                            console.warn('Dados do scanner inválidos:', data);
                         }
                     })
                     .catch(error => {
-                        console.error('Erro ao carregar scanner:', error);
-                        document.getElementById('market-opportunities').innerHTML = 
-                            '<div class="text-center text-danger">Erro ao carregar scanner de mercado</div>';
+                        console.error('[SCANNER] Error loading scanner:', error);
+                        const container = document.getElementById('market-opportunities');
+                        if (container) {
+                            container.innerHTML = '<div class="text-center text-danger">Erro ao carregar scanner de mercado</div>';
+                        }
                     });
             };
 
-            // NOVA FUNÇÃO: Atualizar sinais recentes
             this.updateRecentSignals = function() {
                 makeAPICall('/trading/api/signals?limit=10')
                     .then(data => {
                         if (data && data.recent_signals) {
-                            console.log('[SIGNALS] Dados recebidos:', data);
+                            console.log('[SIGNALS] Data received:', data.recent_signals.length, 'signals');
                             this.updateSignalAnalysis(data.recent_signals);
                         } else {
-                            console.warn('Dados de sinais inválidos:', data);
+                            console.warn('[SIGNALS] Invalid signals data:', data);
                         }
                     })
                     .catch(error => {
-                        console.error('Erro ao carregar sinais:', error);
+                        console.error('[SIGNALS] Error loading signals:', error);
                         const tbody = document.getElementById('recent-signals-body');
                         if (tbody) {
                             tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar sinais</td></tr>';
@@ -805,282 +1107,215 @@
             };
 
             this.updateSignalAnalysis = function(recentSignals) {
-                console.log('Atualizando tabela de sinais recentes com:', recentSignals);
-                const signalsTableBody = document.getElementById('recent-signals-body');
-                if (!signalsTableBody) {
-                    console.warn('Elemento #recent-signals-body não encontrado. A tabela de sinais não pode ser atualizada.');
-                    return;
-                }
+                try {
+                    const signalsTableBody = document.getElementById('recent-signals-body');
+                    if (!signalsTableBody) {
+                        console.warn('[SIGNALS] Table body element not found');
+                        return;
+                    }
 
-                signalsTableBody.innerHTML = ''; // Limpa as linhas existentes
+                    signalsTableBody.innerHTML = '';
 
-                if (recentSignals && recentSignals.length > 0) {
-                    recentSignals.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    if (recentSignals && recentSignals.length > 0) {
+                        recentSignals.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-                    recentSignals.forEach(signal => {
-                        const row = signalsTableBody.insertRow();
-                        row.insertCell().textContent = new Date(signal.created_at).toLocaleString('pt-BR');
-                        row.insertCell().textContent = signal.type; // Ex: 'BUY', 'SELL'
+                        recentSignals.forEach(signal => {
+                            const row = signalsTableBody.insertRow();
+                            row.insertCell().textContent = new Date(signal.created_at).toLocaleString('pt-BR');
+                            row.insertCell().textContent = signal.type;
 
-                        const statusCell = row.insertCell();
-                        statusCell.textContent = signal.status;
-                        if (signal.status === 'ACTIVE') {
-                            statusCell.className = 'text-warning';
-                        } else if (signal.status === 'CLOSED') {
-                            statusCell.className = signal.profit_loss > 0 ? 'text-success' : 'text-danger';
-                        }
+                            const statusCell = row.insertCell();
+                            statusCell.textContent = signal.status;
+                            if (signal.status === 'ACTIVE') {
+                                statusCell.className = 'text-warning';
+                            } else if (signal.status === 'CLOSED') {
+                                statusCell.className = signal.profit_loss > 0 ? 'text-success' : 'text-danger';
+                            }
 
-                        const pnlCell = row.insertCell();
-                        pnlCell.textContent = formatCurrency(signal.profit_loss || 0);
-                        if (signal.profit_loss > 0) {
-                            pnlCell.className = 'text-success';
-                        } else if (signal.profit_loss < 0) {
-                            pnlCell.className = 'text-danger';
-                        } else {
-                            pnlCell.className = '';
-                        }
-                    });
-                    console.log('Tabela de sinais recentes atualizada com sucesso.');
-                } else {
-                    const row = signalsTableBody.insertRow();
-                    const cell = row.insertCell();
-                    cell.colSpan = 4; // Ajuste o colSpan para o número total de colunas da sua tabela
-                    cell.textContent = 'Nenhum sinal recente disponível.';
-                    cell.className = 'text-center text-muted';
-                    console.log('Nenhum sinal para atualizar a tabela.');
-                }
-            };
-
-            this.updateComprehensiveAnalysis = function(data) { // 'data' aqui já é a análise completa
-                console.log('Comprehensive analysis data:', data); // Já é a análise completa
-                const analysis = data; // 'data' JÁ É O OBJETO analysis completo
-                
-                // Update key performance indicators se existirem
-                if (analysis.performance_summary) {
-                    const totalPnlEl = document.getElementById('total-pnl');
-                    const winRateEl = document.getElementById('win-rate-system');
-                    
-                    if (totalPnlEl) totalPnlEl.textContent = formatCurrency(analysis.performance_summary.total_pnl || 0);
-                    if (winRateEl) winRateEl.textContent = formatPercentage(analysis.performance_summary.win_rate || 0);
-                }
-
-                // Update system info
-                if (analysis.system_health) {
-                    const dataQualityEl = document.getElementById('data-quality');
-                    const modelStatusEl = document.getElementById('model-status');
-                    const lastAnalysisEl = document.getElementById('last-analysis');
-                    const dataPointsEl = document.getElementById('data-points');
-                    
-                    if (dataQualityEl) dataQualityEl.textContent = analysis.system_health.data_quality || 'Good';
-                    if (modelStatusEl) modelStatusEl.textContent = analysis.system_health.model_status || 'Operational';
-                    if (lastAnalysisEl) lastAnalysisEl.textContent = new Date(analysis.timestamp || Date.now()).toLocaleString('pt-BR');
-                    if (dataPointsEl) dataPointsEl.textContent = analysis.system_health.data_points || '0';
-                }
-
-                // Update quick stats
-                if (analysis.active_signals) {
-                    const activeSignalsEl = document.getElementById('active-signals');
-                    if (activeSignalsEl) activeSignalsEl.textContent = analysis.active_signals.length || 0;
-                }
-
-                if (analysis.market_analysis && analysis.market_analysis.confidence) {
-                    const confidenceLevelEl = document.getElementById('confidence-level');
-                    const confidenceFillEl = document.querySelector('.confidence-fill');
-                    
-                    if (confidenceLevelEl) {
-                        const confidence = Math.round(analysis.market_analysis.confidence * 100);
-                        confidenceLevelEl.textContent = confidence + '%';
+                            const pnlCell = row.insertCell();
+                            pnlCell.textContent = formatCurrency(signal.profit_loss || 0);
+                            if (signal.profit_loss > 0) {
+                                pnlCell.className = 'text-success';
+                            } else if (signal.profit_loss < 0) {
+                                pnlCell.className = 'text-danger';
+                            }
+                        });
                         
-                        if (confidenceFillEl) {
-                            confidenceFillEl.style.width = confidence + '%';
-                            // Update confidence bar color based on level
-                            confidenceFillEl.className = 'confidence-fill ' + 
-                                (confidence >= 70 ? 'confidence-high' : 
-                                 confidence >= 40 ? 'confidence-medium' : 'confidence-low');
-                        }
+                        console.log('[SIGNALS] Table updated with', recentSignals.length, 'signals');
+                    } else {
+                        const row = signalsTableBody.insertRow();
+                        const cell = row.insertCell();
+                        cell.colSpan = 4;
+                        cell.textContent = 'Nenhum sinal recente disponível.';
+                        cell.className = 'text-center text-muted';
                     }
+                } catch (error) {
+                    console.error('[SIGNALS] Error updating signals table:', error);
                 }
             };
 
-         this.updateChart = function(data) {
-    try {
-        if (!this.chart) {
-            console.warn('Chart not initialized yet');
-            return;
-        }
-        
-        if (!data || !Array.isArray(data) || data.length === 0) {
-            console.warn('Invalid chart data:', data);
-            return;
-        }
-        
-        // Handle different data formats
-        const labels = [];
-        const prices = [];
-        
-        data.forEach(item => {
-            if (item && item.timestamp && (item.price || item.value)) {
-                labels.push(new Date(item.timestamp));
-                prices.push(item.price || item.value);
-            }
-        });
-        
-        if (labels.length > 0 && prices.length > 0) {
-            this.chart.data.labels = labels;
-            this.chart.data.datasets[0].data = prices;
-            this.chart.update('none');
-            console.log(`Chart updated with ${prices.length} data points`);
-            
-            // Update data points display
-            const dataPointsEl = document.getElementById('data-points');
-            if (dataPointsEl) {
-                dataPointsEl.textContent = prices.length;
-            }
-        } else {
-            console.warn('No valid data points found for chart');
-        }
-        
-    } catch (error) {
-        console.error('Erro ao atualizar chart:', error);
-    }
-};
-            
-this.generateFallbackData = function() {
-    console.log('Generating fallback data for chart');
-    const now = new Date();
-    const sampleData = [];
-    const basePrice = 45000;
-    
-    for (let i = 0; i < 20; i++) {
-        const timestamp = new Date(now.getTime() - (20 - i) * 60000);
-        const price = basePrice + Math.random() * 2000 - 1000;
-        sampleData.push({ 
-            timestamp: timestamp.toISOString(), 
-            price: price 
-        });
-    }
-    
-    this.updateChart(sampleData);
-    document.getElementById('current-price').textContent = formatCurrency(sampleData[sampleData.length - 1].price);
-    
-    // Update data points display
-    const dataPointsEl = document.getElementById('data-points');
-    if (dataPointsEl) {
-        dataPointsEl.textContent = sampleData.length;
-    }
-};
-
-this.updateData = function() {
-    // Fetch main status data (from main_routes)
-    makeAPICall('/api/status')
-    .then(data => {
-        if (data) {
-            console.log('[DATA] Main status data:', data);
-            // Update quick stats inline instead of calling updateQuickStats
-            if (data.bitcoin && data.bitcoin.current_price) {
-                document.getElementById('current-price').textContent = formatCurrency(data.bitcoin.current_price);
-            }
-            if (data.trading && data.trading.active_signals !== undefined) {
-                document.getElementById('active-signals').textContent = data.trading.active_signals;
-            }
-            updateDebugInfo(data);
-        }
-    })
-        .catch(error => {
-            console.error('Error fetching main status:', error);
-        });
-
-    // Fetch Bitcoin recent data (from bitcoin_routes)
-    makeAPICall('/bitcoin/api/recent-data')
-        .then(data => {
-            if (data && (data.recent_data || data.data)) {
-                console.log('[DATA] Bitcoin recent data:', data);
-                const chartData = data.recent_data || data.data;
-                this.updateChart(chartData);
-                
-                // Update current price if available
-                if (chartData.length > 0) {
-                    const latestPrice = chartData[chartData.length - 1].price;
-                    if (latestPrice) {
-                        document.getElementById('current-price').textContent = formatCurrency(latestPrice);
+            this.updateComprehensiveAnalysis = function(data) {
+                try {
+                    console.log('[ANALYSIS] Comprehensive analysis data received');
+                    
+                    if (data.performance_summary) {
+                        const totalPnlEl = document.getElementById('total-pnl');
+                        const winRateEl = document.getElementById('win-rate-system');
+                        
+                        if (totalPnlEl) totalPnlEl.textContent = formatCurrency(data.performance_summary.total_pnl || 0);
+                        if (winRateEl) winRateEl.textContent = formatPercentage(data.performance_summary.win_rate || 0);
                     }
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching Bitcoin recent data:', error);
-            // Try stream status as fallback
-            this.tryStreamStatus();
-        });
 
-    // Fetch comprehensive trading analysis data
-    makeAPICall('/trading/api/analysis')
-        .then(analysisData => {
-            if (analysisData) {
-                console.log('[DATA] Comprehensive analysis data:', analysisData);
-                this.updateComprehensiveAnalysis(analysisData);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching comprehensive analysis data:', error);
-        });
-};
-
-// Adicionar função de fallback para stream status
-this.tryStreamStatus = function() {
-    makeAPICall('/bitcoin/api/stream-status')
-        .then(data => {
-            if (data) {
-                console.log('[DATA] Stream status data:', data);
-                // Extract any available data for chart
-                if (data.current_price) {
-                    document.getElementById('current-price').textContent = formatCurrency(data.current_price);
-                }
-                if (data.recent_prices && Array.isArray(data.recent_prices)) {
-                    // Convert to chart format
-                    const chartData = data.recent_prices.map((price, index) => ({
-                        timestamp: new Date(Date.now() - (data.recent_prices.length - index) * 60000).toISOString(),
-                        price: price
-                    }));
-                    this.updateChart(chartData);
-                }
-            }
-        })
-        .catch(error => {
-            console.warn('Stream status also failed:', error);
-            this.generateFallbackData();
-        });
-};
-
-// Adicionar esta nova função após updateData
-this.tryAlternativeEndpoints = function() {
-    // Try different endpoints to get Bitcoin data
-    const endpoints = [
-        '/bitcoin/api/recent-data',
-        '/api/bitcoin/status', 
-        '/bitcoin/recent'
-    ];
-    
-    for (const endpoint of endpoints) {
-        makeAPICall(endpoint)
-            .then(data => {
-                if (data) {
-                    console.log(`[DATA] Success from ${endpoint}:`, data);
-                    if (data.price || data.current_price) {
-                        const price = data.price || data.current_price;
-                        document.getElementById('current-price').textContent = formatCurrency(price);
+                    if (data.system_health) {
+                        const dataQualityEl = document.getElementById('data-quality');
+                        const modelStatusEl = document.getElementById('model-status');
+                        const lastAnalysisEl = document.getElementById('last-analysis');
+                        
+                        if (dataQualityEl) dataQualityEl.textContent = data.system_health.data_quality || 'Good';
+                        if (modelStatusEl) modelStatusEl.textContent = data.system_health.model_status || 'Operational';
+                        if (lastAnalysisEl) lastAnalysisEl.textContent = new Date(data.timestamp || Date.now()).toLocaleString('pt-BR');
                     }
-                    if (data.recent_data || data.data) {
-                        this.updateChart(data.recent_data || data.data);
+
+                    if (data.active_signals) {
+                        const activeSignalsEl = document.getElementById('active-signals');
+                        if (activeSignalsEl) activeSignalsEl.textContent = data.active_signals.length || 0;
                     }
-                    return; // Stop trying other endpoints
+
+                    if (data.market_analysis && data.market_analysis.confidence) {
+                        const confidenceLevelEl = document.getElementById('confidence-level');
+                        const confidenceFillEl = document.querySelector('.confidence-fill');
+                        
+                        if (confidenceLevelEl) {
+                            const confidence = Math.round(data.market_analysis.confidence * 100);
+                            confidenceLevelEl.textContent = confidence + '%';
+                            
+                            if (confidenceFillEl) {
+                                confidenceFillEl.style.width = confidence + '%';
+                                confidenceFillEl.className = 'confidence-fill ' + 
+                                    (confidence >= 70 ? 'confidence-high' : 
+                                     confidence >= 40 ? 'confidence-medium' : 'confidence-low');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('[ANALYSIS] Error updating comprehensive analysis:', error);
                 }
-            })
-            .catch(error => {
-                console.warn(`Failed to fetch from ${endpoint}:`, error);
-            });
-    }
-};
+            };
+
+            this.updateData = function() {
+                // Fetch main status data
+                makeAPICall('/api/integrated/status')
+                    .then(data => {
+                        if (data) {
+                            console.log('[DATA] Main status data received');
+                            
+                            if (data.bitcoin && data.bitcoin.current_price) {
+                                document.getElementById('current-price').textContent = formatCurrency(data.bitcoin.current_price);
+                            }
+                            if (data.trading && data.trading.active_signals !== undefined) {
+                                document.getElementById('active-signals').textContent = data.trading.active_signals;
+                            }
+                            updateDebugInfo(data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[DATA] Error fetching main status:', error);
+                    });
+
+                // Fetch Bitcoin recent data
+                makeAPICall('/bitcoin/api/recent-data')
+                    .then(data => {
+                        console.log('[DATA] Bitcoin API raw response:', data);
+                        
+                        if (data) {
+                            let chartData = null;
+                            let currentPrice = null;
+                            
+                            // Try different possible data structures
+                            if (data.recent_data && Array.isArray(data.recent_data)) {
+                                chartData = data.recent_data;
+                                console.log('[DATA] Using data.recent_data:', chartData.length, 'items');
+                            } else if (data.data && Array.isArray(data.data)) {
+                                chartData = data.data;
+                                console.log('[DATA] Using data.data:', chartData.length, 'items');
+                            } else if (Array.isArray(data)) {
+                                chartData = data;
+                                console.log('[DATA] Using data directly:', chartData.length, 'items');
+                            } else {
+                                console.warn('[DATA] No valid array found in response');
+                            }
+                            
+                            // Get current price
+                            if (data.current_price) {
+                                currentPrice = data.current_price;
+                                console.log('[DATA] Found current_price:', currentPrice);
+                            } else if (chartData && chartData.length > 0) {
+                                const latest = chartData[chartData.length - 1];
+                                currentPrice = latest.price || latest.value;
+                                console.log('[DATA] Extracted price from last item:', currentPrice);
+                            }
+                            
+                            // Update chart
+                            if (chartData && chartData.length > 0) {
+                                console.log('[DATA] Sample chart data item:', chartData[0]);
+                                this.updateChart(chartData);
+                            } else {
+                                console.warn('[DATA] No valid chart data, using fallback');
+                                this.generateFallbackData();
+                            }
+                            
+                            // Update current price display
+                            if (currentPrice) {
+                                document.getElementById('current-price').textContent = formatCurrency(currentPrice);
+                                console.log('[DATA] Price updated to:', currentPrice);
+                            }
+                        } else {
+                            console.warn('[DATA] No data received from Bitcoin API, using fallback');
+                            this.generateFallbackData();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[DATA] Error fetching Bitcoin data:', error);
+                        this.tryStreamStatus();
+                    });
+
+                // Fetch comprehensive trading analysis data
+                makeAPICall('/trading/api/analysis')
+                    .then(analysisData => {
+                        if (analysisData) {
+                            console.log('[DATA] Trading analysis data received');
+                            this.updateComprehensiveAnalysis(analysisData);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[DATA] Error fetching trading analysis:', error);
+                    });
+            };
+
+            this.tryStreamStatus = function() {
+                console.log('[FALLBACK] Trying stream status...');
+                makeAPICall('/bitcoin/api/stream-status')
+                    .then(data => {
+                        if (data) {
+                            console.log('[FALLBACK] Stream status data received:', data);
+                            
+                            if (data.current_price) {
+                                document.getElementById('current-price').textContent = formatCurrency(data.current_price);
+                            }
+                            if (data.recent_prices && Array.isArray(data.recent_prices)) {
+                                const chartData = data.recent_prices.map((price, index) => ({
+                                    timestamp: new Date(Date.now() - (data.recent_prices.length - index) * 60000).toISOString(),
+                                    price: price
+                                }));
+                                this.updateChart(chartData);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.warn('[FALLBACK] Stream status failed, using sample data:', error);
+                        this.generateFallbackData();
+                    });
+            };
 
             this.setupEventListeners = function() {
                 document.getElementById('start-bitcoin').addEventListener('click', async () => {
@@ -1113,12 +1348,11 @@ this.tryAlternativeEndpoints = function() {
                     }
                 });
 
-                // Add tab change listeners para atualizar conteúdo específico
+                // Add tab change listeners
                 document.addEventListener('shown.bs.tab', (event) => {
                     const tabId = event.target.getAttribute('href');
-                    console.log('Tab changed to:', tabId);
+                    console.log('[TAB] Changed to:', tabId);
                     
-                    // Atualizar conteúdo específico da aba
                     if (tabId === '#indicators') {
                         this.updateTechnicalIndicators();
                     } else if (tabId === '#scanner') {
@@ -1129,9 +1363,17 @@ this.tryAlternativeEndpoints = function() {
                 });
             };
 
-            // Public method to start all updates
             this.startUpdates = function() {
+                console.log('[DASHBOARD] Starting dashboard updates...');
+                
                 this.initializeChart();
+                
+                if (this.chart) {
+                    console.log('[DASHBOARD] Chart initialized successfully');
+                } else {
+                    console.error('[DASHBOARD] Chart initialization failed');
+                }
+                
                 this.setupEventListeners();
                 this.updateData(); // Initial data load
                 
@@ -1155,10 +1397,13 @@ this.tryAlternativeEndpoints = function() {
                         }
                     }
                 }, 10000);
+                
+                console.log('[DASHBOARD] Dashboard updates started successfully');
             };
         };
 
-        // Update last update time
+        // ==================== INITIALIZATION ====================
+
         function updateLastUpdate() {
             const element = document.getElementById('last-update');
             if (element) {
@@ -1168,20 +1413,26 @@ this.tryAlternativeEndpoints = function() {
 
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Configurar error handling melhorado
+            console.log('[INIT] DOM loaded, initializing dashboard...');
+            
+            // Error handling
             window.addEventListener('error', function(event) {
                 if (!event.error || event.error === null) return;
                 if (event.error.message && event.error.message.includes('Canvas is already in use')) {
-                    console.warn('Chart.js canvas error (handled)');
+                    console.warn('[ERROR] Chart.js canvas error (handled)');
                     return;
                 }
-                console.error('Global error:', event.error);
+                console.error('[ERROR] Global error:', event.error);
             });
 
+            // Initialize dashboard
             window.enhancedDashboard = new EnhancedDashboard();
-            window.enhancedDashboard.startUpdates(); // Start all updates
+            window.enhancedDashboard.startUpdates();
+            
             updateLastUpdate();
-            setInterval(updateLastUpdate, 60000); // Update every minute
+            setInterval(updateLastUpdate, 60000);
+            
+            console.log('[INIT] Dashboard initialization completed');
         });
     </script>
 </body>
