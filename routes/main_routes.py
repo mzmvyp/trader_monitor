@@ -32,45 +32,81 @@ def trading_dashboard():
 @main_bp.route('/api/integrated/status')
 def get_integrated_status():
     """
-    Provides a high-level status overview of the entire integrated system.
+    Fornece uma visão geral do status de alto nível de todo o sistema integrado.
     """
     try:
-        # Get Bitcoin streaming stats
+        # Obter estatísticas do streaming de Bitcoin
         bitcoin_stats = current_app.bitcoin_streamer.get_stream_statistics()
         
-        # Get trading analyzer health
+        # Obter saúde do analisador de trading
         trading_health = current_app.trading_analyzer.get_system_status()
         
-        # Get latest price from recent data
-        recent_bitcoin = current_app.bitcoin_streamer.get_recent_data(1)
-        last_price = recent_bitcoin[0].price if recent_bitcoin else 0
+        # Obter o preço mais recente dos dados recentes
+        recent_bitcoin_data = current_app.bitcoin_streamer.get_recent_data(1)
+        latest_price = recent_bitcoin_data[0].price if recent_bitcoin_data else 0
+
+        # Determinar se a análise está pronta com base no status do analisador
+        analysis_ready = trading_health.get('indicator_status') == 'ACTIVE'
+
+        # Somar o total de pontos de dados do streamer e do analisador
+        total_system_data_points = bitcoin_stats.get('total_data_points', 0) + \
+                                   trading_health.get('total_analysis_performed', 0) # Use a nova chave aqui!
         
-        return jsonify({
-            'bitcoin_streaming': bitcoin_stats['is_running'],
-            'bitcoin_data_points': bitcoin_stats['total_data_points'],
-            'bitcoin_last_price': last_price,
-            'trading_data_points': trading_health['data_points'],
-            'trading_active_signals': trading_health['active_signals'],
-            'trading_analysis_count': trading_health['total_analysis'],
-            'system_status': 'running' if bitcoin_stats['is_running'] else 'stopped',
-            'fetch_interval_minutes': bitcoin_stats['fetch_interval_minutes'],
-            'last_update': datetime.now().isoformat()
-        })
+        response_data = {
+            'bitcoin': {
+                'metrics': {
+                    'min_price': bitcoin_stats.get('min_price', 0),
+                    'max_price': bitcoin_stats.get('max_price', 0),
+                    'avg_change_24h': bitcoin_stats.get('avg_change_24h', 0),
+                    'price_range': bitcoin_stats.get('price_range', 0),
+                    'last_update': bitcoin_stats.get('last_fetch_time_iso', datetime.now().isoformat()),
+                    'total_records': bitcoin_stats.get('total_data_points', 0)
+                },
+                'recent_data': [data.to_dict() for data in current_app.bitcoin_streamer.get_recent_data(10)],
+                'streaming': bitcoin_stats.get('is_running', False),
+                'stats': {
+                    'is_running': bitcoin_stats.get('is_running', False),
+                    'total_data_points': bitcoin_stats.get('total_data_points', 0),
+                    'api_errors': bitcoin_stats.get('api_errors', 0),
+                    'last_fetch_time': bitcoin_stats.get('last_fetch_time_iso', None),
+                    'last_price': latest_price,
+                    'queue_size': bitcoin_stats.get('queue_size', 0),
+                    'subscribers_count': bitcoin_stats.get('subscribers_count', 0),
+                    'source': bitcoin_stats.get('source', 'binance'),
+                    'fetch_interval_minutes': bitcoin_stats.get('fetch_interval_minutes', 5)
+                }
+            },
+            'trading': {
+                'current_price': latest_price,
+                'indicators': {}, # Geralmente populado por /trading/api/analysis
+                'active_signals': len(current_app.trading_analyzer.signals) if hasattr(current_app.trading_analyzer, 'signals') else 0,
+                'recent_signals': [s.to_dict() for s in current_app.trading_analyzer.signals[-5:]] if hasattr(current_app.trading_analyzer, 'signals') and len(current_app.trading_analyzer.signals) > 0 else [],
+                'pattern_stats': [], # Se você tiver isso do analisador
+                'system_info': {
+                    'analysis_count': trading_health.get('total_analysis_performed', 0), # Usar a nova chave
+                    'data_points': trading_health.get('total_analysis_performed', 0), # Mapear para data_points aqui
+                    'last_analysis': trading_health.get('last_analysis_time', None)
+                }
+            },
+            'integrated_status': {
+                'total_data_points': total_system_data_points,
+                'analysis_ready': analysis_ready,
+                'last_update': datetime.now().isoformat(),
+                'system_healthy': bitcoin_stats.get('is_running', False) and analysis_ready,
+                'persistence_enabled': current_app.config.get('DATABASE_PERSISTENCE', False)
+            },
+            'system_info': {
+                'app_version': '1.0.0',
+                'environment': 'development'
+            }
+        }
+        
+        return jsonify(response_data)
         
     except Exception as e:
         logger.error(f"[API] Erro ao obter status integrado: {e}")
-        return jsonify({
-            'bitcoin_streaming': False,
-            'bitcoin_data_points': 0,
-            'bitcoin_last_price': 0,
-            'trading_data_points': 0,
-            'trading_active_signals': 0,
-            'trading_analysis_count': 0,
-            'system_status': 'error',
-            'fetch_interval_minutes': 5,
-            'last_update': datetime.now().isoformat(),
-            'error': str(e)
-        }), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 @main_bp.route('/api/integrated/dashboard-data')
 def get_dashboard_data():

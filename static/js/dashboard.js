@@ -609,3 +609,125 @@ function loadInitialData() {
     // Configurar atualização dos sinais recentes (mais frequente)
     setInterval(updateRecentSignals, 10000);
 }
+
+// static/js/dashboard.js - JavaScript principal do Dashboard
+
+// ==================== ESTADO DA APLICAÇÃO ====================
+var DashboardApp = {
+    charts: {},
+    updateInterval: null,
+    isSystemRunning: false,
+    lastDataUpdate: null,
+    debugMode: false,
+    
+    // Configurações
+    config: {
+        updateInterval: 5000, // 5 segundos
+        debugMaxLines: 100,
+        chartAnimationDuration: 300
+    }
+};
+
+// ==================== FUNÇÕES DE DEBUG ====================
+function debugLog(message, data) {
+    var timestamp = new Date().toLocaleTimeString();
+    console.log('[DASHBOARD]', timestamp, message, data || '');
+    
+    if (DashboardApp.debugMode) {
+        var debugDiv = document.getElementById('debug-info');
+        if (debugDiv) {
+            var logEntry = document.createElement('div');
+            logEntry.innerHTML = timestamp + ' - ' + message + 
+                (data ? ': ' + JSON.stringify(data).substring(0, 100) + '...' : '');
+            
+            debugDiv.appendChild(logEntry);
+            
+            // Limitar número de linhas
+            var lines = debugDiv.children;
+            if (lines.length > DashboardApp.config.debugMaxLines) {
+                debugDiv.removeChild(lines[0]);
+            }
+            
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+    }
+}
+
+// ==================== FUNÇÕES DE ATUALIZAÇÃO PRINCIPAIS ====================
+
+// Função para buscar e atualizar todos os dados do dashboard
+function fetchAndUpdateDashboardData() {
+    debugLog('Buscando dados do dashboard...');
+    makeAPICall('/api/integrated/status')
+        .then(function(data) {
+            if (data && data.status) {
+                debugLog('Dados recebidos', data);
+
+                // Update quick stats
+                updateQuickStats({
+                    currentPrice: data.bitcoin.trading_price,
+                    activeSignals: data.trading.active_signals,
+                    dataPoints: data.integrated_status.total_data_points,
+                    successRate: data.trading.success_rate || 0
+                });
+
+                // Update main chart (only if data is present)
+                if (data.bitcoin && data.bitcoin.recent_data) {
+                    updateBitcoinPriceChart(data.bitcoin.recent_data);
+                } else {
+                    debugLog('Nenhum dado recente de Bitcoin para atualizar o gráfico.');
+                }
+                
+                // Update tabs content
+                updateBitcoinTab(data.bitcoin);
+                updateTradingTab(data.trading);
+                updateAnalyticsTab(data.trading); // Assuming analytics are part of trading data
+
+                // Update system status
+                updateSystemStatus(data.integrated_status);
+
+            } else {
+                debugLog('Dados inválidos ou erro', data);
+                if (data && data.error) {
+                    showNotification('Erro nos dados: ' + data.error, 'warning');
+                }
+            }
+        })
+        .catch(function(error) {
+            debugLog('Erro ao atualizar dados', error);
+            // Não mostrar notificação para cada erro de conexão
+            // showNotification('Erro de conexão com o servidor', 'danger');
+        });
+}
+
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', function() {
+    debugLog('Dashboard inicializando...');
+    
+    // Configurar tudo
+    // initializeCharts(); // REMOVIDO: Gráficos serão gerenciados por EnhancedDashboard
+    setupEventListeners();
+    startRealTimeUpdates();
+    loadInitialData();
+    
+    debugLog('Dashboard inicializado com sucesso');
+});
+
+// ==================== CLEANUP ====================
+window.addEventListener('beforeunload', function() {
+    if (DashboardApp.updateInterval) {
+        clearInterval(DashboardApp.updateInterval);
+        debugLog('Interval de atualização limpo');
+    }
+});
+
+// ==================== CARREGAMENTO INICIAL ====================
+function loadInitialData() {
+    debugLog('Carregando dados iniciais...');
+    
+    // Carregar sinais recentes
+    updateRecentSignals();
+    
+    // Configurar atualização dos sinais recentes (mais frequente)
+    setInterval(updateRecentSignals, 10000);
+}

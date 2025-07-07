@@ -21,12 +21,14 @@ class Config:
     BITCOIN_STREAM_MAX_QUEUE_SIZE = 1000
     BITCOIN_STREAM_FETCH_INTERVAL_SECONDS = 300  # 5 minutes
     BITCOIN_STREAM_MAX_CONSECUTIVE_ERRORS = 5
+    AUTO_START_STREAM = True # Adicionado para controlar o início automático do streamer
     
     # Bitcoin Stream Processor settings
     BITCOIN_PROCESSOR_BATCH_SIZE = 20
     
     # Trading Analyzer settings
     TRADING_ANALYZER_UPDATE_INTERVAL_SECONDS = 60 # How often to feed data to analyzer
+    ANALYZER_PROCESS_INTERVAL_SECONDS = 5 # Intervalo para a thread de processamento/análise
     
     # Flask app settings
     FLASK_DEBUG_MODE = os.getenv('DEBUG', 'false').lower() == 'true'
@@ -35,10 +37,17 @@ class Config:
 
     # Data cleanup settings
     DEFAULT_DAYS_TO_KEEP_DATA = 7
+    DATA_RETENTION_DAYS = 30 # Para o BitcoinAnalyticsEngine
 
     # API Endpoints (if external APIs were used directly, but here they are internal)
     BINANCE_API_URL = "https://api.binance.com/api/v3/ticker/24hr"
     BINANCE_SYMBOL = 'BTCUSDT'
+
+    # >>> ADICIONADO: Chaves de API da Binance (MUITO IMPORTANTE) <<< [!code addition]
+    # Substitua 'SUA_CHAVE_API_AQUI' e 'SEU_SECRETO_API_AQUI' pelas suas credenciais reais. [!code addition]
+    # Você pode obter essas chaves na sua conta Binance, na seção de Gerenciamento de API. [!code addition]
+    BINANCE_API_KEY = os.getenv('BINANCE_API_KEY', 'SUA_CHAVE_API_AQUI') # [!code addition]
+    BINANCE_API_SECRET = os.getenv('BINANCE_API_SECRET', 'SEU_SECRETO_API_AQUI') # [!code addition]
 
     # Price validation thresholds
     PRICE_CHANGE_THRESHOLD_PCT = 0.10 # 10%

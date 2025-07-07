@@ -9,6 +9,29 @@ from typing import Dict, List, Optional, Tuple
 from utils.logging_config import logger
 from config import app_config
 from database.setup import setup_trading_analyzer_db
+import numpy as np # Certifique-se de que numpy está importado
+import json # Será útil para a função de conversão, embora não seja diretamente usado no retorno
+from flask import Blueprint, jsonify, request, current_app, render_template
+
+
+# Função auxiliar para serializar objetos NumPy
+def convert_numpy_types(obj):
+    """
+    Recursively converts NumPy types within a dictionary or list
+    to standard Python types (float, int, bool).
+    """
+    if isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(elem) for elem in obj]
+    elif isinstance(obj, np.floating): # Handles np.float32, np.float64, etc.
+        return float(obj)
+    elif isinstance(obj, np.integer): # Handles np.int32, np.int64, etc.
+        return int(obj)
+    elif isinstance(obj, np.bool_): # Handles np.True_, np.False_
+        return bool(obj)
+    else:
+        return obj
 
 class EnhancedTradingAnalyzer:
     """
@@ -236,6 +259,26 @@ class EnhancedTradingAnalyzer:
             
         except Exception as e:
             logger.error(f"[ENHANCED] Error in comprehensive analysis: {e}")
+
+    def update_analyzer(self, new_price_data: Dict, new_volume_data: Dict = None):
+        """
+        Atualiza o analisador com novos dados de preço e volume.
+        Isso deve ser chamado por um processador de dados.
+        """
+        self.price_history.append(new_price_data)
+        if new_volume_data:
+            self.volume_history.append(new_volume_data)
+
+        # Mantenha o histórico limitado para evitar uso excessivo de memória
+        max_history = 200 # Ajuste conforme necessário para seus indicadores
+        if len(self.price_history) > max_history:
+            self.price_history.pop(0)
+        if len(self.volume_history) > max_history:
+            self.volume_history.pop(0)
+
+        # Incrementar a contagem de análises e atualizar o timestamp
+        self.analysis_count += 1
+        self.last_analysis_time = datetime.now()
     
     def _calculate_comprehensive_indicators(self) -> Dict:
         """Calculate all technical indicators"""
@@ -837,6 +880,7 @@ class EnhancedTradingAnalyzer:
         """Get comprehensive analysis including all indicators and signals"""
         try:
             if len(self.price_history) < 20:
+                # O retorno aqui já é um dict com tipos padrão, então não precisa de conversão
                 return {
                     'status': 'INSUFFICIENT_DATA',
                     'message': 'Aguardando mais dados para análise completa',
@@ -874,7 +918,8 @@ class EnhancedTradingAnalyzer:
                     'EMA_26': round(indicators.get('ema_26', 0), 2)
                 }
             
-            return {
+            # Construção do dicionário de análise
+            analysis = {
                 'timestamp': datetime.now().isoformat(),
                 'current_price': current_price,
                 'technical_indicators': technical_indicators,
@@ -920,6 +965,11 @@ class EnhancedTradingAnalyzer:
                     'last_analysis': self.last_analysis.isoformat() if self.last_analysis else None
                 }
             }
+            
+            # --- CHAME A FUNÇÃO DE CONVERSÃO AQUI ---
+            final_analysis = convert_numpy_types(analysis)
+            
+            return final_analysis # Retorne o dicionário já com tipos Python nativos
             
         except Exception as e:
             logger.error(f"[ENHANCED] Error getting comprehensive analysis: {e}")
@@ -1109,7 +1159,28 @@ class EnhancedTradingAnalyzer:
     
     def get_system_status(self) -> Dict:
         """Get system status"""
-        return {
+        
+        # Obter o timestamp do último dado de preço de forma segura
+        last_data_timestamp = None
+        if self.price_history and isinstance(self.price_history[-1], dict) and 'timestamp' in self.price_history[-1]:
+            ts = self.price_history[-1]['timestamp']
+            if isinstance(ts, datetime):
+                last_data_timestamp = ts.isoformat()
+            elif isinstance(ts, str): # Se já for string ISO, use-o diretamente
+                last_data_timestamp = ts
+            # Se for NumPy datetime, a função convert_numpy_types cuidará
+            
+        # Obter o timestamp do último sinal de forma segura
+        last_signal_time_iso = None
+        if self.signals and isinstance(self.signals[-1], dict) and 'created_at' in self.signals[-1]:
+            created_at = self.signals[-1]['created_at']
+            if isinstance(created_at, datetime):
+                last_signal_time_iso = created_at.isoformat()
+            elif isinstance(created_at, str): # Se já for string ISO, use-o diretamente
+                last_signal_time_iso = created_at
+            # Se for NumPy datetime, a função convert_numpy_types cuidará
+
+        status_data = {
             'system_info': {
                 'version': '2.0.0-enhanced',
                 'status': 'ACTIVE',
@@ -1120,28 +1191,31 @@ class EnhancedTradingAnalyzer:
                 'price_data_points': len(self.price_history),
                 'volume_data_points': len(self.volume_history),
                 'data_quality': 'GOOD' if len(self.price_history) >= 50 else 'FAIR',
-                'last_data_timestamp': self.price_history[-1]['timestamp'].isoformat() if self.price_history else None
+                'last_data_timestamp': last_data_timestamp
             },
             'signal_status': {
                 'total_signals_generated': len(self.signals),
                 'active_signals': len([s for s in self.signals if s.get('status') == 'ACTIVE']),
                 'closed_signals': len([s for s in self.signals if s.get('status') != 'ACTIVE']),
-                'last_signal_time': self.signals[-1]['created_at'] if self.signals else None
+                'last_signal_time': last_signal_time_iso
             },
             'performance_overview': {
                 'win_rate': self._calculate_win_rate(),
-                'total_pnl': round(sum([s.get('profit_loss', 0) for s in self.signals]), 2)
+                'total_pnl': round(sum(s.get('profit_loss', 0) for s in self.signals), 2)
             }
         }
+        
+        # Aplica a função de conversão para garantir que todos os tipos sejam JSON-serializáveis
+        return convert_numpy_types(status_data)
     
     def _calculate_win_rate(self) -> float:
-        """Calculate overall win rate"""
+        """Calcula a taxa de vitória com base nos sinais fechados."""
         closed_signals = [s for s in self.signals if s.get('status') != 'ACTIVE']
         if not closed_signals:
             return 0.0
-        
-        winning_signals = len([s for s in closed_signals if s.get('profit_loss', 0) > 0])
-        return round((winning_signals / len(closed_signals) * 100), 2)
+
+        wins = sum(1 for s in closed_signals if s.get('profit_loss', 0) > 0)
+        return (wins / len(closed_signals)) * 100.0
     
     def reset_signals_and_state(self):
         """Reset all signals and state"""

@@ -399,7 +399,7 @@ function updateSystemInfo(status) {
 
 // ==================== ATUALIZAÇÃO SINAIS RECENTES ====================
 function updateRecentSignals() {
-    makeAPICall('/api/trading/signals?limit=5')
+    makeAPICall('/trading/api/signals?limit=5')
         .then(function(signals) {
             var container = document.getElementById('recent-signals');
             if (!container) return;

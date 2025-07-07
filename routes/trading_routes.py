@@ -1,4 +1,4 @@
-# your_project/routes/trading_routes.py - Versão com Enhanced Features
+# your_project/routes/trading_routes.py - Versão Limpa sem Duplicatas
 
 import sqlite3
 from flask import Blueprint, jsonify, request, current_app, render_template
@@ -20,6 +20,11 @@ def get_trading_analysis():
     try:
         # Usar o método get_comprehensive_analysis() do Enhanced Analyzer
         analysis = current_app.trading_analyzer.get_comprehensive_analysis()
+        
+        # --- ADICIONE ESTA LINHA PARA DEBUGAR O RETORNO ---
+        logger.debug(f"[DEBUG_ANALYSIS] Retorno de get_comprehensive_analysis: {analysis}")
+        # --- FIM DA LINHA DE DEBUG ---
+        
         return jsonify(analysis)
     except Exception as e:
         logger.error(f"Erro ao obter análise de trading: {e}")
@@ -192,76 +197,6 @@ def export_signals():
         logger.error(f"Erro ao exportar sinais: {e}")
         return jsonify({'error': str(e)}), 500
 
-# ==================== HELPER FUNCTIONS ====================
-
-def get_indicator_interpretation(indicator_name: str, value) -> str:
-    """Interpreta o valor do indicador"""
-    interpretations = {
-        'RSI': lambda v: 'Oversold' if v < 30 else 'Overbought' if v > 70 else 'Neutral',
-        'MACD_Histogram': lambda v: 'Bullish' if v > 0 else 'Bearish',
-        'BB_Position': lambda v: 'Near Lower Band' if v < 0.2 else 'Near Upper Band' if v > 0.8 else 'Middle Range',
-        'Stoch_K': lambda v: 'Oversold' if v < 20 else 'Overbought' if v > 80 else 'Neutral',
-        'Volume_Ratio': lambda v: 'High Volume' if v > 1.5 else 'Low Volume' if v < 0.7 else 'Normal Volume',
-        'Trend_Strength': lambda v: 'Strong Trend' if v > 0.7 else 'Weak Trend' if v < 0.3 else 'Moderate Trend'
-    }
-    
-    if indicator_name in interpretations and value is not None:
-        return interpretations[indicator_name](value)
-    return 'N/A'
-
-def get_indicator_signal(indicator_name: str, value) -> str:
-    """Determina o sinal do indicador (buy/sell/neutral)"""
-    if value is None:
-        return 'neutral'
-    
-    signals = {
-        'RSI': lambda v: 'buy' if v < 30 else 'sell' if v > 70 else 'neutral',
-        'MACD_Histogram': lambda v: 'buy' if v > 0 else 'sell',
-        'BB_Position': lambda v: 'buy' if v < 0.2 else 'sell' if v > 0.8 else 'neutral',
-        'Stoch_K': lambda v: 'buy' if v < 20 else 'sell' if v > 80 else 'neutral',
-    }
-    
-    if indicator_name in signals:
-        return signals[indicator_name](value)
-    return 'neutral'
-
-# ==================== GLOBAL API ROUTES (mantendo compatibilidade) ====================
-
-@trading_bp.route('/api/trading/analysis')
-def get_trading_analysis_global():
-    """Global API endpoint for trading analysis"""
-    return get_trading_analysis()
-
-@trading_bp.route('/api/trading/signals')
-def get_trading_signals_global():
-    """Global API endpoint for trading signals"""
-    return get_trading_signals()
-
-@trading_bp.route('/api/trading/active-signals')
-def get_active_signals_global():
-    """Global API endpoint for active signals"""
-    return get_active_signals()
-
-@trading_bp.route('/api/trading/pattern-stats')
-def get_pattern_statistics_global():
-    """Global API endpoint for pattern statistics"""
-    return get_pattern_statistics()
-
-@trading_bp.route('/api/trading/indicators')
-def get_current_indicators_global():
-    """Global API endpoint for indicators"""
-    return get_current_indicators()
-
-@trading_bp.route('/api/trading/scanner')
-def get_market_scanner_global():
-    """Global API endpoint for market scanner"""
-    return get_market_scanner()
-
-@trading_bp.route('/api/trading/performance')
-def get_performance_report_global():
-    """Global API endpoint for performance report"""
-    return get_performance_report()
-
 # ==================== CONTROL ROUTES ====================
 
 @trading_bp.route('/api/control/cleanup', methods=['POST'])
@@ -348,3 +283,36 @@ def force_save():
     except Exception as e:
         logger.error(f"Erro ao salvar estado: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ==================== HELPER FUNCTIONS ====================
+
+def get_indicator_interpretation(indicator_name: str, value) -> str:
+    """Interpreta o valor do indicador"""
+    interpretations = {
+        'RSI': lambda v: 'Oversold' if v < 30 else 'Overbought' if v > 70 else 'Neutral',
+        'MACD_Histogram': lambda v: 'Bullish' if v > 0 else 'Bearish',
+        'BB_Position': lambda v: 'Near Lower Band' if v < 0.2 else 'Near Upper Band' if v > 0.8 else 'Middle Range',
+        'Stoch_K': lambda v: 'Oversold' if v < 20 else 'Overbought' if v > 80 else 'Neutral',
+        'Volume_Ratio': lambda v: 'High Volume' if v > 1.5 else 'Low Volume' if v < 0.7 else 'Normal Volume',
+        'Trend_Strength': lambda v: 'Strong Trend' if v > 0.7 else 'Weak Trend' if v < 0.3 else 'Moderate Trend'
+    }
+    
+    if indicator_name in interpretations and value is not None:
+        return interpretations[indicator_name](value)
+    return 'N/A'
+
+def get_indicator_signal(indicator_name: str, value) -> str:
+    """Determina o sinal do indicador (buy/sell/neutral)"""
+    if value is None:
+        return 'neutral'
+    
+    signals = {
+        'RSI': lambda v: 'buy' if v < 30 else 'sell' if v > 70 else 'neutral',
+        'MACD_Histogram': lambda v: 'buy' if v > 0 else 'sell',
+        'BB_Position': lambda v: 'buy' if v < 0.2 else 'sell' if v > 0.8 else 'neutral',
+        'Stoch_K': lambda v: 'buy' if v < 20 else 'sell' if v > 80 else 'neutral',
+    }
+    
+    if indicator_name in signals:
+        return signals[indicator_name](value)
+    return 'neutral'
