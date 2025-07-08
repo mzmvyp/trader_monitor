@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Asset Trading Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.30.0/date_fns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --bg-color: #f8fafc;
+            
+            /* Asset Colors */
+            --btc-color: #f7931a;
+            --eth-color: #627eea;
+            --sol-color: #9945ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            border-bottom: 3px solid #1e40af;
+        }
+
+        .multi-asset-badge {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+
+        .asset-selector {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .asset-tab {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .asset-tab:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .asset-tab.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #f0f7ff, #e0f2fe);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .asset-tab.btc { border-left: 4px solid var(--btc-color); }
+        .asset-tab.eth { border-left: 4px solid var(--eth-color); }
+        .asset-tab.sol { border-left: 4px solid var(--sol-color); }
+
+        .asset-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .asset-name {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .asset-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .asset-status {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .status-streaming {
+            color: var(--success-color);
+        }
+
+        .status-stopped {
+            color: var(--danger-color);
+        }
+
+        .multi-asset-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .enhanced-stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .enhanced-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .enhanced-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.overview { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-icon.signals { background: linear-gradient(135deg, #10b981, #059669); }
+        .stat-icon.performance { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .stat-icon.correlation { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .enhanced-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+
+        .enhanced-card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+
+        .enhanced-card-body {
+            padding: 1.5rem;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .asset-comparison-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .comparison-icon {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        .comparison-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .comparison-metric {
+            text-align: center;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .signals-table {
+            width: 100%;
+        }
+
+        .signals-table th {
+            background: #f8fafc;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 1rem 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .signals-table td {
+            padding: 1rem 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .asset-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .asset-badge.BTC { background: var(--btc-color); }
+        .asset-badge.ETH { background: var(--eth-color); }
+        .asset-badge.SOL { background: var(--sol-color); }
+
+        .signal-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .signal-confluence-buy {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+        }
+
+        .signal-confluence-sell {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .correlation-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .correlation-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .correlation-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .correlation-positive { color: var(--success-color); }
+        .correlation-negative { color: var(--danger-color); }
+        .correlation-neutral { color: #6b7280; }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .control-panel {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .control-section {
+            text-align: center;
+        }
+
+        .control-section h6 {
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+
+        .btn-multi-asset {
+            background: linear-gradient(45deg, var(--primary-color), #1d4ed8);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 0.25rem;
+        }
+
+        .btn-multi-asset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            color: white;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 12px;
+        }
+
+        .nav-tabs-enhanced {
+            border: none;
+            background: white;
+            border-radius: 12px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs-enhanced .nav-link {
+            border: none;
+            border-radius: 8px;
+            color: #6b7280;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs-enhanced .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .multi-asset-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-network"></i> Multi-Asset Trading System
+                <span class="multi-asset-badge">
+                    <i class="fas fa-layer-group"></i> Multi-Asset
+                </span>
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="nav-link"><i class="fas fa-home"></i> Dashboard Principal</a>
+                <a href="/bitcoin" class="nav-link"><i class="fab fa-bitcoin"></i> Bitcoin</a>
+                <a href="/trading" class="nav-link"><i class="fas fa-chart-line"></i> Trading</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Asset Selector -->
+        <div class="asset-selector">
+            <h5 class="mb-3"><i class="fas fa-coins"></i> Seletor de Assets</h5>
+            <div class="row" id="asset-selector-grid">
+                <!-- Assets will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Multi-Asset Statistics -->
+        <div class="multi-asset-stats">
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon overview">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="total-assets">0</div>
+                <div class="stat-label">Assets Ativos</div>
+            </div>
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon signals">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="total-signals">0</div>
+                <div class="stat-label">Sinais Consolidados</div>
+            </div>
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon performance">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="best-performer">-</div>
+                <div class="stat-label">Melhor Performance</div>
+            </div>
+            <div class="enhanced-stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon correlation">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="correlation-strength">-</div>
+                <div class="stat-label">Correlação Máxima</div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h5><i class="fas fa-cogs"></i> Controles Multi-Asset</h5>
+            <div class="control-grid">
+                <div class="control-section">
+                    <h6><i class="fas fa-play-circle"></i> Streaming</h6>
+                    <button id="start-all" class="btn btn-multi-asset">
+                        <i class="fas fa-play"></i> Iniciar Todos
+                    </button>
+                    <button id="stop-all" class="btn btn-multi-asset">
+                        <i class="fas fa-stop"></i> Parar Todos
+                    </button>
+                </div>
+                <div class="control-section">
+                    <h6><i class="fas fa-sync"></i> Gerenciamento</h6>
+                    <button id="save-state" class="btn btn-multi-asset">
+                        <i class="fas fa-save"></i> Salvar Estado
+                    </button>
+                    <button id="refresh-data" class="btn btn-multi-asset">
+                        <i class="fas fa-refresh"></i> Atualizar
+                    </button>
+                </div>
+                <div class="control-section">
+                    <h6><i class="fas fa-chart-area"></i> Análise</h6>
+                    <button id="correlations" class="btn btn-multi-asset">
+                        <i class="fas fa-project-diagram"></i> Correlações
+                    </button>
+                    <button id="performance" class="btn btn-multi-asset">
+                        <i class="fas fa-medal"></i> Performance
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <div class="row">
+            <div class="col-12">
+                <ul class="nav nav-tabs nav-tabs-enhanced mb-4" id="mainTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">
+                            <i class="fas fa-tachometer-alt"></i> Overview Consolidado
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="comparison-tab" data-bs-toggle="tab" href="#comparison">
+                            <i class="fas fa-balance-scale"></i> Comparação Assets
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="signals-tab" data-bs-toggle="tab" href="#signals">
+                            <i class="fas fa-crosshairs"></i> Sinais Consolidados
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="analytics-tab" data-bs-toggle="tab" href="#analytics">
+                            <i class="fas fa-chart-bar"></i> Analytics Multi-Asset
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="enhanced-card">
+                                    <div class="enhanced-card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-line"></i> Preços Multi-Asset em Tempo Real
+                                        </h5>
+                                    </div>
+                                    <div class="enhanced-card-body">
+                                        <div class="chart-container">
+                                            <canvas id="multiAssetChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="enhanced-card">
+                                    <div class="enhanced-card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-info-circle"></i> Status do Sistema
+                                        </h5>
+                                    </div>
+                                    <div class="enhanced-card-body">
+                                        <div id="system-status">
+                                            <!-- System status will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Tab -->
+                    <div class="tab-pane fade" id="comparison">
+                        <div class="enhanced-card">
+                            <div class="enhanced-card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-balance-scale"></i> Comparação de Performance entre Assets
+                                </h5>
+                            </div>
+                            <div class="enhanced-card-body">
+                                <div class="comparison-grid" id="comparison-grid">
+                                    <!-- Comparison cards will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signals Tab -->
+                    <div class="tab-pane fade" id="signals">
+                        <div class="enhanced-card">
+                            <div class="enhanced-card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-crosshairs"></i> Sinais Consolidados de Todos os Assets
+                                </h5>
+                            </div>
+                            <div class="enhanced-card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover signals-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Asset</th>
+                                                <th>Timestamp</th>
+                                                <th>Tipo</th>
+                                                <th>Entry</th>
+                                                <th>Status</th>

@@ -1,737 +1,233 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Trading System - Enhanced Analytics Dashboard</title>
-    <script>
-    console.log('=== DASHBOARD INITIALIZATION START ===');
-    console.log('Chart.js loaded:', typeof Chart !== 'undefined');
-    console.log('Bootstrap loaded:', typeof bootstrap !== 'undefined');
-    console.log('Date-fns loaded:', typeof dateFns !== 'undefined');
-    
-    // Capturar TODOS os erros, incluindo os silenciosos
-    window.addEventListener('error', function(event) {
-        console.error('🔴 GLOBAL ERROR CAPTURED:', {
-            message: event.message,
-            filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno,
-            error: event.error,
-            stack: event.error?.stack
-        });
-    });
+<!-- templates/integrated_dashboard.html - ADICIONAR estas modificações ao arquivo existente -->
 
-    window.addEventListener('unhandledrejection', function(event) {
-        console.error('🔴 UNHANDLED PROMISE REJECTION:', event.reason);
-    });
-
-    // Log quando DOM carregar
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('✅ DOM LOADED');
-        console.log('Elements check:');
-        console.log('- overviewChart:', !!document.getElementById('overviewChart'));
-        console.log('- current-price:', !!document.getElementById('current-price'));
-        console.log('- data-points:', !!document.getElementById('data-points'));
-    });
-
-    // Verificar elementos de erro na página
-function checkErrorElements() {
-    const errorSelectors = [
-        '.alert-danger',
-        '.error-message', 
-        '.notification',
-        '[id*="error"]',
-        '[class*="error"]',
-        '.toast'
-    ];
-    
-    errorSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        if (elements.length > 0) {
-            console.log(`❌ Found error elements with selector "${selector}":`, elements);
-            elements.forEach((el, index) => {
-                console.log(`   ${index + 1}. Text: "${el.textContent.trim()}"`, el);
-            });
-        }
-    });
-}
-
-// Chamar a verificação depois que DOM carregar
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(checkErrorElements, 1000); // Aguardar 1 segundo
-});
-
-// Interceptar possíveis sistemas de notificação
-const originalAlert = window.alert;
-window.alert = function(message) {
-    console.log('🔔 ALERT INTERCEPTED:', message);
-    return originalAlert.call(this, message);
-};
-
-// Verificar se há algum sistema de toast/notification
-if (typeof Notification !== 'undefined') {
-    console.log('Browser notifications available');
-}
-
-// Verificar Bootstrap toast
-if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-    console.log('Bootstrap Toast available');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('[INIT] 🚀 Starting dashboard initialization...');
-    
-    try {
-        // Verificar dependências
-        console.log('[INIT] Checking dependencies...');
-        console.log('- Chart.js:', typeof Chart);
-        console.log('- fetch:', typeof fetch);
-        console.log('- Promise:', typeof Promise);
+<!-- === MODIFICAR: Navbar (adicionar link multi-asset) === -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-rocket"></i> Bitcoin Trading System
+            <span class="enhanced-badge">
+                <i class="fas fa-star"></i> Enhanced
+            </span>
+            <!-- === NOVO: Badge Multi-Asset === -->
+            <span class="multi-asset-badge">
+                <i class="fas fa-layer-group"></i> Multi-Asset
+            </span>
+        </a>
         
-        // Verificar elementos essenciais
-        const essentialElements = [
-            'overviewChart',
-            'current-price', 
-            'data-points',
-            'active-signals'
-        ];
-        
-        essentialElements.forEach(id => {
-            const element = document.getElementById(id);
-            console.log(`- Element #${id}:`, element ? '✅ Found' : '❌ Missing');
-        });
-        
-        // Inicializar dashboard
-        console.log('[INIT] Creating dashboard instance...');
-        window.enhancedDashboard = new EnhancedDashboard();
-        
-        console.log('[INIT] Starting dashboard updates...');
-        window.enhancedDashboard.startUpdates();
-        
-        console.log('[INIT] ✅ Dashboard initialization completed successfully');
-        
-    } catch (error) {
-        console.error('[INIT] 🔴 FATAL ERROR during initialization:', error);
-        console.error('[INIT] Stack trace:', error.stack);
-        
-        // Tentar mostrar erro na tela
-        const errorDiv = document.createElement('div');
-        errorDiv.innerHTML = `
-            <div class="alert alert-danger m-3">
-                <strong>Erro de Inicialização:</strong> ${error.message}
-                <br><small>Verifique o console para mais detalhes</small>
-            </div>
-        `;
-        document.body.prepend(errorDiv);
-    }
-});
-    </script>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.30.0/date_fns.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-
-    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
-    
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --dark-color: #1f2937;
-            --bg-color: #f8fafc;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
-            border-bottom: 3px solid #1e40af;
-        }
-
-        .enhanced-badge {
-            background: linear-gradient(45deg, #10b981, #059669);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 10px;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-        }
-
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .enhanced-stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .enhanced-stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .enhanced-stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
-        }
-
-        .stat-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .stat-icon.price { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .stat-icon.signals { background: linear-gradient(135deg, #10b981, #059669); }
-        .stat-icon.confidence { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .stat-icon.performance { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dark-color);
-            margin: 0.5rem 0;
-        }
-
-        .stat-label {
-            color: #6b7280;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .stat-change {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-top: 0.5rem;
-        }
-
-        .stat-change.positive {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .stat-change.negative {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .enhanced-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-            margin-bottom: 1.5rem;
-        }
-
-        .enhanced-card-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        }
-
-        .enhanced-card-body {
-            padding: 1.5rem;
-        }
-
-        .indicators-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .indicator-card {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 1rem;
-            border: 1px solid #e5e7eb;
-        }
-
-        .indicator-name {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-        }
-
-        .indicator-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .indicator-signal {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-top: 0.5rem;
-            display: inline-block;
-        }
-
-        .signal-bullish {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .signal-bearish {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .signal-neutral {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .signals-table {
-            width: 100%;
-        }
-
-        .signals-table th {
-            background: #f8fafc;
-            color: #374151;
-            font-weight: 600;
-            font-size: 0.875rem;
-            padding: 1rem 0.75rem;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .signals-table td {
-            padding: 1rem 0.75rem;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .signal-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .signal-confluence-buy {
-            background: linear-gradient(45deg, #10b981, #059669);
-            color: white;
-        }
-
-        .signal-confluence-sell {
-            background: linear-gradient(45deg, #ef4444, #dc2626);
-            color: white;
-        }
-
-        .confidence-bar {
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-
-        .confidence-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-
-        .confidence-high { background: linear-gradient(90deg, #10b981, #059669); }
-        .confidence-medium { background: linear-gradient(90deg, #f59e0b, #d97706); }
-        .confidence-low { background: linear-gradient(90deg, #ef4444, #dc2626); }
-
-        .market-scanner {
-            background: linear-gradient(135deg, #1e293b, #334155);
-            color: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .opportunity-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid;
-        }
-
-        .opportunity-high { border-left-color: #ef4444; }
-        .opportunity-medium { border-left-color: #f59e0b; }
-        .opportunity-low { border-left-color: #10b981; }
-
-        .system-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .info-item {
-            padding: 0.75rem;
-            background: #f8fafc;
-            border-radius: 6px;
-            border-left: 3px solid var(--primary-color);
-        }
-
-        .info-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .info-value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .status-enhanced {
-            background: linear-gradient(45deg, #10b981, #059669);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-        }
-
-        .nav-tabs-enhanced {
-            border: none;
-            background: white;
-            border-radius: 12px;
-            padding: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-tabs-enhanced .nav-link {
-            border: none;
-            border-radius: 8px;
-            color: #6b7280;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tabs-enhanced .nav-link.active {
-            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
-            color: white;
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-        }
-
-        .footer-enhanced {
-            background: linear-gradient(135deg, var(--dark-color), #374151);
-            color: white;
-            padding: 2rem 0;
-            margin-top: 3rem;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-rocket"></i> Bitcoin Trading System
-                <span class="enhanced-badge">
-                    <i class="fas fa-star"></i> Enhanced
-                </span>
+        <div class="navbar-nav ms-auto">
+            <!-- === NOVO: Link para Multi-Asset Dashboard === -->
+            <a href="/multi-asset" class="nav-link">
+                <i class="fas fa-layer-group"></i> Multi-Asset
+            </a>
+            <a href="/bitcoin" class="nav-link">
+                <i class="fab fa-bitcoin"></i> Bitcoin
+            </a>
+            <a href="/trading" class="nav-link">
+                <i class="fas fa-chart-line"></i> Trading
             </a>
             
-            <div class="navbar-nav ms-auto">
-                <div class="status-enhanced">
-                    <span class="pulse">
-                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
-                    </span>
-                    <span id="system-status-text">Enhanced Active</span>
-                </div>
+            <div class="status-enhanced">
+                <span class="pulse">
+                    <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                </span>
+                <span id="system-status-text">Enhanced Active</span>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <div class="container mt-4">
-        <div class="quick-stats">
-            <div class="enhanced-stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon price">
-                        <i class="fab fa-bitcoin"></i>
-                    </div>
-                </div>
-                <div class="stat-value" id="current-price">$0.00</div>
-                <div class="stat-label">Preço Bitcoin</div>
-                <div class="stat-change positive" id="price-change">+2.4% 24h</div>
+<!-- === ADICIONAR: CSS para Multi-Asset Badge === -->
+<style>
+.multi-asset-badge {
+    background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 10px;
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* === NOVO: Estilo para asset selector no dashboard principal === */
+.asset-quick-selector {
+    background: white;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.asset-quick-tab {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.asset-quick-tab.btc {
+    background: rgba(247, 147, 26, 0.1);
+    color: #f7931a;
+    border: 1px solid rgba(247, 147, 26, 0.3);
+}
+
+.asset-quick-tab.eth {
+    background: rgba(98, 126, 234, 0.1);
+    color: #627eea;
+    border: 1px solid rgba(98, 126, 234, 0.3);
+}
+
+.asset-quick-tab.sol {
+    background: rgba(153, 69, 255, 0.1);
+    color: #9945ff;
+    border: 1px solid rgba(153, 69, 255, 0.3);
+}
+
+.asset-quick-tab:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.asset-quick-tab.active {
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+</style>
+
+<!-- === MODIFICAR: Quick Stats (adicionar seletor de asset) === -->
+<div class="container mt-4">
+    <!-- === NOVO: Asset Quick Selector === -->
+    <div class="asset-quick-selector">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <strong><i class="fas fa-coins"></i> Asset Selecionado:</strong>
+                <span id="current-asset-display">Bitcoin (BTC)</span>
             </div>
-            <div class="enhanced-stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon signals">
-                        <i class="fas fa-crosshairs"></i>
-                    </div>
-                </div>
-                <div class="stat-value" id="active-signals">0</div>
-                <div class="stat-label">Sinais Enhanced Ativos</div>
-                <div class="stat-change positive" id="signals-change">Quality Focused</div>
-            </div>
-            <div class="enhanced-stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon confidence">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                </div>
-                <div class="stat-value" id="confidence-level">0%</div>
-                <div class="stat-label">Confiança Atual</div>
-                <div class="confidence-bar">
-                    <div class="confidence-fill confidence-medium" style="width: 0%"></div>
-                </div>
-            </div>
-            <div class="enhanced-stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon performance">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                </div>
-                <div class="stat-value" id="win-rate">0%</div>
-                <div class="stat-label">Taxa de Sucesso</div>
-                <div class="stat-change positive" id="performance-change">Enhanced Quality</div>
+            <div id="asset-quick-selector">
+                <span class="asset-quick-tab btc active" data-asset="BTC">
+                    <i class="fab fa-bitcoin"></i> BTC
+                </span>
+                <span class="asset-quick-tab eth" data-asset="ETH">
+                    <i class="fab fa-ethereum"></i> ETH
+                </span>
+                <span class="asset-quick-tab sol" data-asset="SOL">
+                    <i class="fas fa-sun"></i> SOL
+                </span>
+                <a href="/multi-asset" class="btn btn-sm btn-outline-primary ms-3">
+                    <i class="fas fa-layer-group"></i> Dashboard Completo
+                </a>
             </div>
         </div>
+    </div>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="enhanced-card">
-                    <div class="enhanced-card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-cogs"></i> Controles Enhanced Trading System
-                        </h5>
-                    </div>
-                    <div class="enhanced-card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <h6><i class="fab fa-bitcoin"></i> Pipeline Bitcoin</h6>
-                                <button id="start-bitcoin" class="btn btn-success me-2">
-                                    <i class="fas fa-play"></i> Iniciar
-                                </button>
-                                <button id="stop-bitcoin" class="btn btn-outline-danger">
-                                    <i class="fas fa-stop"></i> Parar
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <h6><i class="fas fa-brain"></i> Enhanced Analyzer</h6>
-                                <span class="status-enhanced">
-                                    <i class="fas fa-check-circle"></i> Active
-                                </span>
-                            </div>
-                            <div class="col-md-4">
-                                <h6><i class="fas fa-external-link-alt"></i> Navegação</h6>
-                                <a href="/bitcoin" class="btn btn-outline-primary me-2">
-                                    <i class="fas fa-bitcoin"></i> Bitcoin
-                                </a>
-                                <a href="/trading" class="btn btn-outline-info">
-                                    <i class="fas fa-chart-line"></i> Trading
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+    <!-- === MANTER: Quick stats existentes === -->
+    <div class="quick-stats">
+        <div class="enhanced-stat-card">
+            <div class="stat-header">
+                <div class="stat-icon price">
+                    <i class="fab fa-bitcoin" id="current-asset-icon"></i>
                 </div>
             </div>
+            <div class="stat-value" id="current-price">$0.00</div>
+            <div class="stat-label">Preço <span id="current-asset-name">Bitcoin</span></div>
+            <div class="stat-change positive" id="price-change">+2.4% 24h</div>
         </div>
+        
+        <!-- === MANTER: Outros stats cards existentes === -->
+        <div class="enhanced-stat-card">
+            <div class="stat-header">
+                <div class="stat-icon signals">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="active-signals">0</div>
+            <div class="stat-label">Sinais Enhanced Ativos</div>
+            <div class="stat-change positive" id="signals-change">Quality Focused</div>
+        </div>
+        
+        <div class="enhanced-stat-card">
+            <div class="stat-header">
+                <div class="stat-icon confidence">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="confidence-level">0%</div>
+            <div class="stat-label">Confiança Atual</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill confidence-medium" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="enhanced-stat-card">
+            <div class="stat-header">
+                <div class="stat-icon performance">
+                    <i class="fas fa-trophy"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="win-rate">0%</div>
+            <div class="stat-label">Taxa de Sucesso</div>
+            <div class="stat-change positive" id="performance-change">Enhanced Quality</div>
+        </div>
+    </div>
 
-        <div class="row">
-            <div class="col-12">
-                <ul class="nav nav-tabs nav-tabs-enhanced mb-4" id="mainTabs">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">
-                            <i class="fas fa-tachometer-alt"></i> Enhanced Overview
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="indicators-tab" data-bs-toggle="tab" href="#indicators">
-                            <i class="fas fa-chart-bar"></i> Technical Indicators
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="signals-tab" data-bs-toggle="tab" href="#signals">
-                            <i class="fas fa-crosshairs"></i> Enhanced Signals
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="scanner-tab" data-bs-toggle="tab" href="#scanner">
-                            <i class="fas fa-radar"></i> Market Scanner
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="overview">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="enhanced-card">
-                                    <div class="enhanced-card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-chart-line"></i> Bitcoin Price + Enhanced Analysis
-                                        </h5>
-                                    </div>
-                                    <div class="enhanced-card-body">
-                                        <div class="chart-container">
-                                            <canvas id="overviewChart"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="enhanced-card">
-                                    <div class="enhanced-card-header">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-microchip"></i> Enhanced System Info
-                                        </h5>
-                                    </div>
-                                    <div class="enhanced-card-body">
-                                        <div class="system-info-grid" id="system-info">
-                                            <div class="info-item">
-                                                <div class="info-label">Version</div>
-                                                <div class="info-value">Enhanced 2.0</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Data Quality</div>
-                                                <div class="info-value" id="data-quality">Loading...</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Indicators</div>
-                                                <div class="info-value">12+ Active</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Min Confidence</div>
-                                                <div class="info-value">70%</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Model Status</div>
-                                                <div class="info-value" id="model-status">Operational</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Last Analysis</div>
-                                                <div class="info-value" id="last-analysis">N/A</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Data Points</div>
-                                                <div class="info-value" id="data-points">0</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Total PnL</div>
-                                                <div class="info-value" id="total-pnl">$0.00</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Win Rate</div>
-                                                <div class="info-value" id="win-rate-system">0%</div>
-                                            </div>
-                                            <div class="info-item">
-                                                <div class="info-label">Next Update</div>
-                                                <div class="info-value" id="next-update">Soon...</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+    <!-- === MODIFICAR: Controles (adicionar multi-asset) === -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="enhanced-card">
+                <div class="enhanced-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs"></i> Controles Enhanced Multi-Asset System
+                    </h5>
+                </div>
+                <div class="enhanced-card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6><i class="fab fa-bitcoin"></i> Pipeline Bitcoin</h6>
+                            <button id="start-bitcoin" class="btn btn-success me-2">
+                                <i class="fas fa-play"></i> Iniciar
+                            </button>
+                            <button id="stop-bitcoin" class="btn btn-outline-danger">
+                                <i class="fas fa-stop"></i> Parar
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="indicators">
-                        <div class="enhanced-card">
-                            <div class="enhanced-card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-chart-bar"></i> Indicadores Técnicos
-                                </h5>
-                            </div>
-                            <div class="enhanced-card-body">
-                                <div class="indicators-grid" id="technical-indicators">
-                                    <div class="text-center text-muted">Carregando indicadores...</div>
-                                </div>
-                            </div>
+                        <div class="col-md-3">
+                            <h6><i class="fas fa-brain"></i> Enhanced Analyzer</h6>
+                            <span class="status-enhanced">
+                                <i class="fas fa-check-circle"></i> Active
+                            </span>
                         </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="signals">
-                        <div class="enhanced-card">
-                            <div class="enhanced-card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-crosshairs"></i> Sinais Recentes Gerados
-                                </h5>
-                            </div>
-                            <div class="enhanced-card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover signals-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Timestamp</th>
-                                                <th>Tipo</th>
-                                                <th>Status</th>
-                                                <th>PnL</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="recent-signals-body">
-                                            <tr><td colspan="4" class="text-center text-muted">Nenhum sinal recente disponível.</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <!-- === NOVO: Controles Multi-Asset === -->
+                        <div class="col-md-3">
+                            <h6><i class="fas fa-layer-group"></i> Multi-Asset</h6>
+                            <button id="start-multi-asset" class="btn btn-primary me-2">
+                                <i class="fas fa-play"></i> Iniciar
+                            </button>
+                            <button id="stop-multi-asset" class="btn btn-outline-warning">
+                                <i class="fas fa-stop"></i> Parar
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="scanner">
-                        <div class="market-scanner">
-                            <h4><i class="fas fa-radar"></i> Scanner de Oportunidades de Mercado</h4>
-                            <p class="text-muted">Análise em tempo real para identificar potenciais entradas e saídas.</p>
-                            <div id="market-opportunities">
-                                <div class="text-center text-muted">Buscando oportunidades...</div>
-                            </div>
+                        <div class="col-md-3">
+                            <h6><i class="fas fa-external-link-alt"></i> Navegação</h6>
+                            <a href="/multi-asset" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-layer-group"></i> Multi-Asset
+                            </a>
+                            <a href="/bitcoin" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-bitcoin"></i> Bitcoin
+                            </a>
+                            <a href="/trading" class="btn btn-outline-info">
+                                <i class="fas fa-chart-line"></i> Trading
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -739,701 +235,453 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <footer class="footer-enhanced mt-5">
-        <div class="container text-center">
-            <p>&copy; 2023 Bitcoin Trading System. All Rights Reserved.</p>
-            <p class="text-muted">Enhanced Analytics Dashboard - Version 2.0</p>
+    <!-- === MANTER: Tabs existentes === -->
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs nav-tabs-enhanced mb-4" id="mainTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">
+                        <i class="fas fa-tachometer-alt"></i> Enhanced Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="indicators-tab" data-bs-toggle="tab" href="#indicators">
+                        <i class="fas fa-chart-bar"></i> Technical Indicators
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="signals-tab" data-bs-toggle="tab" href="#signals">
+                        <i class="fas fa-crosshairs"></i> Enhanced Signals
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="scanner-tab" data-bs-toggle="tab" href="#scanner">
+                        <i class="fas fa-radar"></i> Market Scanner
+                    </a>
+                </li>
+                <!-- === NOVO: Tab Multi-Asset === -->
+                <li class="nav-item">
+                    <a class="nav-link" id="multi-asset-tab" data-bs-toggle="tab" href="#multi-asset">
+                        <i class="fas fa-layer-group"></i> Multi-Asset Overview
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- === MANTER: Todas as tabs existentes === -->
+                <div class="tab-pane fade show active" id="overview">
+                    <!-- Conteúdo existente mantido -->
+                </div>
+
+                <div class="tab-pane fade" id="indicators">
+                    <!-- Conteúdo existente mantido -->
+                </div>
+
+                <div class="tab-pane fade" id="signals">
+                    <!-- Conteúdo existente mantido -->
+                </div>
+
+                <div class="tab-pane fade" id="scanner">
+                    <!-- Conteúdo existente mantido -->
+                </div>
+
+                <!-- === NOVA: Tab Multi-Asset === -->
+                <div class="tab-pane fade" id="multi-asset">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="enhanced-card">
+                                <div class="enhanced-card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-chart-line"></i> Comparação Multi-Asset
+                                    </h5>
+                                </div>
+                                <div class="enhanced-card-body">
+                                    <div class="chart-container">
+                                        <canvas id="multiAssetComparisonChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="enhanced-card">
+                                <div class="enhanced-card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-layer-group"></i> Assets Overview
+                                    </h5>
+                                </div>
+                                <div class="enhanced-card-body">
+                                    <div id="multi-asset-overview">
+                                        <div class="text-center text-muted">Carregando dados multi-asset...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="enhanced-card mt-3">
+                        <div class="enhanced-card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-crosshairs"></i> Sinais Consolidados
+                            </h5>
+                        </div>
+                        <div class="enhanced-card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover signals-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Asset</th>
+                                            <th>Tipo</th>
+                                            <th>Entry</th>
+                                            <th>Status</th>
+                                            <th>PnL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="multi-asset-signals-table">
+                                        <tr><td colspan="5" class="text-center text-muted">Carregando sinais...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- === ADICIONAR: JavaScript para Multi-Asset no Dashboard Principal === -->
+<script>
+// === ADICIONAR estas funções ao JavaScript existente ===
+
+// Variável global para asset selecionado
+let currentSelectedAsset = 'BTC';
+let multiAssetChart = null;
+
+// Configurações dos assets
+const assetConfigs = {
+    'BTC': { name: 'Bitcoin', icon: 'fab fa-bitcoin', color: '#f7931a' },
+    'ETH': { name: 'Ethereum', icon: 'fab fa-ethereum', color: '#627eea' },
+    'SOL': { name: 'Solana', icon: 'fas fa-sun', color: '#9945ff' }
+};
+
+// === ADICIONAR ao DOMContentLoaded existente ===
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup existing dashboard...
     
-    <script>
-        // ==================== DEFINIÇÕES GLOBAIS ====================
+    // === NOVO: Setup Multi-Asset functionality ===
+    setupMultiAssetControls();
+    setupAssetSelector();
+    
+    // === NOVO: Tab change handler para multi-asset ===
+    document.addEventListener('shown.bs.tab', (event) => {
+        const tabId = event.target.getAttribute('href');
+        if (tabId === '#multi-asset') {
+            loadMultiAssetData();
+        }
+    });
+});
+
+function setupMultiAssetControls() {
+    // Botão iniciar multi-asset
+    document.getElementById('start-multi-asset')?.addEventListener('click', async () => {
+        try {
+            showNotification('Iniciando streaming multi-asset...', 'info');
+            const response = await fetch('/api/multi-asset/start', { method: 'POST' });
+            const data = await response.json();
+            
+            if (data.status === 'started') {
+                showNotification('Multi-asset streaming iniciado!', 'success');
+            } else {
+                showNotification('Erro: ' + data.message, 'warning');
+            }
+        } catch (error) {
+            console.error('Erro ao iniciar multi-asset:', error);
+            showNotification('Erro ao iniciar multi-asset streaming', 'danger');
+        }
+    });
+
+    // Botão parar multi-asset
+    document.getElementById('stop-multi-asset')?.addEventListener('click', async () => {
+        try {
+            showNotification('Parando streaming multi-asset...', 'info');
+            const response = await fetch('/api/multi-asset/stop', { method: 'POST' });
+            const data = await response.json();
+            
+            if (data.status === 'stopped') {
+                showNotification('Multi-asset streaming parado!', 'warning');
+            } else {
+                showNotification('Erro: ' + data.message, 'warning');
+            }
+        } catch (error) {
+            console.error('Erro ao parar multi-asset:', error);
+            showNotification('Erro ao parar multi-asset streaming', 'danger');
+        }
+    });
+}
+
+function setupAssetSelector() {
+    const selector = document.getElementById('asset-quick-selector');
+    if (!selector) return;
+    
+    selector.addEventListener('click', (e) => {
+        const tab = e.target.closest('.asset-quick-tab');
+        if (tab) {
+            const asset = tab.dataset.asset;
+            selectAsset(asset);
+        }
+    });
+}
+
+function selectAsset(assetSymbol) {
+    currentSelectedAsset = assetSymbol;
+    
+    // Atualizar visual do seletor
+    document.querySelectorAll('.asset-quick-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-asset="${assetSymbol}"]`)?.classList.add('active');
+    
+    // Atualizar display do asset atual
+    const config = assetConfigs[assetSymbol];
+    if (config) {
+        document.getElementById('current-asset-display').textContent = `${config.name} (${assetSymbol})`;
+        document.getElementById('current-asset-icon').className = config.icon;
+        document.getElementById('current-asset-name').textContent = config.name;
+    }
+    
+    // Atualizar dados específicos do asset
+    updateSelectedAssetData(assetSymbol);
+}
+
+async function updateSelectedAssetData(assetSymbol) {
+    try {
+        // Obter dados específicos do asset
+        const response = await fetch(`/multi-asset/api/asset/${assetSymbol}`);
+        const data = await response.json();
         
-        // Verificar se funções necessárias existem
-        if (typeof formatCurrency === 'undefined') {
-            function formatCurrency(value) {
-                try {
-                    if (value === null || value === undefined || isNaN(value)) {
-                        return '$0.00';
-                    }
-                    return '$' + Number(value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                } catch (error) {
-                    return '$0.00';
-                }
-            }
-            window.formatCurrency = formatCurrency;
+        if (data.error) {
+            console.warn('Erro ao obter dados do asset:', data.error);
+            return;
         }
-
-        if (typeof formatPercentage === 'undefined') {
-            function formatPercentage(value, decimals = 1) {
-                try {
-                    if (value === null || value === undefined || isNaN(value)) {
-                        return '0%';
-                    }
-                    return Number(value).toFixed(decimals) + '%';
-                } catch (error) {
-                    return '0%';
-                }
-            }
-            window.formatPercentage = formatPercentage;
+        
+        // Atualizar preço atual
+        const currentPrice = data.streaming_data?.last_price;
+        if (currentPrice) {
+            document.getElementById('current-price').textContent = formatCurrency(currentPrice);
         }
-
-        if (typeof updateDebugInfo === 'undefined') {
-            function updateDebugInfo(data) {
-                console.log('[DEBUG] updateDebugInfo called with:', data);
-                try {
-                    if (!data) return;
-                    
-                    const dataQualityEl = document.getElementById('data-quality');
-                    const modelStatusEl = document.getElementById('model-status');
-                    
-                    if (dataQualityEl && data.data_quality) {
-                        dataQualityEl.textContent = data.data_quality;
-                    }
-                    
-                    if (modelStatusEl && data.model_status) {
-                        modelStatusEl.textContent = data.model_status;
-                    }
-                } catch (error) {
-                    console.warn("Erro em updateDebugInfo:", error);
-                }
-            }
-            window.updateDebugInfo = updateDebugInfo;
+        
+        // Atualizar sinais ativos
+        const analysisData = data.analysis_data;
+        if (analysisData && analysisData.active_signals) {
+            document.getElementById('active-signals').textContent = analysisData.active_signals.length;
         }
-
-        if (typeof makeAPICall === 'undefined') {
-            async function makeAPICall(url, options = {}) {
-                try {
-                    const response = await fetch(url, {
-                        headers: { 'Content-Type': 'application/json' },
-                        ...options
-                    });
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.json();
-                } catch (error) {
-                    console.error(`API call failed for ${url}:`, error);
-                    throw error;
-                }
-            }
-            window.makeAPICall = makeAPICall;
-        }
-
-        if (typeof showNotification === 'undefined') {
-            function showNotification(message, type = 'info') {
-                console.log(`[${type.toUpperCase()}] ${message}`);
-            }
-            window.showNotification = showNotification;
-        }
-
-        // Destruir gráfico existente antes de criar novo
-        function destroyExistingChart(canvasId) {
-            const existingChart = Chart.getChart(canvasId);
-            if (existingChart) {
-                existingChart.destroy();
-                console.log('[CHART] Existing chart destroyed');
-            }
-        }
-
-        // ==================== DASHBOARD CLASS ====================
-
-        var EnhancedDashboard = function() {
-            this.chart = null;
-            this.chartData = {
-                labels: [],
-                datasets: [
-                    {
-                        label: 'Preço Bitcoin',
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        data: [],
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Linha de Sinais',
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                        data: [],
-                        tension: 0.3,
-                        fill: false
-                    }
-                ]
-            };
-
-            this.initializeChart = function() {
-                try {
-                    console.log('[CHART] Initializing chart...');
-                    destroyExistingChart('overviewChart');
-                    
-                    const canvas = document.getElementById('overviewChart');
-                    if (!canvas) {
-                        console.error('[CHART] Canvas element not found');
-                        return;
-                    }
-                    
-                    const ctx = canvas.getContext('2d');
-                    this.chart = new Chart(ctx, {
-                        type: 'line',
-                        data: this.chartData,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: true,
-                                    position: 'top',
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    type: 'time',
-                                    time: {
-                                        unit: 'minute',
-                                        tooltipFormat: 'MMM D, YYYY h:mm:ss a',
-                                        displayFormats: {
-                                            minute: 'h:mm a'
-                                        }
-                                    },
-                                    title: {
-                                        display: true,
-                                        text: 'Tempo'
-                                    }
-                                },
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: 'Preço (USD)'
-                                    }
-                                }
-                            },
-                            animation: {
-                                duration: 0
-                            }
-                        }
-                    });
-                    
-                    console.log('[CHART] Chart initialized successfully');
-                } catch (error) {
-                    console.error('[CHART] Error initializing chart:', error);
-                }
-            };
-
-            this.updateChart = function(data) {
-                try {
-                    console.log('[CHART] updateChart called with:', data?.length, 'items');
-                    
-                    if (!this.chart) {
-                        console.error('[CHART] Chart not initialized yet');
-                        return;
-                    }
-                    
-                    
-                    console.log('[CHART] Sample data item:', data[0]);
-                    
-                    // Handle different data formats
-                    const labels = [];
-                    const prices = [];
-                    
-                    data.forEach((item, index) => {
-                        if (item && item.timestamp && (item.price || item.value)) {
-                            labels.push(new Date(item.timestamp));
-                            prices.push(item.price || item.value);
-                        } else {
-                            console.warn(`[CHART] Invalid item at index ${index}:`, item);
-                        }
-                    });
-                    
-                    console.log(`[CHART] Processed ${labels.length} labels and ${prices.length} prices`);
-                    
-                    if (labels.length > 0 && prices.length > 0) {
-                        this.chart.data.labels = labels;
-                        this.chart.data.datasets[0].data = prices;
-                        this.chart.update('none');
-                        console.log(`✅ [CHART] Chart updated successfully with ${prices.length} data points`);
-                        
-                        // Update data points display
-                        const dataPointsEl = document.getElementById('data-points');
-                        if (dataPointsEl) {
-                            dataPointsEl.textContent = prices.length;
-                            console.log(`[CHART] Data points display updated: ${prices.length}`);
-                        }
-                    } else {
-                        console.error('❌ [CHART] No valid data points found for chart');
-                    }
-                    
-                } catch (error) {
-                    console.error('[CHART] Erro ao atualizar chart:', error);
-                }
-            };
-
-            this.generateFallbackData = function() {
-                console.log('[FALLBACK] Generating fallback data for chart');
-                const now = new Date();
-                const sampleData = [];
-                const basePrice = 109000; // Use uma base mais próxima do Bitcoin atual
-                
-                for (let i = 0; i < 20; i++) {
-                    const timestamp = new Date(now.getTime() - (20 - i) * 60000);
-                    const price = basePrice + (Math.random() - 0.5) * 4000; // Variação de ±2000
-                    sampleData.push({ 
-                        timestamp: timestamp.toISOString(), 
-                        price: Math.round(price * 100) / 100 // 2 decimais
-                    });
-                }
-                
-                console.log('[FALLBACK] Generated', sampleData.length, 'sample points');
-                this.updateChart(sampleData);
-                document.getElementById('current-price').textContent = formatCurrency(sampleData[sampleData.length - 1].price);
-                
-                // Update data points display
-                const dataPointsEl = document.getElementById('data-points');
-                if (dataPointsEl) {
-                    dataPointsEl.textContent = sampleData.length;
-                }
-            };
-
-            this.updateTechnicalIndicators = function() {
-                makeAPICall('/trading/api/indicators')
-                    .then(data => {
-                        if (data && data.indicators) {
-                            console.log('[INDICATORS] Data received:', Object.keys(data.indicators).length, 'indicators');
-                            const container = document.getElementById('technical-indicators');
-                            if (!container) return;
-                            
-                            container.innerHTML = '';
-                            
-                            Object.keys(data.indicators).forEach(indicatorName => {
-                                const indicator = data.indicators[indicatorName];
-                                const card = document.createElement('div');
-                                card.className = 'indicator-card';
-                                
-                                let signalClass = 'signal-neutral';
-                                if (indicator.signal === 'buy') signalClass = 'signal-bullish';
-                                else if (indicator.signal === 'sell') signalClass = 'signal-bearish';
-                                
-                                // Verificar tipo antes de usar toFixed
-                                let formattedValue = 'N/A';
-                                if (indicator.value !== null && indicator.value !== undefined) {
-                                    if (typeof indicator.value === 'number') {
-                                        formattedValue = indicator.value.toFixed(2);
-                                    } else {
-                                        formattedValue = String(indicator.value);
-                                    }
-                                }
-                                
-                                card.innerHTML = `
-                                    <div class="indicator-name">${indicatorName}</div>
-                                    <div class="indicator-value">${formattedValue}</div>
-                                    <div class="indicator-signal ${signalClass}">${indicator.interpretation || 'N/A'}</div>
-                                `;
-                                
-                                container.appendChild(card);
-                            });
-                            
-                            console.log('[INDICATORS] Updated successfully');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('[INDICATORS] Error loading indicators:', error);
-                        const container = document.getElementById('technical-indicators');
-                        if (container) {
-                            container.innerHTML = '<div class="text-center text-danger">Erro ao carregar indicadores</div>';
-                        }
-                    });
-            };
-
-            this.updateMarketScanner = function() {
-                makeAPICall('/trading/api/market-scanner')
-                    .then(data => {
-                        if (data) {
-                            console.log('[SCANNER] Data received:', data);
-                            const container = document.getElementById('market-opportunities');
-                            if (!container) return;
-                            
-                            container.innerHTML = '';
-                            
-                            if (data.opportunities && data.opportunities.length > 0) {
-                                data.opportunities.forEach(opportunity => {
-                                    const card = document.createElement('div');
-                                    card.className = `opportunity-card opportunity-${opportunity.priority || 'low'}`;
-                                    
-                                    card.innerHTML = `
-                                        <h6>${opportunity.type || 'Oportunidade'}</h6>
-                                        <p>${opportunity.description || 'Sem descrição disponível'}</p>
-                                        <small>Confiança: ${opportunity.confidence || 0}%</small>
-                                    `;
-                                    
-                                    container.appendChild(card);
-                                });
-                            } else {
-                                container.innerHTML = '<div class="text-center">Nenhuma oportunidade encontrada no momento</div>';
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('[SCANNER] Error loading scanner:', error);
-                        const container = document.getElementById('market-opportunities');
-                        if (container) {
-                            container.innerHTML = '<div class="text-center text-danger">Erro ao carregar scanner de mercado</div>';
-                        }
-                    });
-            };
-
-            this.updateRecentSignals = function() {
-                makeAPICall('/trading/api/signals?limit=10')
-                    .then(data => {
-                        if (data && data.recent_signals) {
-                            console.log('[SIGNALS] Data received:', data.recent_signals.length, 'signals');
-                            this.updateSignalAnalysis(data.recent_signals);
-                        } else {
-                            console.warn('[SIGNALS] Invalid signals data:', data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('[SIGNALS] Error loading signals:', error);
-                        const tbody = document.getElementById('recent-signals-body');
-                        if (tbody) {
-                            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar sinais</td></tr>';
-                        }
-                    });
-            };
-
-            this.updateSignalAnalysis = function(recentSignals) {
-                try {
-                    const signalsTableBody = document.getElementById('recent-signals-body');
-                    if (!signalsTableBody) {
-                        console.warn('[SIGNALS] Table body element not found');
-                        return;
-                    }
-
-                    signalsTableBody.innerHTML = '';
-
-                    if (recentSignals && recentSignals.length > 0) {
-                        recentSignals.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-                        recentSignals.forEach(signal => {
-                            const row = signalsTableBody.insertRow();
-                            row.insertCell().textContent = new Date(signal.created_at).toLocaleString('pt-BR');
-                            row.insertCell().textContent = signal.type;
-
-                            const statusCell = row.insertCell();
-                            statusCell.textContent = signal.status;
-                            if (signal.status === 'ACTIVE') {
-                                statusCell.className = 'text-warning';
-                            } else if (signal.status === 'CLOSED') {
-                                statusCell.className = signal.profit_loss > 0 ? 'text-success' : 'text-danger';
-                            }
-
-                            const pnlCell = row.insertCell();
-                            pnlCell.textContent = formatCurrency(signal.profit_loss || 0);
-                            if (signal.profit_loss > 0) {
-                                pnlCell.className = 'text-success';
-                            } else if (signal.profit_loss < 0) {
-                                pnlCell.className = 'text-danger';
-                            }
-                        });
-                        
-                        console.log('[SIGNALS] Table updated with', recentSignals.length, 'signals');
-                    } else {
-                        const row = signalsTableBody.insertRow();
-                        const cell = row.insertCell();
-                        cell.colSpan = 4;
-                        cell.textContent = 'Nenhum sinal recente disponível.';
-                        cell.className = 'text-center text-muted';
-                    }
-                } catch (error) {
-                    console.error('[SIGNALS] Error updating signals table:', error);
-                }
-            };
-
-            this.updateComprehensiveAnalysis = function(data) {
-                try {
-                    console.log('[ANALYSIS] Comprehensive analysis data received');
-                    
-                    if (data.performance_summary) {
-                        const totalPnlEl = document.getElementById('total-pnl');
-                        const winRateEl = document.getElementById('win-rate-system');
-                        
-                        if (totalPnlEl) totalPnlEl.textContent = formatCurrency(data.performance_summary.total_pnl || 0);
-                        if (winRateEl) winRateEl.textContent = formatPercentage(data.performance_summary.win_rate || 0);
-                    }
-
-                    if (data.system_health) {
-                        const dataQualityEl = document.getElementById('data-quality');
-                        const modelStatusEl = document.getElementById('model-status');
-                        const lastAnalysisEl = document.getElementById('last-analysis');
-                        
-                        if (dataQualityEl) dataQualityEl.textContent = data.system_health.data_quality || 'Good';
-                        if (modelStatusEl) modelStatusEl.textContent = data.system_health.model_status || 'Operational';
-                        if (lastAnalysisEl) lastAnalysisEl.textContent = new Date(data.timestamp || Date.now()).toLocaleString('pt-BR');
-                    }
-
-                    if (data.active_signals) {
-                        const activeSignalsEl = document.getElementById('active-signals');
-                        if (activeSignalsEl) activeSignalsEl.textContent = data.active_signals.length || 0;
-                    }
-
-                    if (data.market_analysis && data.market_analysis.confidence) {
-                        const confidenceLevelEl = document.getElementById('confidence-level');
-                        const confidenceFillEl = document.querySelector('.confidence-fill');
-                        
-                        if (confidenceLevelEl) {
-                            const confidence = Math.round(data.market_analysis.confidence * 100);
-                            confidenceLevelEl.textContent = confidence + '%';
-                            
-                            if (confidenceFillEl) {
-                                confidenceFillEl.style.width = confidence + '%';
-                                confidenceFillEl.className = 'confidence-fill ' + 
-                                    (confidence >= 70 ? 'confidence-high' : 
-                                     confidence >= 40 ? 'confidence-medium' : 'confidence-low');
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error('[ANALYSIS] Error updating comprehensive analysis:', error);
-                }
-            };
-
-            this.updateData = function() {
-                // Fetch main status data
-                makeAPICall('/api/integrated/status')
-                    .then(data => {
-                        if (data) {
-                            console.log('[DATA] Main status data received');
-                            
-                            if (data.bitcoin && data.bitcoin.current_price) {
-                                document.getElementById('current-price').textContent = formatCurrency(data.bitcoin.current_price);
-                            }
-                            if (data.trading && data.trading.active_signals !== undefined) {
-                                document.getElementById('active-signals').textContent = data.trading.active_signals;
-                            }
-                            updateDebugInfo(data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('[DATA] Error fetching main status:', error);
-                    });
-
-                // Fetch Bitcoin recent data
-                makeAPICall('/bitcoin/api/recent-data')
-                    .then(data => {
-                        console.log('[DATA] Bitcoin API raw response:', data);
-                        
-                        if (data) {
-                            let chartData = null;
-                            let currentPrice = null;
-                            
-                            // Try different possible data structures
-                            if (data.recent_data && Array.isArray(data.recent_data)) {
-                                chartData = data.recent_data;
-                                console.log('[DATA] Using data.recent_data:', chartData.length, 'items');
-                            } else if (data.data && Array.isArray(data.data)) {
-                                chartData = data.data;
-                                console.log('[DATA] Using data.data:', chartData.length, 'items');
-                            } else if (Array.isArray(data)) {
-                                chartData = data;
-                                console.log('[DATA] Using data directly:', chartData.length, 'items');
-                            } else {
-                                console.warn('[DATA] No valid array found in response');
-                            }
-                            
-                            // Get current price
-                            if (data.current_price) {
-                                currentPrice = data.current_price;
-                                console.log('[DATA] Found current_price:', currentPrice);
-                            } else if (chartData && chartData.length > 0) {
-                                const latest = chartData[chartData.length - 1];
-                                currentPrice = latest.price || latest.value;
-                                console.log('[DATA] Extracted price from last item:', currentPrice);
-                            }
-                            
-                            // Update chart
-                            if (chartData && chartData.length > 0) {
-                                console.log('[DATA] Sample chart data item:', chartData[0]);
-                                this.updateChart(chartData);
-                            } else {
-                                console.warn('[DATA] No valid chart data, using fallback');
-                                this.generateFallbackData();
-                            }
-                            
-                            // Update current price display
-                            if (currentPrice) {
-                                document.getElementById('current-price').textContent = formatCurrency(currentPrice);
-                                console.log('[DATA] Price updated to:', currentPrice);
-                            }
-                        } else {
-                            console.warn('[DATA] No data received from Bitcoin API, using fallback');
-                            this.generateFallbackData();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('[DATA] Error fetching Bitcoin data:', error);
-                        this.tryStreamStatus();
-                    });
-
-                // Fetch comprehensive trading analysis data
-                makeAPICall('/trading/api/analysis')
-                    .then(analysisData => {
-                        if (analysisData) {
-                            console.log('[DATA] Trading analysis data received');
-                            this.updateComprehensiveAnalysis(analysisData);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('[DATA] Error fetching trading analysis:', error);
-                    });
-            };
-
-            this.tryStreamStatus = function() {
-                console.log('[FALLBACK] Trying stream status...');
-                makeAPICall('/bitcoin/api/stream-status')
-                    .then(data => {
-                        if (data) {
-                            console.log('[FALLBACK] Stream status data received:', data);
-                            
-                            if (data.current_price) {
-                                document.getElementById('current-price').textContent = formatCurrency(data.current_price);
-                            }
-                            if (data.recent_prices && Array.isArray(data.recent_prices)) {
-                                const chartData = data.recent_prices.map((price, index) => ({
-                                    timestamp: new Date(Date.now() - (data.recent_prices.length - index) * 60000).toISOString(),
-                                    price: price
-                                }));
-                                this.updateChart(chartData);
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.warn('[FALLBACK] Stream status failed, using sample data:', error);
-                        this.generateFallbackData();
-                    });
-            };
-
-            this.setupEventListeners = function() {
-                document.getElementById('start-bitcoin').addEventListener('click', async () => {
-                    showNotification('Iniciando streaming de Bitcoin...', 'info');
-                    try {
-                        const response = await makeAPICall('/bitcoin/api/start-stream', { method: 'POST' });
-                        if (response.status === 'started') {
-                            showNotification('Streaming de Bitcoin iniciado!', 'success');
-                        } else {
-                            showNotification('Erro ao iniciar streaming: ' + response.message, 'danger');
-                        }
-                    } catch (error) {
-                        console.error('Erro ao iniciar streaming:', error);
-                        showNotification('Erro de conexão com o servidor ao iniciar streaming.', 'danger');
-                    }
-                });
-
-                document.getElementById('stop-bitcoin').addEventListener('click', async () => {
-                    showNotification('Parando streaming de Bitcoin...', 'info');
-                    try {
-                        const response = await makeAPICall('/bitcoin/api/stop-stream', { method: 'POST' });
-                        if (response.status === 'stopped') {
-                            showNotification('Streaming de Bitcoin parado!', 'info');
-                        } else {
-                            showNotification('Erro ao parar streaming: ' + response.message, 'danger');
-                        }
-                    } catch (error) {
-                        console.error('Erro ao parar streaming:', error);
-                        showNotification('Erro de conexão com o servidor ao parar streaming.', 'danger');
-                    }
-                });
-
-                // Add tab change listeners
-                document.addEventListener('shown.bs.tab', (event) => {
-                    const tabId = event.target.getAttribute('href');
-                    console.log('[TAB] Changed to:', tabId);
-                    
-                    if (tabId === '#indicators') {
-                        this.updateTechnicalIndicators();
-                    } else if (tabId === '#scanner') {
-                        this.updateMarketScanner();
-                    } else if (tabId === '#signals') {
-                        this.updateRecentSignals();
-                    }
-                });
-            };
-
-            this.startUpdates = function() {
-                console.log('[DASHBOARD] Starting dashboard updates...');
-                
-                this.initializeChart();
-                
-                if (this.chart) {
-                    console.log('[DASHBOARD] Chart initialized successfully');
-                } else {
-                    console.error('[DASHBOARD] Chart initialization failed');
-                }
-                
-                this.setupEventListeners();
-                this.updateData(); // Initial data load
-                
-                // Update general data every 5 seconds
-                setInterval(() => {
-                    this.updateData();
-                }, 5000);
-                
-                // Update tab-specific content every 10 seconds
-                setInterval(() => {
-                    const activeTab = document.querySelector('.nav-link.active');
-                    if (activeTab) {
-                        const tabId = activeTab.getAttribute('href');
-                        
-                        if (tabId === '#indicators') {
-                            this.updateTechnicalIndicators();
-                        } else if (tabId === '#scanner') {
-                            this.updateMarketScanner();
-                        } else if (tabId === '#signals') {
-                            this.updateRecentSignals();
-                        }
-                    }
-                }, 10000);
-                
-                console.log('[DASHBOARD] Dashboard updates started successfully');
-            };
-        };
-
-        // ==================== INITIALIZATION ====================
-
-        function updateLastUpdate() {
-            const element = document.getElementById('last-update');
-            if (element) {
-                element.textContent = new Date().toLocaleString('pt-BR');
-            }
-        }
-
-        // Initialize dashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('[INIT] DOM loaded, initializing dashboard...');
+        
+        // Atualizar confiança
+        if (analysisData && analysisData.signal_analysis) {
+            const confidence = analysisData.signal_analysis.confidence || 0;
+            document.getElementById('confidence-level').textContent = confidence + '%';
             
-            // Error handling
-            window.addEventListener('error', function(event) {
-                if (!event.error || event.error === null) return;
-                if (event.error.message && event.error.message.includes('Canvas is already in use')) {
-                    console.warn('[ERROR] Chart.js canvas error (handled)');
-                    return;
-                }
-                console.error('[ERROR] Global error:', event.error);
-            });
+            const fillElement = document.querySelector('.confidence-fill');
+            if (fillElement) {
+                fillElement.style.width = confidence + '%';
+                fillElement.className = 'confidence-fill ' + 
+                    (confidence >= 70 ? 'confidence-high' : 
+                     confidence >= 40 ? 'confidence-medium' : 'confidence-low');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Erro ao atualizar dados do asset:', error);
+    }
+}
 
-            // Initialize dashboard
-            window.enhancedDashboard = new EnhancedDashboard();
-            window.enhancedDashboard.startUpdates();
+async function loadMultiAssetData() {
+    try {
+        // Carregar overview multi-asset
+        const overviewResponse = await fetch('/api/multi-asset/overview');
+        const overviewData = await overviewResponse.json();
+        
+        updateMultiAssetOverview(overviewData);
+        updateMultiAssetChart(overviewData);
+        
+        // Carregar sinais consolidados
+        const signalsResponse = await fetch('/multi-asset/api/consolidated/signals');
+        const signalsData = await signalsResponse.json();
+        
+        updateMultiAssetSignalsTable(signalsData.consolidated_signals || []);
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados multi-asset:', error);
+    }
+}
+
+function updateMultiAssetOverview(data) {
+    const container = document.getElementById('multi-asset-overview');
+    if (!container) return;
+    
+    let html = '';
+    
+    if (data.assets) {
+        Object.entries(data.assets).forEach(([symbol, assetData]) => {
+            if (assetData.error) return;
             
-            updateLastUpdate();
-            setInterval(updateLastUpdate, 60000);
+            const config = assetConfigs[symbol];
+            const streaming = assetData.streaming || {};
+            const trading = assetData.trading || {};
             
-            console.log('[INIT] Dashboard initialization completed');
+            html += `
+                <div class="d-flex align-items-center justify-content-between mb-3 p-2" style="background: rgba(${config ? config.color : '#6b7280'}, 0.1); border-radius: 8px;">
+                    <div class="d-flex align-items-center">
+                        <i class="${config ? config.icon : 'fas fa-coins'}" style="color: ${config ? config.color : '#6b7280'}; font-size: 1.5rem; margin-right: 0.75rem;"></i>
+                        <div>
+                            <div class="fw-bold">${config ? config.name : symbol}</div>
+                            <small class="text-muted">${formatCurrency(streaming.current_price || 0)}</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="small">
+                            <span class="${streaming.is_running ? 'text-success' : 'text-danger'}">
+                                <i class="fas fa-circle"></i> ${streaming.is_running ? 'Ativo' : 'Parado'}
+                            </span>
+                        </div>
+                        <div class="small text-muted">
+                            ${trading.active_signals || 0} sinais
+                        </div>
+                    </div>
+                </div>
+            `;
         });
-    </script>
-</body>
-</html>
+    }
+    
+    if (html === '') {
+        html = '<div class="text-center text-muted">Nenhum dado multi-asset disponível</div>';
+    }
+    
+    container.innerHTML = html;
+}
+
+function updateMultiAssetChart(data) {
+    const canvas = document.getElementById('multiAssetComparisonChart');
+    if (!canvas) return;
+    
+    // Destruir gráfico existente
+    if (multiAssetChart) {
+        multiAssetChart.destroy();
+    }
+    
+    const ctx = canvas.getContext('2d');
+    const datasets = [];
+    
+    if (data.assets) {
+        Object.entries(data.assets).forEach(([symbol, assetData]) => {
+            if (assetData.error) return;
+            
+            const config = assetConfigs[symbol];
+            const price = assetData.streaming?.current_price || 0;
+            
+            if (price > 0) {
+                // Simular dados históricos para demonstração
+                const historicalData = [];
+                const now = new Date();
+                
+                for (let i = 19; i >= 0; i--) {
+                    const timestamp = new Date(now.getTime() - i * 60000);
+                    const variation = (Math.random() - 0.5) * 0.02; // ±1%
+                    historicalData.push({
+                        x: timestamp,
+                        y: price * (1 + variation)
+                    });
+                }
+                
+                datasets.push({
+                    label: config ? config.name : symbol,
+                    data: historicalData,
+                    borderColor: config ? config.color : '#6b7280',
+                    backgroundColor: (config ? config.color : '#6b7280') + '20',
+                    tension: 0.3,
+                    fill: false
+                });
+            }
+        });
+    }
+    
+    multiAssetChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'minute'
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Preço (USD)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateMultiAssetSignalsTable(signals) {
+    const tableBody = document.getElementById('multi-asset-signals-table');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    if (signals.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum sinal disponível</td></tr>';
+        return;
+    }
+    
+    signals.slice(0, 10).forEach(signal => {
+        const row = tableBody.insertRow();
+        
+        // Asset
+        const assetCell = row.insertCell();
+        const config = assetConfigs[signal.asset_symbol];
+        assetCell.innerHTML = `
+            <span style="color: ${config ? config.color : '#6b7280'}; font-weight: 600;">
+                <i class="${config ? config.icon : 'fas fa-coins'}"></i> ${signal.asset_symbol}
+            </span>
+        `;
+        
+        // Tipo
+        row.insertCell().textContent = signal.signal_type || signal.pattern_type;
+        
+        // Entry
+        row.insertCell().textContent = formatCurrency(signal.entry_price);
+        
+        // Status
+        const statusCell = row.insertCell();
+        statusCell.textContent = signal.status;
+        statusCell.className = signal.status === 'ACTIVE' ? 'text-warning' : 
+                              signal.profit_loss > 0 ? 'text-success' : 'text-danger';
+        
+        // PnL
+        const pnlCell = row.insertCell();
+        const pnl = signal.profit_loss || 0;
+        pnlCell.textContent = `${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}%`;
+        pnlCell.className = pnl > 0 ? 'text-success' : pnl < 0 ? 'text-danger' : 'text-muted';
+    });
+}
+
+// === MODIFICAR: Função updateData existente para incluir multi-asset ===
+// Adicionar esta chamada na função updateData existente:
+// if (currentSelectedAsset !== 'BTC') {
+//     updateSelectedAssetData(currentSelectedAsset);
+// }
+</script>

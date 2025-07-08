@@ -1,4 +1,4 @@
-# your_project/config.py
+# your_project/config.py - ADICIONAR estas seções ao arquivo existente
 
 import os
 
@@ -8,65 +8,136 @@ class Config:
     Manages various settings for the application.
     """
     
-    # Database paths
+    # === EXISTENTE: Database paths ===
     DATA_DIR = 'data'
     TRADING_ANALYZER_DB = os.path.join(DATA_DIR, 'trading_analyzer.db')
     BITCOIN_STREAM_DB = os.path.join(DATA_DIR, 'bitcoin_stream.db')
     
-    # Logging configuration
+    # === NOVO: Multi-Asset Database Configuration ===
+    # Asset-specific databases
+    ETH_STREAM_DB = os.path.join(DATA_DIR, 'eth_stream.db')
+    SOL_STREAM_DB = os.path.join(DATA_DIR, 'sol_stream.db')
+    ETH_TRADING_DB = os.path.join(DATA_DIR, 'eth_trading.db')
+    SOL_TRADING_DB = os.path.join(DATA_DIR, 'sol_trading.db')
+    
+    # Multi-asset consolidated database
+    MULTI_ASSET_DB = os.path.join(DATA_DIR, 'multi_asset.db')
+    
+    # === NOVO: Asset Configuration ===
+    SUPPORTED_ASSETS = {
+        'BTC': {
+            'symbol': 'BTCUSDT',
+            'name': 'Bitcoin',
+            'precision': 2,
+            'min_price': 20000,
+            'max_price': 200000,
+            'stream_db': 'BITCOIN_STREAM_DB',
+            'trading_db': 'TRADING_ANALYZER_DB',
+            'color': '#f7931a',
+            'icon': 'fab fa-bitcoin'
+        },
+        'ETH': {
+            'symbol': 'ETHUSDT', 
+            'name': 'Ethereum',
+            'precision': 2,
+            'min_price': 1000,
+            'max_price': 10000,
+            'stream_db': 'ETH_STREAM_DB',
+            'trading_db': 'ETH_TRADING_DB',
+            'color': '#627eea',
+            'icon': 'fab fa-ethereum'
+        },
+        'SOL': {
+            'symbol': 'SOLUSDT',
+            'name': 'Solana', 
+            'precision': 2,
+            'min_price': 10,
+            'max_price': 1000,
+            'stream_db': 'SOL_STREAM_DB',
+            'trading_db': 'SOL_TRADING_DB',
+            'color': '#9945ff',
+            'icon': 'fas fa-sun'
+        }
+    }
+    
+    # Default asset for backwards compatibility
+    DEFAULT_ASSET = 'BTC'
+    
+    # === EXISTENTE: Logging configuration ===
     LOG_FILE = os.path.join(DATA_DIR, 'trading_system.log')
-    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper() # Default to INFO, can be overridden by env var
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
     
-    # Bitcoin Streamer settings
+    # === NOVO: Multi-Asset Streamer Settings ===
+    MULTI_ASSET_FETCH_INTERVAL_SECONDS = 300  # 5 minutes
+    MULTI_ASSET_MAX_QUEUE_SIZE = 1000
+    
+    # Asset-specific intervals (podem ser diferentes)
+    ASSET_INTERVALS = {
+        'BTC': 300,  # 5 minutes - existing
+        'ETH': 300,  # 5 minutes  
+        'SOL': 300   # 5 minutes
+    }
+    
+    # === EXISTENTE: Bitcoin Stream settings (manter para compatibilidade) ===
     BITCOIN_STREAM_MAX_QUEUE_SIZE = 1000
-    BITCOIN_STREAM_FETCH_INTERVAL_SECONDS = 300  # 5 minutes
+    BITCOIN_STREAM_FETCH_INTERVAL_SECONDS = 300
     BITCOIN_STREAM_MAX_CONSECUTIVE_ERRORS = 5
-    AUTO_START_STREAM = True # Adicionado para controlar o início automático do streamer
+    AUTO_START_STREAM = True
     
-    # Bitcoin Stream Processor settings
+    # === EXISTENTE: outros configs... ===
     BITCOIN_PROCESSOR_BATCH_SIZE = 20
+    TRADING_ANALYZER_UPDATE_INTERVAL_SECONDS = 60
+    ANALYZER_PROCESS_INTERVAL_SECONDS = 5
     
-    # Trading Analyzer settings
-    TRADING_ANALYZER_UPDATE_INTERVAL_SECONDS = 60 # How often to feed data to analyzer
-    ANALYZER_PROCESS_INTERVAL_SECONDS = 5 # Intervalo para a thread de processamento/análise
+    # === NOVO: Multi-Asset Analytics ===
+    MULTI_ASSET_COMPARISON_TIMEFRAMES = ['1h', '24h', '7d', '30d']
+    CORRELATION_ANALYSIS_ENABLED = True
+    PORTFOLIO_REBALANCING_ENABLED = False  # Future feature
     
-    # Flask app settings
+    # === EXISTENTE: Flask app settings ===
     FLASK_DEBUG_MODE = os.getenv('DEBUG', 'false').lower() == 'true'
     FLASK_PORT = int(os.getenv('PORT', 5000))
     FLASK_HOST = os.getenv('HOST', '0.0.0.0')
 
-    # Data cleanup settings
-    DEFAULT_DAYS_TO_KEEP_DATA = 7
-    DATA_RETENTION_DAYS = 30 # Para o BitcoinAnalyticsEngine
-
-    # API Endpoints (if external APIs were used directly, but here they are internal)
+    # === EXISTENTE: API Endpoints ===
     BINANCE_API_URL = "https://api.binance.com/api/v3/ticker/24hr"
-    BINANCE_SYMBOL = 'BTCUSDT'
-
-    # >>> ADICIONADO: Chaves de API da Binance (MUITO IMPORTANTE) <<< [!code addition]
-    # Substitua 'SUA_CHAVE_API_AQUI' e 'SEU_SECRETO_API_AQUI' pelas suas credenciais reais. [!code addition]
-    # Você pode obter essas chaves na sua conta Binance, na seção de Gerenciamento de API. [!code addition]
-    BINANCE_API_KEY = os.getenv('BINANCE_API_KEY', 'SUA_CHAVE_API_AQUI') # [!code addition]
-    BINANCE_API_SECRET = os.getenv('BINANCE_API_SECRET', 'SEU_SECRETO_API_AQUI') # [!code addition]
-
-    # Price validation thresholds
-    PRICE_CHANGE_THRESHOLD_PCT = 0.10 # 10%
-    MIN_EXPECTED_PRICE = 20000
-    MAX_EXPECTED_PRICE = 200000
-
-    # Frontend paths (for static files and templates)
-    STATIC_DIR_CSS = os.path.join('static', 'css')
-    STATIC_DIR_JS = os.path.join('static', 'js')
-    TEMPLATES_DIR = 'templates'
+    BINANCE_SYMBOL = 'BTCUSDT'  # Keep for backwards compatibility
+    
+    # === NOVO: Métodos Helper para Multi-Asset ===
+    def get_asset_config(self, asset_symbol):
+        """Retorna configuração específica do asset"""
+        return self.SUPPORTED_ASSETS.get(asset_symbol.upper(), self.SUPPORTED_ASSETS[self.DEFAULT_ASSET])
+    
+    def get_asset_db_path(self, asset_symbol, db_type='stream'):
+        """Retorna caminho do banco para o asset"""
+        asset_config = self.get_asset_config(asset_symbol)
+        if db_type == 'stream':
+            db_attr = asset_config['stream_db']
+        elif db_type == 'trading':
+            db_attr = asset_config['trading_db']
+        else:
+            raise ValueError(f"Unknown db_type: {db_type}")
+        return getattr(self, db_attr)
+    
+    def get_supported_asset_symbols(self):
+        """Retorna lista de símbolos suportados"""
+        return list(self.SUPPORTED_ASSETS.keys())
+    
+    def is_asset_supported(self, asset_symbol):
+        """Verifica se o asset é suportado"""
+        return asset_symbol.upper() in self.SUPPORTED_ASSETS
 
     def __init__(self):
         """
         Initializes the Config class and ensures necessary directories exist.
         """
         os.makedirs(self.DATA_DIR, exist_ok=True)
-        os.makedirs(self.STATIC_DIR_CSS, exist_ok=True)
-        os.makedirs(self.STATIC_DIR_JS, exist_ok=True)
-        os.makedirs(self.TEMPLATES_DIR, exist_ok=True)
+        # Criar diretórios para assets específicos se necessário
+        for asset in self.SUPPORTED_ASSETS.values():
+            stream_db_path = getattr(self, asset['stream_db'])
+            trading_db_path = getattr(self, asset['trading_db'])
+            os.makedirs(os.path.dirname(stream_db_path), exist_ok=True)
+            os.makedirs(os.path.dirname(trading_db_path), exist_ok=True)
 
 # Instantiate the config for easy import
 app_config = Config()

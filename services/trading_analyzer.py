@@ -51,8 +51,8 @@ class EnhancedTradingAnalyzer:
         # Parâmetros de Análise Técnica
         self.ta_params = {
             'rsi_period': 14,
-            'rsi_overbought': 75,
-            'rsi_oversold': 25,
+            'rsi_overbought': 70,
+            'rsi_oversold': 30,
             'sma_short': 9,
             'sma_long': 21,
             'ema_short': 12,
@@ -66,15 +66,15 @@ class EnhancedTradingAnalyzer:
             'stoch_oversold': 20,
             'volume_sma': 20,
             'atr_period': 14,
-            'min_confidence': 70,
-            'min_risk_reward': 2.5,
-            'min_volume_ratio': 1.3,
+            'min_confidence': 60,
+            'min_risk_reward': 1.5,
+            'min_volume_ratio': 1.1,
         }
         
         # Configuração de Sinais
         self.signal_config = {
-            'max_active_signals': 3,
-            'signal_cooldown_minutes': 120,
+            'max_active_signals': 50,
+            'signal_cooldown_minutes': 10,
             'target_multipliers': [2.0, 3.5, 5.0],
             'stop_loss_atr_multiplier': 2.0,
             'partial_take_profit': [0.5, 0.3, 0.2],
