@@ -1,5 +1,6 @@
 # tests/test_settings.py - Testes automatizados para o sistema de configurações
 
+import time
 import unittest
 import json
 import os

@@ -1,0 +1,63 @@
+2025-07-09 03:18:40,645 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:18:40,652 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:18:40,652 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:18:40,663 - INFO - [CONFIG_MIDDLEWARE] Auto-refresh iniciado (intervalo: 30s)
+2025-07-09 03:18:40,663 - INFO - [CONFIG_MIDDLEWARE] Callback registrado: log_config_change
+2025-07-09 03:18:40,663 - INFO - [CONFIG_MIDDLEWARE] Callback registrado: monitor_performance_impact
+2025-07-09 03:19:16,453 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:16,455 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:19:16,463 - INFO - [CONFIG_MIDDLEWARE] Auto-refresh iniciado (intervalo: 30s)
+2025-07-09 03:19:16,464 - INFO - [CONFIG_MIDDLEWARE] Callback registrado: log_config_change
+2025-07-09 03:19:16,464 - INFO - [CONFIG_MIDDLEWARE] Callback registrado: monitor_performance_impact
+2025-07-09 03:19:33,338 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,338 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:19:33,523 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,529 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,529 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,531 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:19:33,536 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:19:33,554 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,560 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,560 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,565 - INFO - [CONFIG_MGR] Perfil criado: aggressive
+2025-07-09 03:19:33,585 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,591 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,591 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,611 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,618 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,618 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,636 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,641 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,642 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,647 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:19:33,667 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,673 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,673 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,691 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,696 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,696 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,698 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:19:33,719 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:33,725 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:33,725 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:33,730 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:19:33,732 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:19:34,009 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:34,010 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:19:34,438 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:34,439 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:19:34,611 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:34,617 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:34,617 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:34,618 - INFO - [CONFIG_MGR] Configuração aplicada: streaming.fetch_interval, streaming.max_queue_size
+2025-07-09 03:19:34,635 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:34,641 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:34,641 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:34,642 - INFO - [CONFIG_MGR] Configuração aplicada: trading.ta_params, trading.signal_config, trading.indicator_weights
+2025-07-09 03:19:34,657 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:19:34,662 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:19:34,663 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:19:34,669 - INFO - [CONFIG_MGR] Configuração salva: 2 itens
+2025-07-09 03:19:34,670 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:20:33,795 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:20:33,796 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
