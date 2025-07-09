@@ -7,7 +7,19 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/static/css/settings.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: none; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #e9ecef; }
+        .form-range::-webkit-slider-thumb { background-color: #0d6efd; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .status-active { background-color: #28a745; }
+        .status-inactive { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        .setting-group { border-left: 3px solid #0d6efd; padding-left: 15px; margin-bottom: 20px; }
+        .advanced-settings { display: none; }
+        .config-preview { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; font-family: monospace; font-size: 12px; }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -33,162 +45,703 @@
             <div class="col-12">
                 <h2><i class="fas fa-cogs"></i> Configurações do Sistema</h2>
                 <p class="text-muted">Configure os parâmetros de geração de sinais e análise técnica</p>
-            </div>
-        </div>
-
-        <!-- Trading Parameters -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-signal"></i> Parâmetros de Sinais
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="signal-params-form">
-                            <div class="mb-3">
-                                <label for="min-confidence" class="form-label">
-                                    Confiança Mínima (%)
-                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
-                                       title="Nível mínimo de confiança para gerar um sinal"></i>
-                                </label>
-                                <input type="range" class="form-range" id="min-confidence" 
-                                       min="30" max="90" value="50" step="5">
-                                <div class="d-flex justify-content-between">
-                                    <small>30%</small>
-                                    <strong id="confidence-value">50%</strong>
-                                    <small>90%</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="cooldown-minutes" class="form-label">
-                                    Intervalo entre Sinais (minutos)
-                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
-                                       title="Tempo mínimo entre a geração de novos sinais"></i>
-                                </label>
-                                <input type="range" class="form-range" id="cooldown-minutes" 
-                                       min="5" max="180" value="30" step="5">
-                                <div class="d-flex justify-content-between">
-                                    <small>5min</small>
-                                    <strong id="cooldown-value">30min</strong>
-                                    <small>180min</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="max-signals" class="form-label">
-                                    Máximo de Sinais Ativos
-                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
-                                       title="Número máximo de sinais que podem estar ativos simultaneamente"></i>
-                                </label>
-                                <input type="range" class="form-range" id="max-signals" 
-                                       min="1" max="20" value="10" step="1">
-                                <div class="d-flex justify-content-between">
-                                    <small>1</small>
-                                    <strong id="max-signals-value">10</strong>
-                                    <small>20</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="risk-reward" class="form-label">
-                                    Risk/Reward Mínimo
-                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
-                                       title="Relação mínima entre risco e recompensa para gerar sinal"></i>
-                                </label>
-                                <input type="range" class="form-range" id="risk-reward" 
-                                       min="1.0" max="5.0" value="1.5" step="0.1">
-                                <div class="d-flex justify-content-between">
-                                    <small>1:1</small>
-                                    <strong id="risk-reward-value">1.5:1</strong>
-                                    <small>5:1</small>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-bar"></i> Indicadores Técnicos
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="indicators-form">
-                            <div class="mb-3">
-                                <label for="rsi-overbought" class="form-label">RSI Overbought</label>
-                                <input type="range" class="form-range" id="rsi-overbought" 
-                                       min="60" max="85" value="65" step="1">
-                                <div class="d-flex justify-content-between">
-                                    <small>60</small>
-                                    <strong id="rsi-overbought-value">65</strong>
-                                    <small>85</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="rsi-oversold" class="form-label">RSI Oversold</label>
-                                <input type="range" class="form-range" id="rsi-oversold" 
-                                       min="15" max="40" value="35" step="1">
-                                <div class="d-flex justify-content-between">
-                                    <small>15</small>
-                                    <strong id="rsi-oversold-value">35</strong>
-                                    <small>40</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="volume-ratio" class="form-label">
-                                    Volume Ratio Mínimo
-                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
-                                       title="Multiplicador de volume para confirmar sinais"></i>
-                                </label>
-                                <input type="range" class="form-range" id="volume-ratio" 
-                                       min="0.5" max="3.0" value="1.0" step="0.1">
-                                <div class="d-flex justify-content-between">
-                                    <small>0.5x</small>
-                                    <strong id="volume-ratio-value">1.0x</strong>
-                                    <small>3.0x</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="require-volume" checked>
-                                    <label class="form-check-label" for="require-volume">
-                                        Exigir Confirmação de Volume
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="enable-auto-signals" checked>
-                                    <label class="form-check-label" for="enable-auto-signals">
-                                        Geração Automática de Sinais
-                                    </label>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                
+                <!-- Status Bar -->
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>Status do Sistema: </span>
+                    <span class="status-indicator ms-2" id="system-status-indicator"></span>
+                    <span id="system-status-text">Carregando...</span>
+                    <button class="btn btn-sm btn-outline-primary ms-auto" id="refresh-status">
+                        <i class="fas fa-sync"></i> Atualizar
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- System Settings -->
+        <!-- Settings Tabs -->
+        <ul class="nav nav-tabs mb-4" id="settings-tabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#trading-settings">
+                    <i class="fas fa-chart-line"></i> Trading
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#indicators-settings">
+                    <i class="fas fa-chart-bar"></i> Indicadores
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#system-settings">
+                    <i class="fas fa-server"></i> Sistema
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#advanced-settings">
+                    <i class="fas fa-cogs"></i> Avançado
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Trading Settings Tab -->
+            <div class="tab-pane fade show active" id="trading-settings">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-signal"></i> Parâmetros de Sinais
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="signal-params-form">
+                                    <div class="setting-group">
+                                        <div class="mb-3">
+                                            <label for="min-confidence" class="form-label">
+                                                Confiança Mínima (%)
+                                                <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                                   title="Nível mínimo de confiança para gerar um sinal"></i>
+                                            </label>
+                                            <input type="range" class="form-range" id="min-confidence" 
+                                                   min="30" max="90" value="60" step="5">
+                                            <div class="d-flex justify-content-between">
+                                                <small>30%</small>
+                                                <strong id="confidence-value">60%</strong>
+                                                <small>90%</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="cooldown-minutes" class="form-label">
+                                                Intervalo entre Sinais (minutos)
+                                                <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                                   title="Tempo mínimo entre a geração de novos sinais"></i>
+                                            </label>
+                                            <input type="range" class="form-range" id="cooldown-minutes" 
+                                                   min="5" max="180" value="60" step="5">
+                                            <div class="d-flex justify-content-between">
+                                                <small>5min</small>
+                                                <strong id="cooldown-value">60min</strong>
+                                                <small>180min</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="max-signals" class="form-label">
+                                                Máximo de Sinais Ativos
+                                                <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                                   title="Número máximo de sinais que podem estar ativos simultaneamente"></i>
+                                            </label>
+                                            <input type="range" class="form-range" id="max-signals" 
+                                                   min="1" max="20" value="5" step="1">
+                                            <div class="d-flex justify-content-between">
+                                                <small>1</small>
+                                                <strong id="max-signals-value">5</strong>
+                                                <small>20</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="risk-reward" class="form-label">
+                                                Risk/Reward Mínimo
+                                                <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                                   title="Relação mínima entre risco e recompensa para gerar sinal"></i>
+                                            </label>
+                                            <input type="range" class="form-range" id="risk-reward" 
+                                                   min="1.0" max="5.0" value="1.5" step="0.1">
+                                            <div class="d-flex justify-content-between">
+                                                <small>1:1</small>
+                                                <strong id="risk-reward-value">1.5:1</strong>
+                                                <small>5:1</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-target"></i> Configurações de Targets
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-group">
+                                    <div class="mb-3">
+                                        <label for="target-1" class="form-label">Target 1 Multiplier</label>
+                                        <input type="range" class="form-range" id="target-1" 
+                                               min="1.0" max="5.0" value="2.0" step="0.1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>1.0x</small>
+                                            <strong id="target-1-value">2.0x</strong>
+                                            <small>5.0x</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="target-2" class="form-label">Target 2 Multiplier</label>
+                                        <input type="range" class="form-range" id="target-2" 
+                                               min="2.0" max="8.0" value="3.5" step="0.1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>2.0x</small>
+                                            <strong id="target-2-value">3.5x</strong>
+                                            <small>8.0x</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="target-3" class="form-label">Target 3 Multiplier</label>
+                                        <input type="range" class="form-range" id="target-3" 
+                                               min="3.0" max="10.0" value="5.0" step="0.1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>3.0x</small>
+                                            <strong id="target-3-value">5.0x</strong>
+                                            <small>10.0x</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="stop-loss-atr" class="form-label">Stop Loss ATR Multiplier</label>
+                                        <input type="range" class="form-range" id="stop-loss-atr" 
+                                               min="1.0" max="5.0" value="2.0" step="0.1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>1.0x</small>
+                                            <strong id="stop-loss-atr-value">2.0x</strong>
+                                            <small>5.0x</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indicators Settings Tab -->
+            <div class="tab-pane fade" id="indicators-settings">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar"></i> RSI & Osciladores
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-group">
+                                    <div class="mb-3">
+                                        <label for="rsi-period" class="form-label">RSI Período</label>
+                                        <input type="range" class="form-range" id="rsi-period" 
+                                               min="5" max="30" value="14" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>5</small>
+                                            <strong id="rsi-period-value">14</strong>
+                                            <small>30</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rsi-overbought" class="form-label">RSI Overbought</label>
+                                        <input type="range" class="form-range" id="rsi-overbought" 
+                                               min="60" max="85" value="70" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>60</small>
+                                            <strong id="rsi-overbought-value">70</strong>
+                                            <small>85</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rsi-oversold" class="form-label">RSI Oversold</label>
+                                        <input type="range" class="form-range" id="rsi-oversold" 
+                                               min="15" max="40" value="30" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>15</small>
+                                            <strong id="rsi-oversold-value">30</strong>
+                                            <small>40</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="stoch-overbought" class="form-label">Stochastic Overbought</label>
+                                        <input type="range" class="form-range" id="stoch-overbought" 
+                                               min="70" max="90" value="80" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>70</small>
+                                            <strong id="stoch-overbought-value">80</strong>
+                                            <small>90</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="stoch-oversold" class="form-label">Stochastic Oversold</label>
+                                        <input type="range" class="form-range" id="stoch-oversold" 
+                                               min="10" max="30" value="20" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>10</small>
+                                            <strong id="stoch-oversold-value">20</strong>
+                                            <small>30</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-wave-square"></i> Médias Móveis & Volume
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-group">
+                                    <div class="mb-3">
+                                        <label for="sma-short" class="form-label">SMA Curta</label>
+                                        <input type="range" class="form-range" id="sma-short" 
+                                               min="5" max="20" value="9" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>5</small>
+                                            <strong id="sma-short-value">9</strong>
+                                            <small>20</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="sma-long" class="form-label">SMA Longa</label>
+                                        <input type="range" class="form-range" id="sma-long" 
+                                               min="15" max="50" value="21" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>15</small>
+                                            <strong id="sma-long-value">21</strong>
+                                            <small>50</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="ema-short" class="form-label">EMA Curta</label>
+                                        <input type="range" class="form-range" id="ema-short" 
+                                               min="8" max="20" value="12" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>8</small>
+                                            <strong id="ema-short-value">12</strong>
+                                            <small>20</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="ema-long" class="form-label">EMA Longa</label>
+                                        <input type="range" class="form-range" id="ema-long" 
+                                               min="20" max="50" value="26" step="1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>20</small>
+                                            <strong id="ema-long-value">26</strong>
+                                            <small>50</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="volume-ratio" class="form-label">
+                                            Volume Ratio Mínimo
+                                            <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                               title="Multiplicador de volume para confirmar sinais"></i>
+                                        </label>
+                                        <input type="range" class="form-range" id="volume-ratio" 
+                                               min="0.5" max="3.0" value="1.1" step="0.1">
+                                        <div class="d-flex justify-content-between">
+                                            <small>0.5x</small>
+                                            <strong id="volume-ratio-value">1.1x</strong>
+                                            <small>3.0x</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-balance-scale"></i> Pesos dos Indicadores
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label for="weight-rsi" class="form-label">RSI</label>
+                                        <input type="range" class="form-range" id="weight-rsi" 
+                                               min="0.05" max="0.40" value="0.20" step="0.05">
+                                        <small id="weight-rsi-value">20%</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="weight-macd" class="form-label">MACD</label>
+                                        <input type="range" class="form-range" id="weight-macd" 
+                                               min="0.05" max="0.40" value="0.25" step="0.05">
+                                        <small id="weight-macd-value">25%</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="weight-bb" class="form-label">Bollinger</label>
+                                        <input type="range" class="form-range" id="weight-bb" 
+                                               min="0.05" max="0.30" value="0.15" step="0.05">
+                                        <small id="weight-bb-value">15%</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="weight-stoch" class="form-label">Stochastic</label>
+                                        <input type="range" class="form-range" id="weight-stoch" 
+                                               min="0.05" max="0.30" value="0.15" step="0.05">
+                                        <small id="weight-stoch-value">15%</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="weight-sma" class="form-label">SMA Cross</label>
+                                        <input type="range" class="form-range" id="weight-sma" 
+                                               min="0.05" max="0.30" value="0.15" step="0.05">
+                                        <small id="weight-sma-value">15%</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="weight-volume" class="form-label">Volume</label>
+                                        <input type="range" class="form-range" id="weight-volume" 
+                                               min="0.05" max="0.20" value="0.10" step="0.05">
+                                        <small id="weight-volume-value">10%</small>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Total: <span id="total-weight">100%</span></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings Tab -->
+            <div class="tab-pane fade" id="system-settings">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-stream"></i> Configurações de Streaming
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-group">
+                                    <div class="mb-3">
+                                        <label for="fetch-interval-btc" class="form-label">
+                                            Intervalo Bitcoin (segundos)
+                                        </label>
+                                        <input type="range" class="form-range" id="fetch-interval-btc" 
+                                               min="60" max="600" value="300" step="30">
+                                        <div class="d-flex justify-content-between">
+                                            <small>1min</small>
+                                            <strong id="fetch-interval-btc-value">5min</strong>
+                                            <small>10min</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="fetch-interval-eth" class="form-label">
+                                            Intervalo Ethereum (segundos)
+                                        </label>
+                                        <input type="range" class="form-range" id="fetch-interval-eth" 
+                                               min="60" max="600" value="300" step="30">
+                                        <div class="d-flex justify-content-between">
+                                            <small>1min</small>
+                                            <strong id="fetch-interval-eth-value">5min</strong>
+                                            <small>10min</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="fetch-interval-sol" class="form-label">
+                                            Intervalo Solana (segundos)
+                                        </label>
+                                        <input type="range" class="form-range" id="fetch-interval-sol" 
+                                               min="60" max="600" value="300" step="30">
+                                        <div class="d-flex justify-content-between">
+                                            <small>1min</small>
+                                            <strong id="fetch-interval-sol-value">5min</strong>
+                                            <small>10min</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="max-queue-size" class="form-label">
+                                            Tamanho Máximo da Queue
+                                        </label>
+                                        <input type="range" class="form-range" id="max-queue-size" 
+                                               min="50" max="500" value="200" step="50">
+                                        <div class="d-flex justify-content-between">
+                                            <small>50</small>
+                                            <strong id="max-queue-size-value">200</strong>
+                                            <small>500</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-toggle-on"></i> Funcionalidades
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-group">
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="auto-start-stream" checked>
+                                            <label class="form-check-label" for="auto-start-stream">
+                                                Auto-iniciar Streaming
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="require-volume" checked>
+                                            <label class="form-check-label" for="require-volume">
+                                                Exigir Confirmação de Volume
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enable-auto-signals" checked>
+                                            <label class="form-check-label" for="enable-auto-signals">
+                                                Geração Automática de Sinais
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enable-advanced-patterns">
+                                            <label class="form-check-label" for="enable-advanced-patterns">
+                                                Padrões Avançados (Elliott, Double Bottom)
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enable-notifications">
+                                            <label class="form-check-label" for="enable-notifications">
+                                                Notificações do Sistema
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="correlation-analysis">
+                                            <label class="form-check-label" for="correlation-analysis">
+                                                Análise de Correlação
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Settings Tab -->
+            <div class="tab-pane fade" id="advanced-settings">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-database"></i> Configurações de Banco
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-group">
+                                    <div class="mb-3">
+                                        <label for="cleanup-days" class="form-label">
+                                            Dias para Manter Dados
+                                        </label>
+                                        <input type="range" class="form-range" id="cleanup-days" 
+                                               min="7" max="365" value="30" step="7">
+                                        <div class="d-flex justify-content-between">
+                                            <small>7 dias</small>
+                                            <strong id="cleanup-days-value">30 dias</strong>
+                                            <small>1 ano</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="auto-cleanup" checked>
+                                            <label class="form-check-label" for="auto-cleanup">
+                                                Limpeza Automática de Dados Antigos
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="database-backup" checked>
+                                            <label class="form-check-label" for="database-backup">
+                                                Backup Automático do Banco
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-warning me-2" id="cleanup-now-btn">
+                                        <i class="fas fa-broom"></i> Limpeza Manual
+                                    </button>
+                                    <button type="button" class="btn btn-info" id="backup-now-btn">
+                                        <i class="fas fa-download"></i> Backup Manual
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-code"></i> Configuração Atual (JSON)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="config-preview" id="config-preview">
+                                    <!-- Configuration will be shown here -->
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-2" id="export-config-btn">
+                                        <i class="fas fa-download"></i> Exportar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="import-config-btn">
+                                        <i class="fas fa-upload"></i> Importar
+                                    </button>
+                                    <input type="file" id="config-file-input" style="display: none;" accept=".json">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-tools"></i> Ações do Sistema
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-danger w-100" id="reset-signals-btn">
+                                            <i class="fas fa-trash"></i> Reset Sinais
+                                        </button>
+                                        <small class="text-muted">Remove todos os sinais ativos</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-warning w-100" id="restart-analyzers-btn">
+                                            <i class="fas fa-redo"></i> Restart Analyzers
+                                        </button>
+                                        <small class="text-muted">Reinicia todos os analisadores</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-info w-100" id="force-save-btn">
+                                            <i class="fas fa-save"></i> Forçar Save
+                                        </button>
+                                        <small class="text-muted">Salva estado atual</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-secondary w-100" id="reset-config-btn">
+                                            <i class="fas fa-undo"></i> Reset Config
+                                        </button>
+                                        <small class="text-muted">Volta às configurações padrão</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-server"></i> Configurações do Sistema
-                        </h5>
-                    </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Aplicar Configurações</h6>
+                                <small class="text-muted">As configurações serão salvas e aplicadas ao sistema</small>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary me-2" id="reset-form-btn">
+                                    <i class="fas fa-undo"></i> Resetar
+                                </button>
+                                <button type="button" class="btn btn-success" id="save-settings-btn">
+                                    <i class="fas fa-save"></i> Salvar Configurações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="notification-toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Configurações</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Mensagem
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Ação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirm-message">
+                    Tem certeza que deseja executar esta ação?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirm-action-btn">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

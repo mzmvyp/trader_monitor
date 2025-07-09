@@ -1,4 +1,4 @@
-# app_fixed.py - Versão corrigida do app principal
+# app_fixed.py - Versão corrigida do app principal com Settings
 
 import os
 import sqlite3
@@ -36,6 +36,7 @@ try:
     from routes.main_routes import main_bp
     from routes.bitcoin_routes import bitcoin_bp
     from routes.trading_routes import trading_bp
+    from routes.settings_routes import settings_bp  # ===== NOVO: Settings Routes =====
 
     # Multi-Asset Routes (se existirem)
     try:
@@ -162,11 +163,18 @@ class IntegratedController:
         self.app.register_blueprint(main_bp)
         self.app.register_blueprint(bitcoin_bp)
         self.app.register_blueprint(trading_bp)
+        self.app.register_blueprint(settings_bp)  # ===== NOVO: Settings Blueprint =====
         
         # Multi-Asset Routes (se disponíveis)
         if MULTI_ASSET_ROUTES_AVAILABLE:
             self.app.register_blueprint(multi_asset_bp)
             logger.info("[CTRL] Multi-Asset blueprint registrado")
+
+        # ===== NOVO: Settings Page Route =====
+        @self.app.route('/settings')
+        def settings_page():
+            """Renders the settings page"""
+            return render_template('settings.html')
 
         # Global API routes
         @self.app.route('/api/bitcoin/current')
@@ -314,6 +322,7 @@ class IntegratedController:
         logger.info(f"[DATA] Dashboard Principal: http://localhost:{port}")
         logger.info(f"[BTC] Dashboard Bitcoin: http://localhost:{port}/bitcoin")
         logger.info(f"[TRADE] Dashboard Trading: http://localhost:{port}/trading")
+        logger.info(f"[SETTINGS] Configurações: http://localhost:{port}/settings")  # ===== NOVO =====
         
         if self.multi_asset_manager:
             logger.info(f"[MULTI] Dashboard Multi-Asset: http://localhost:{port}/multi-asset")
@@ -325,6 +334,7 @@ class IntegratedController:
         logger.info(f"   - Bitcoin Métricas: http://localhost:{port}/api/bitcoin/metrics")
         logger.info(f"   - Trading Análise: http://localhost:{port}/trading/api/analysis")
         logger.info(f"   - Sinais Ativos: http://localhost:{port}/trading/api/active-signals")
+        logger.info(f"   - Configurações: http://localhost:{port}/settings/api/get-config")  # ===== NOVO =====
         
         if self.multi_asset_manager:
             logger.info(f"   - Multi-Asset Overview: http://localhost:{port}/api/multi-asset/overview")
@@ -334,6 +344,7 @@ class IntegratedController:
         logger.info("[CTRL] Controles (POST):")
         logger.info(f"   - Iniciar Stream Bitcoin: http://localhost:{port}/api/bitcoin/start-stream")
         logger.info(f"   - Parar Stream Bitcoin: http://localhost:{port}/api/bitcoin/stop-stream")
+        logger.info(f"   - Salvar Configurações: http://localhost:{port}/settings/api/save-config")  # ===== NOVO =====
         
         if self.multi_asset_manager:
             logger.info(f"   - Iniciar Multi-Asset: http://localhost:{port}/api/multi-asset/start")
@@ -342,6 +353,7 @@ class IntegratedController:
         
         logger.info("[BINANCE] Usando apenas API Binance (intervalo: 5 minutos)")
         logger.info("[PERSIST] Persistência habilitada - dados preservados entre sessões")
+        logger.info("[SETTINGS] Sistema de configurações habilitado")  # ===== NOVO =====
         logger.info("=" * 60)
         
         self.app.debug = debug
@@ -539,6 +551,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
-    
