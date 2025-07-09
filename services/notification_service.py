@@ -1,27 +1,31 @@
-# services/notification_service.py - Sistema de notificações para configurações
+# services/notification_service.py - Sistema de notificações multi-canal
 
-import smtplib
+import os
 import json
+import sqlite3
+import smtplib
 import requests
+import logging
 from datetime import datetime
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
-from typing import Dict, List, Optional, Any
+from typing import Dict, Any, List, Optional
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from utils.logging_config import logger
 
 class NotificationService:
     """
-    Serviço de notificações para mudanças de configuração e eventos do sistema
-    Suporta: Email, Webhook, Slack, Discord, Telegram
+    Serviço de notificações que suporta múltiplos canais:
+    - Email (SMTP)
+    - Slack (Webhook)
+    - Discord (Webhook)
+    - Telegram (Bot API)
+    - Webhook genérico
     """
     
-    def __init__(self):
-        self.notification_channels = {}
-        self.notification_queue = []
-        self.notification_history = []
-        self.max_history_size = 1000
+    def __init__(self, db_path: Optional[str] = None):
+        self.db_path = db_path or os.path.join('data', 'notifications.db')
         
-        # Configurações padrão
+        # Configurações dos canais (serão carregadas do banco ou arquivo)
         self.config = {
             'email': {
                 'enabled': False,
@@ -31,12 +35,6 @@ class NotificationService:
                 'password': '',
                 'from_email': '',
                 'to_emails': []
-            },
-            'webhook': {
-                'enabled': False,
-                'url': '',
-                'headers': {},
-                'timeout': 10
             },
             'slack': {
                 'enabled': False,
@@ -54,690 +52,774 @@ class NotificationService:
                 'bot_token': '',
                 'chat_id': '',
                 'parse_mode': 'Markdown'
+            },
+            'webhook': {
+                'enabled': False,
+                'url': '',
+                'headers': {},
+                'method': 'POST'
             }
         }
         
         # Tipos de notificação e suas prioridades
         self.notification_types = {
-            'CONFIG_CHANGED': {'priority': 'medium', 'icon': '⚙️'},
-            'CONFIG_APPLIED': {'priority': 'low', 'icon': '✅'},
-            'CONFIG_ERROR': {'priority': 'high', 'icon': '❌'},
-            'SYSTEM_HEALTH': {'priority': 'high', 'icon': '🏥'},
-            'TRADING_SIGNAL': {'priority': 'medium', 'icon': '📊'},
-            'PERFORMANCE_ALERT': {'priority': 'medium', 'icon': '⚡'},
-            'SECURITY_ALERT': {'priority': 'critical', 'icon': '🔐'},
-            'MAINTENANCE': {'priority': 'low', 'icon': '🔧'}
+            'CONFIG_CHANGED': 'medium',
+            'CONFIG_APPLIED': 'low',
+            'CONFIG_ERROR': 'high',
+            'SYSTEM_HEALTH': 'high',
+            'SYSTEM_STATUS': 'medium',
+            'SYSTEM_ERROR': 'critical',
+            'TRADING_SIGNAL': 'medium',
+            'PERFORMANCE_ALERT': 'medium',
+            'SECURITY_ALERT': 'critical',
+            'MAINTENANCE': 'low',
+            'MANUAL': 'medium'
         }
         
+        # Cache para rate limiting
+        self.last_notification_times = {}
+        self.min_interval_between_notifications = 5  # segundos
+        
+        self.setup_database()
         self.load_config()
     
-    def load_config(self):
-        """Carrega configuração de notificações do arquivo ou banco"""
+    def setup_database(self):
+        """Configura banco de dados para histórico de notificações"""
         try:
-            # Tentar carregar de arquivo de configuração
-            import os
-            config_file = os.path.join('data', 'notification_config.json')
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             
-            if os.path.exists(config_file):
-                with open(config_file, 'r') as f:
-                    loaded_config = json.load(f)
-                    self.config.update(loaded_config)
-                    logger.info("[NOTIFICATIONS] Configuração carregada do arquivo")
-            else:
-                logger.info("[NOTIFICATIONS] Usando configuração padrão")
-                
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Tabela de histórico de notificações
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS notification_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    type TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    details TEXT,
+                    priority TEXT NOT NULL,
+                    channels_sent TEXT,
+                    sent_at TEXT NOT NULL,
+                    success BOOLEAN NOT NULL,
+                    error_message TEXT
+                )
+            ''')
+            
+            # Tabela de configurações de notificação
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS notification_config (
+                    id INTEGER PRIMARY KEY,
+                    channel TEXT UNIQUE NOT NULL,
+                    config_data TEXT NOT NULL,
+                    enabled BOOLEAN DEFAULT 0,
+                    updated_at TEXT NOT NULL
+                )
+            ''')
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info("[NOTIFICATION] Banco de notificações inicializado")
+            
         except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro ao carregar configuração: {e}")
+            logger.error(f"[NOTIFICATION] Erro ao configurar banco: {e}")
+    
+    def load_config(self):
+        """Carrega configurações do banco de dados"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('SELECT channel, config_data, enabled FROM notification_config')
+            rows = cursor.fetchall()
+            
+            for row in rows:
+                channel, config_data, enabled = row
+                if channel in self.config:
+                    channel_config = json.loads(config_data)
+                    channel_config['enabled'] = bool(enabled)
+                    self.config[channel] = channel_config
+            
+            conn.close()
+            logger.info("[NOTIFICATION] Configurações carregadas")
+            
+        except Exception as e:
+            logger.error(f"[NOTIFICATION] Erro ao carregar configurações: {e}")
     
     def save_config(self):
-        """Salva configuração atual em arquivo"""
+        """Salva configurações no banco de dados"""
         try:
-            import os
-            os.makedirs('data', exist_ok=True)
-            config_file = os.path.join('data', 'notification_config.json')
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
             
-            with open(config_file, 'w') as f:
-                json.dump(self.config, f, indent=2)
+            timestamp = datetime.now().isoformat()
+            
+            for channel, config in self.config.items():
+                config_data = config.copy()
+                enabled = config_data.pop('enabled', False)
                 
-            logger.info("[NOTIFICATIONS] Configuração salva")
+                cursor.execute('''
+                    INSERT OR REPLACE INTO notification_config 
+                    (channel, config_data, enabled, updated_at)
+                    VALUES (?, ?, ?, ?)
+                ''', (channel, json.dumps(config_data), enabled, timestamp))
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info("[NOTIFICATION] Configurações salvas")
             return True
             
         except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro ao salvar configuração: {e}")
+            logger.error(f"[NOTIFICATION] Erro ao salvar configurações: {e}")
             return False
     
-    def send_notification(self, 
-                         notification_type: str,
-                         title: str,
-                         message: str,
-                         details: Dict = None,
-                         priority: str = None) -> Dict[str, Any]:
+    def send_notification(self, notification_type: str, title: str, message: str, 
+                         details: Dict = None, priority: str = None) -> Dict[str, Any]:
         """
-        Envia notificação através de todos os canais habilitados
+        Envia notificação através dos canais habilitados
         
         Args:
-            notification_type: Tipo da notificação (CONFIG_CHANGED, etc.)
+            notification_type: Tipo da notificação
             title: Título da notificação
             message: Mensagem principal
             details: Detalhes adicionais (dict)
-            priority: Prioridade (critical, high, medium, low)
-        
+            priority: Prioridade (low, medium, high, critical)
+            
         Returns:
-            Resultado do envio para cada canal
+            Resultado do envio
         """
         try:
             # Determinar prioridade
-            if not priority:
-                priority = self.notification_types.get(notification_type, {}).get('priority', 'medium')
+            if priority is None:
+                priority = self.notification_types.get(notification_type, 'medium')
             
-            # Criar objeto de notificação
-            notification = {
-                'id': f"notif_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}",
+            # Verificar rate limiting
+            now = datetime.now()
+            cache_key = f"{notification_type}_{title}"
+            
+            if cache_key in self.last_notification_times:
+                time_diff = (now - self.last_notification_times[cache_key]).total_seconds()
+                if time_diff < self.min_interval_between_notifications:
+                    logger.debug(f"[NOTIFICATION] Rate limiting: {cache_key}")
+                    return {
+                        'success': False,
+                        'error': 'Rate limited',
+                        'retry_after': self.min_interval_between_notifications - time_diff
+                    }
+            
+            self.last_notification_times[cache_key] = now
+            
+            # Preparar dados da notificação
+            notification_data = {
                 'type': notification_type,
                 'title': title,
                 'message': message,
                 'details': details or {},
                 'priority': priority,
-                'timestamp': datetime.now().isoformat(),
-                'icon': self.notification_types.get(notification_type, {}).get('icon', '📢')
+                'timestamp': now.isoformat()
             }
             
-            # Adicionar ao histórico
-            self._add_to_history(notification)
+            # Enviar para canais habilitados
+            sent_channels = []
+            errors = []
             
-            # Enviar através de todos os canais habilitados
-            results = {}
+            for channel, config in self.config.items():
+                if config.get('enabled', False):
+                    try:
+                        success = self._send_to_channel(channel, notification_data)
+                        if success:
+                            sent_channels.append(channel)
+                        else:
+                            errors.append(f"{channel}: failed to send")
+                    except Exception as e:
+                        errors.append(f"{channel}: {str(e)}")
+                        logger.error(f"[NOTIFICATION] Erro no canal {channel}: {e}")
             
-            if self.config['email']['enabled']:
-                results['email'] = self._send_email(notification)
+            # Registrar no histórico
+            self._save_to_history(notification_data, sent_channels, len(errors) == 0, errors)
             
-            if self.config['webhook']['enabled']:
-                results['webhook'] = self._send_webhook(notification)
-                
-            if self.config['slack']['enabled']:
-                results['slack'] = self._send_slack(notification)
-                
-            if self.config['discord']['enabled']:
-                results['discord'] = self._send_discord(notification)
-                
-            if self.config['telegram']['enabled']:
-                results['telegram'] = self._send_telegram(notification)
-            
-            # Log resultado
-            success_count = sum(1 for r in results.values() if r.get('success', False))
-            total_count = len(results)
-            
-            logger.info(f"[NOTIFICATIONS] Enviado '{title}' para {success_count}/{total_count} canais")
-            
-            return {
-                'notification_id': notification['id'],
-                'success': success_count > 0,
-                'results': results,
-                'summary': f"{success_count}/{total_count} canais"
+            # Resultado
+            result = {
+                'success': len(sent_channels) > 0,
+                'channels_sent': sent_channels,
+                'total_channels': len([c for c in self.config.values() if c.get('enabled')]),
+                'timestamp': now.isoformat()
             }
+            
+            if errors:
+                result['errors'] = errors
+            
+            logger.info(f"[NOTIFICATION] Enviado para {len(sent_channels)} canais: {title}")
+            return result
             
         except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no envio: {e}")
+            logger.error(f"[NOTIFICATION] Erro ao enviar notificação: {e}")
             return {
                 'success': False,
-                'error': str(e)
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
             }
     
-    def _send_email(self, notification: Dict) -> Dict:
+    def _send_to_channel(self, channel: str, notification_data: Dict) -> bool:
+        """Envia notificação para um canal específico"""
+        config = self.config[channel]
+        
+        if channel == 'email':
+            return self._send_email(notification_data, config)
+        elif channel == 'slack':
+            return self._send_slack(notification_data, config)
+        elif channel == 'discord':
+            return self._send_discord(notification_data, config)
+        elif channel == 'telegram':
+            return self._send_telegram(notification_data, config)
+        elif channel == 'webhook':
+            return self._send_webhook(notification_data, config)
+        else:
+            logger.warning(f"[NOTIFICATION] Canal desconhecido: {channel}")
+            return False
+    
+    def _send_email(self, notification_data: Dict, config: Dict) -> bool:
         """Envia notificação por email"""
         try:
-            config = self.config['email']
+            # Validar configuração
+            required_fields = ['smtp_server', 'smtp_port', 'username', 'password', 'from_email', 'to_emails']
+            for field in required_fields:
+                if not config.get(field):
+                    logger.error(f"[EMAIL] Campo obrigatório ausente: {field}")
+                    return False
             
             # Criar mensagem
-            msg = MimeMultipart()
+            msg = MIMEMultipart()
             msg['From'] = config['from_email']
             msg['To'] = ', '.join(config['to_emails'])
-            msg['Subject'] = f"[Trading System] {notification['title']}"
+            msg['Subject'] = f"[{notification_data['priority'].upper()}] {notification_data['title']}"
             
-            # Corpo do email
-            body = self._format_email_body(notification)
-            msg.attach(MimeText(body, 'html'))
+            # Corpo da mensagem
+            body = f"""
+{notification_data['message']}
+
+Tipo: {notification_data['type']}
+Prioridade: {notification_data['priority']}
+Timestamp: {notification_data['timestamp']}
+"""
             
-            # Enviar
+            if notification_data['details']:
+                body += f"\nDetalhes:\n{json.dumps(notification_data['details'], indent=2)}"
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Enviar email
             server = smtplib.SMTP(config['smtp_server'], config['smtp_port'])
             server.starttls()
             server.login(config['username'], config['password'])
             server.send_message(msg)
             server.quit()
             
-            return {'success': True, 'message': 'Email enviado'}
+            logger.debug(f"[EMAIL] Enviado: {notification_data['title']}")
+            return True
             
         except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no email: {e}")
-            return {'success': False, 'error': str(e)}
+            logger.error(f"[EMAIL] Erro ao enviar: {e}")
+            return False
     
-    def _send_webhook(self, notification: Dict) -> Dict:
-        """Envia notificação via webhook"""
-        try:
-            config = self.config['webhook']
-            
-            payload = {
-                'notification': notification,
-                'system': 'trading_system',
-                'timestamp': datetime.now().isoformat()
-            }
-            
-            response = requests.post(
-                config['url'],
-                json=payload,
-                headers=config.get('headers', {}),
-                timeout=config.get('timeout', 10)
-            )
-            
-            response.raise_for_status()
-            
-            return {'success': True, 'status_code': response.status_code}
-            
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no webhook: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def _send_slack(self, notification: Dict) -> Dict:
+    def _send_slack(self, notification_data: Dict, config: Dict) -> bool:
         """Envia notificação para Slack"""
         try:
-            config = self.config['slack']
+            # Validar webhook URL
+            if not config.get('webhook_url'):
+                logger.error("[SLACK] Webhook URL não configurada")
+                return False
             
             # Determinar cor baseada na prioridade
             color_map = {
-                'critical': '#ff0000',
-                'high': '#ff6600',
-                'medium': '#ffcc00',
-                'low': '#00ff00'
+                'low': '#36a64f',      # Verde
+                'medium': '#ffaa00',   # Amarelo
+                'high': '#ff6600',     # Laranja
+                'critical': '#ff0000'  # Vermelho
             }
             
+            color = color_map.get(notification_data['priority'], '#36a64f')
+            
+            # Criar payload
             payload = {
-                'channel': config['channel'],
-                'username': config['username'],
-                'icon_emoji': ':robot_face:',
+                'channel': config.get('channel', '#trading-alerts'),
+                'username': config.get('username', 'Trading System'),
                 'attachments': [{
-                    'color': color_map.get(notification['priority'], '#36a64f'),
-                    'title': f"{notification['icon']} {notification['title']}",
-                    'text': notification['message'],
-                    'fields': self._format_slack_fields(notification),
+                    'color': color,
+                    'title': notification_data['title'],
+                    'text': notification_data['message'],
+                    'fields': [
+                        {
+                            'title': 'Tipo',
+                            'value': notification_data['type'],
+                            'short': True
+                        },
+                        {
+                            'title': 'Prioridade',
+                            'value': notification_data['priority'].upper(),
+                            'short': True
+                        },
+                        {
+                            'title': 'Timestamp',
+                            'value': notification_data['timestamp'],
+                            'short': False
+                        }
+                    ],
                     'footer': 'Trading System',
                     'ts': int(datetime.now().timestamp())
                 }]
             }
             
-            response = requests.post(config['webhook_url'], json=payload)
-            response.raise_for_status()
-            
-            return {'success': True, 'message': 'Slack enviado'}
-            
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no Slack: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def _send_discord(self, notification: Dict) -> Dict:
-        """Envia notificação para Discord"""
-        try:
-            config = self.config['discord']
-            
-            # Determinar cor baseada na prioridade
-            color_map = {
-                'critical': 16711680,  # Vermelho
-                'high': 16753920,      # Laranja
-                'medium': 16776960,    # Amarelo
-                'low': 65280          # Verde
-            }
-            
-            embed = {
-                'title': f"{notification['icon']} {notification['title']}",
-                'description': notification['message'],
-                'color': color_map.get(notification['priority'], 3447003),
-                'timestamp': notification['timestamp'],
-                'footer': {'text': 'Trading System'},
-                'fields': self._format_discord_fields(notification)
-            }
-            
-            payload = {
-                'username': config['username'],
-                'embeds': [embed]
-            }
-            
-            response = requests.post(config['webhook_url'], json=payload)
-            response.raise_for_status()
-            
-            return {'success': True, 'message': 'Discord enviado'}
-            
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no Discord: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def _send_telegram(self, notification: Dict) -> Dict:
-        """Envia notificação para Telegram"""
-        try:
-            config = self.config['telegram']
-            
-            # Formatar mensagem
-            message = self._format_telegram_message(notification)
-            
-            url = f"https://api.telegram.org/bot{config['bot_token']}/sendMessage"
-            
-            payload = {
-                'chat_id': config['chat_id'],
-                'text': message,
-                'parse_mode': config.get('parse_mode', 'Markdown'),
-                'disable_web_page_preview': True
-            }
-            
-            response = requests.post(url, json=payload)
-            response.raise_for_status()
-            
-            return {'success': True, 'message': 'Telegram enviado'}
-            
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no Telegram: {e}")
-            return {'success': False, 'error': str(e)}
-    
-    def _format_email_body(self, notification: Dict) -> str:
-        """Formata corpo do email em HTML"""
-        priority_colors = {
-            'critical': '#dc3545',
-            'high': '#fd7e14',
-            'medium': '#ffc107',
-            'low': '#28a745'
-        }
-        
-        color = priority_colors.get(notification['priority'], '#6c757d')
-        
-        html = f"""
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .header {{ background-color: {color}; color: white; padding: 20px; text-align: center; }}
-                .content {{ padding: 20px; }}
-                .details {{ background-color: #f8f9fa; padding: 15px; border-left: 4px solid {color}; margin: 15px 0; }}
-                .footer {{ text-align: center; color: #6c757d; font-size: 12px; padding: 20px; }}
-                .badge {{ background-color: {color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>{notification['icon']} {notification['title']}</h1>
-                <span class="badge">{notification['priority'].upper()}</span>
-            </div>
-            
-            <div class="content">
-                <p><strong>Mensagem:</strong></p>
-                <p>{notification['message']}</p>
-                
-                <p><strong>Tipo:</strong> {notification['type']}</p>
-                <p><strong>Data/Hora:</strong> {notification['timestamp']}</p>
-        """
-        
-        if notification['details']:
-            html += """
-                <div class="details">
-                    <h3>Detalhes:</h3>
-                    <ul>
-            """
-            for key, value in notification['details'].items():
-                html += f"<li><strong>{key}:</strong> {value}</li>"
-            
-            html += """
-                    </ul>
-                </div>
-            """
-        
-        html += """
-            </div>
-            
-            <div class="footer">
-                <p>Sistema de Trading - Notificação Automática</p>
-                <p>Esta é uma mensagem automática, não responda este email.</p>
-            </div>
-        </body>
-        </html>
-        """
-        
-        return html
-    
-    def _format_slack_fields(self, notification: Dict) -> List[Dict]:
-        """Formata campos para Slack"""
-        fields = [
-            {
-                'title': 'Tipo',
-                'value': notification['type'],
-                'short': True
-            },
-            {
-                'title': 'Prioridade',
-                'value': notification['priority'].upper(),
-                'short': True
-            }
-        ]
-        
-        if notification['details']:
-            for key, value in list(notification['details'].items())[:3]:  # Máximo 3 campos extras
-                fields.append({
-                    'title': key.replace('_', ' ').title(),
-                    'value': str(value)[:100],  # Limitar tamanho
-                    'short': len(str(value)) < 50
+            # Adicionar detalhes se existirem
+            if notification_data['details']:
+                details_text = json.dumps(notification_data['details'], indent=2)
+                payload['attachments'][0]['fields'].append({
+                    'title': 'Detalhes',
+                    'value': f"```{details_text}```",
+                    'short': False
                 })
-        
-        return fields
-    
-    def _format_discord_fields(self, notification: Dict) -> List[Dict]:
-        """Formata campos para Discord"""
-        fields = [
-            {
-                'name': 'Tipo',
-                'value': notification['type'],
-                'inline': True
-            },
-            {
-                'name': 'Prioridade',
-                'value': notification['priority'].upper(),
-                'inline': True
-            }
-        ]
-        
-        if notification['details']:
-            for key, value in list(notification['details'].items())[:3]:
-                fields.append({
-                    'name': key.replace('_', ' ').title(),
-                    'value': str(value)[:1024],  # Limite do Discord
-                    'inline': len(str(value)) < 50
-                })
-        
-        return fields
-    
-    def _format_telegram_message(self, notification: Dict) -> str:
-        """Formata mensagem para Telegram"""
-        message = f"{notification['icon']} *{notification['title']}*\n\n"
-        message += f"{notification['message']}\n\n"
-        message += f"📊 *Tipo:* `{notification['type']}`\n"
-        message += f"⚠️ *Prioridade:* `{notification['priority'].upper()}`\n"
-        message += f"🕐 *Horário:* `{notification['timestamp']}`\n"
-        
-        if notification['details']:
-            message += "\n*Detalhes:*\n"
-            for key, value in notification['details'].items():
-                message += f"• *{key.replace('_', ' ').title()}:* `{value}`\n"
-        
-        message += "\n_Sistema de Trading - Notificação Automática_"
-        
-        return message
-    
-    def _add_to_history(self, notification: Dict):
-        """Adiciona notificação ao histórico"""
-        self.notification_history.append(notification)
-        
-        # Manter tamanho máximo
-        if len(self.notification_history) > self.max_history_size:
-            self.notification_history = self.notification_history[-self.max_history_size:]
-    
-    def get_notification_history(self, limit: int = 50, 
-                               notification_type: str = None,
-                               priority: str = None) -> List[Dict]:
-        """Obtém histórico de notificações com filtros opcionais"""
-        history = self.notification_history.copy()
-        
-        # Aplicar filtros
-        if notification_type:
-            history = [n for n in history if n['type'] == notification_type]
-        
-        if priority:
-            history = [n for n in history if n['priority'] == priority]
-        
-        # Ordenar por timestamp (mais recentes primeiro)
-        history.sort(key=lambda x: x['timestamp'], reverse=True)
-        
-        return history[:limit]
-    
-    def get_notification_stats(self, days: int = 7) -> Dict:
-        """Obtém estatísticas de notificações dos últimos N dias"""
-        from datetime import datetime, timedelta
-        
-        cutoff_date = datetime.now() - timedelta(days=days)
-        
-        recent_notifications = [
-            n for n in self.notification_history 
-            if datetime.fromisoformat(n['timestamp']) > cutoff_date
-        ]
-        
-        stats = {
-            'total_notifications': len(recent_notifications),
-            'by_type': {},
-            'by_priority': {},
-            'by_day': {},
-            'success_rate': 0
-        }
-        
-        # Estatísticas por tipo
-        for notif in recent_notifications:
-            notif_type = notif['type']
-            priority = notif['priority']
-            day = notif['timestamp'][:10]  # YYYY-MM-DD
             
-            stats['by_type'][notif_type] = stats['by_type'].get(notif_type, 0) + 1
-            stats['by_priority'][priority] = stats['by_priority'].get(priority, 0) + 1
-            stats['by_day'][day] = stats['by_day'].get(day, 0) + 1
-        
-        return stats
-    
-    def test_notifications(self) -> Dict:
-        """Testa todos os canais de notificação configurados"""
-        test_results = {}
-        
-        test_notification = {
-            'id': 'test_notification',
-            'type': 'SYSTEM_HEALTH',
-            'title': 'Teste de Notificações',
-            'message': 'Esta é uma mensagem de teste para verificar se as notificações estão funcionando corretamente.',
-            'details': {
-                'test_time': datetime.now().isoformat(),
-                'system_status': 'operational',
-                'version': '2.0.0'
-            },
-            'priority': 'low',
-            'timestamp': datetime.now().isoformat(),
-            'icon': '🧪'
-        }
-        
-        # Testar cada canal habilitado
-        if self.config['email']['enabled']:
-            test_results['email'] = self._send_email(test_notification)
-        
-        if self.config['webhook']['enabled']:
-            test_results['webhook'] = self._send_webhook(test_notification)
-        
-        if self.config['slack']['enabled']:
-            test_results['slack'] = self._send_slack(test_notification)
-        
-        if self.config['discord']['enabled']:
-            test_results['discord'] = self._send_discord(test_notification)
-        
-        if self.config['telegram']['enabled']:
-            test_results['telegram'] = self._send_telegram(test_notification)
-        
-        # Resumo
-        successful_channels = [k for k, v in test_results.items() if v.get('success', False)]
-        
-        return {
-            'test_completed': True,
-            'channels_tested': len(test_results),
-            'successful_channels': len(successful_channels),
-            'results': test_results,
-            'summary': f"{len(successful_channels)}/{len(test_results)} canais funcionando"
-        }
-    
-    def update_config(self, new_config: Dict) -> bool:
-        """Atualiza configuração de notificações"""
-        try:
-            # Validar configuração
-            if self._validate_config(new_config):
-                self.config.update(new_config)
-                success = self.save_config()
-                
-                if success:
-                    logger.info("[NOTIFICATIONS] Configuração atualizada")
-                    
-                    # Enviar notificação sobre a mudança
-                    self.send_notification(
-                        'CONFIG_CHANGED',
-                        'Configuração de Notificações Atualizada',
-                        'As configurações de notificação foram alteradas com sucesso.',
-                        {'config_keys': list(new_config.keys())}
-                    )
-                
-                return success
-            else:
-                logger.error("[NOTIFICATIONS] Configuração inválida")
-                return False
-                
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro ao atualizar configuração: {e}")
-            return False
-    
-    def _validate_config(self, config: Dict) -> bool:
-        """Valida configuração de notificações"""
-        try:
-            # Validações específicas por canal
-            if 'email' in config:
-                email_config = config['email']
-                if email_config.get('enabled', False):
-                    required_fields = ['smtp_server', 'username', 'password', 'from_email', 'to_emails']
-                    for field in required_fields:
-                        if not email_config.get(field):
-                            logger.error(f"[NOTIFICATIONS] Campo obrigatório para email: {field}")
-                            return False
+            # Enviar
+            response = requests.post(config['webhook_url'], json=payload, timeout=10)
+            response.raise_for_status()
             
-            if 'webhook' in config:
-                webhook_config = config['webhook']
-                if webhook_config.get('enabled', False):
-                    if not webhook_config.get('url'):
-                        logger.error("[NOTIFICATIONS] URL obrigatória para webhook")
-                        return False
-            
-            # Outras validações podem ser adicionadas aqui
-            
+            logger.debug(f"[SLACK] Enviado: {notification_data['title']}")
             return True
             
         except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro na validação: {e}")
+            logger.error(f"[SLACK] Erro ao enviar: {e}")
             return False
-
-
-# ==================== INTEGRAÇÃO COM CONFIG MIDDLEWARE ====================
-
-def create_config_notification_callbacks():
-    """Cria callbacks para integrar notificações com mudanças de configuração"""
     
-    notification_service = NotificationService()
-    
-    def on_config_changed(old_config: Dict, new_config: Dict):
-        """Callback chamado quando configuração muda"""
+    def _send_discord(self, notification_data: Dict, config: Dict) -> bool:
+        """Envia notificação para Discord"""
         try:
-            # Calcular mudanças
-            changes = []
+            # Validar webhook URL
+            if not config.get('webhook_url'):
+                logger.error("[DISCORD] Webhook URL não configurada")
+                return False
             
-            def find_changes(old_dict, new_dict, path=""):
-                for key, new_value in new_dict.items():
-                    current_path = f"{path}.{key}" if path else key
-                    
-                    if key not in old_dict:
-                        changes.append(f"Adicionado {current_path} = {new_value}")
-                    elif isinstance(new_value, dict) and isinstance(old_dict[key], dict):
-                        find_changes(old_dict[key], new_value, current_path)
-                    elif old_dict[key] != new_value:
-                        changes.append(f"Alterado {current_path}: {old_dict[key]} → {new_value}")
+            # Determinar cor baseada na prioridade
+            color_map = {
+                'low': 0x36a64f,      # Verde
+                'medium': 0xffaa00,   # Amarelo
+                'high': 0xff6600,     # Laranja
+                'critical': 0xff0000  # Vermelho
+            }
             
-            find_changes(old_config, new_config)
+            color = color_map.get(notification_data['priority'], 0x36a64f)
             
-            if changes:
-                # Determinar prioridade baseada no número de mudanças
-                priority = 'high' if len(changes) > 10 else 'medium' if len(changes) > 5 else 'low'
-                
-                notification_service.send_notification(
-                    'CONFIG_CHANGED',
-                    f'Configuração Alterada ({len(changes)} mudanças)',
-                    f'As configurações do sistema foram modificadas. Total de mudanças: {len(changes)}',
+            # Criar embed
+            embed = {
+                'title': notification_data['title'],
+                'description': notification_data['message'],
+                'color': color,
+                'fields': [
                     {
-                        'total_changes': len(changes),
-                        'changed_keys': [change.split(' ')[1].split(' ')[0] for change in changes[:5]],
-                        'sample_changes': changes[:3]
+                        'name': 'Tipo',
+                        'value': notification_data['type'],
+                        'inline': True
                     },
-                    priority
-                )
-        
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no callback de mudança: {e}")
-    
-    def on_config_applied(applied_components: List[str]):
-        """Callback chamado quando configuração é aplicada"""
-        try:
-            notification_service.send_notification(
-                'CONFIG_APPLIED',
-                'Configuração Aplicada com Sucesso',
-                f'Nova configuração foi aplicada a {len(applied_components)} componentes do sistema.',
-                {
-                    'applied_components': applied_components,
-                    'application_time': datetime.now().isoformat()
-                }
-            )
-        
-        except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no callback de aplicação: {e}")
-    
-    def on_config_error(error_message: str, config_data: Dict = None):
-        """Callback chamado quando há erro na configuração"""
-        try:
-            notification_service.send_notification(
-                'CONFIG_ERROR',
-                'Erro na Configuração',
-                f'Ocorreu um erro ao processar configuração: {error_message}',
-                {
-                    'error_message': error_message,
-                    'config_snapshot': str(config_data)[:200] if config_data else None,
-                    'error_time': datetime.now().isoformat()
+                    {
+                        'name': 'Prioridade',
+                        'value': notification_data['priority'].upper(),
+                        'inline': True
+                    },
+                    {
+                        'name': 'Timestamp',
+                        'value': notification_data['timestamp'],
+                        'inline': False
+                    }
+                ],
+                'footer': {
+                    'text': 'Trading System'
                 },
-                'high'
-            )
-        
+                'timestamp': notification_data['timestamp']
+            }
+            
+            # Adicionar detalhes se existirem
+            if notification_data['details']:
+                details_text = json.dumps(notification_data['details'], indent=2)
+                embed['fields'].append({
+                    'name': 'Detalhes',
+                    'value': f"```json\n{details_text}\n```",
+                    'inline': False
+                })
+            
+            # Payload do Discord
+            payload = {
+                'username': config.get('username', 'Trading System'),
+                'embeds': [embed]
+            }
+            
+            # Enviar
+            response = requests.post(config['webhook_url'], json=payload, timeout=10)
+            response.raise_for_status()
+            
+            logger.debug(f"[DISCORD] Enviado: {notification_data['title']}")
+            return True
+            
         except Exception as e:
-            logger.error(f"[NOTIFICATIONS] Erro no callback de erro: {e}")
+            logger.error(f"[DISCORD] Erro ao enviar: {e}")
+            return False
     
-    return {
-        'on_config_changed': on_config_changed,
-        'on_config_applied': on_config_applied,
-        'on_config_error': on_config_error
-    }
+    def _send_telegram(self, notification_data: Dict, config: Dict) -> bool:
+        """Envia notificação para Telegram"""
+        try:
+            # Validar configuração
+            if not config.get('bot_token') or not config.get('chat_id'):
+                logger.error("[TELEGRAM] Bot token ou chat_id não configurados")
+                return False
+            
+            # Criar mensagem
+            priority_emoji = {
+                'low': '🟢',
+                'medium': '🟡', 
+                'high': '🟠',
+                'critical': '🔴'
+            }
+            
+            emoji = priority_emoji.get(notification_data['priority'], '🟡')
+            
+            message = f"{emoji} *{notification_data['title']}*\n\n"
+            message += f"{notification_data['message']}\n\n"
+            message += f"📋 Tipo: `{notification_data['type']}`\n"
+            message += f"⚠️ Prioridade: `{notification_data['priority'].upper()}`\n"
+            message += f"🕒 Timestamp: `{notification_data['timestamp']}`"
+            
+            if notification_data['details']:
+                details_text = json.dumps(notification_data['details'], indent=2)
+                message += f"\n\n📄 Detalhes:\n```json\n{details_text}\n```"
+            
+            # URL da API do Telegram
+            url = f"https://api.telegram.org/bot{config['bot_token']}/sendMessage"
+            
+            # Payload
+            payload = {
+                'chat_id': config['chat_id'],
+                'text': message,
+                'parse_mode': config.get('parse_mode', 'Markdown')
+            }
+            
+            # Enviar
+            response = requests.post(url, json=payload, timeout=10)
+            response.raise_for_status()
+            
+            logger.debug(f"[TELEGRAM] Enviado: {notification_data['title']}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[TELEGRAM] Erro ao enviar: {e}")
+            return False
+    
+    def _send_webhook(self, notification_data: Dict, config: Dict) -> bool:
+        """Envia notificação para webhook genérico"""
+        try:
+            # Validar URL
+            if not config.get('url'):
+                logger.error("[WEBHOOK] URL não configurada")
+                return False
+            
+            # Preparar headers
+            headers = config.get('headers', {})
+            if 'Content-Type' not in headers:
+                headers['Content-Type'] = 'application/json'
+            
+            # Método HTTP
+            method = config.get('method', 'POST').upper()
+            
+            # Payload
+            payload = {
+                'notification': notification_data,
+                'source': 'trading_system',
+                'version': '2.0.0'
+            }
+            
+            # Enviar
+            if method == 'POST':
+                response = requests.post(config['url'], json=payload, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(config['url'], json=payload, headers=headers, timeout=10)
+            else:
+                logger.error(f"[WEBHOOK] Método HTTP não suportado: {method}")
+                return False
+            
+            response.raise_for_status()
+            
+            logger.debug(f"[WEBHOOK] Enviado: {notification_data['title']}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[WEBHOOK] Erro ao enviar: {e}")
+            return False
+    
+    def _save_to_history(self, notification_data: Dict, sent_channels: List[str], 
+                        success: bool, errors: List[str]):
+        """Salva notificação no histórico"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT INTO notification_history 
+                (type, title, message, details, priority, channels_sent, sent_at, success, error_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                notification_data['type'],
+                notification_data['title'],
+                notification_data['message'],
+                json.dumps(notification_data['details']),
+                notification_data['priority'],
+                ','.join(sent_channels),
+                notification_data['timestamp'],
+                success,
+                '; '.join(errors) if errors else None
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            logger.error(f"[NOTIFICATION] Erro ao salvar histórico: {e}")
+    
+    def get_notification_history(self, limit: int = 50) -> List[Dict]:
+        """Obtém histórico de notificações"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT type, title, message, details, priority, channels_sent, sent_at, success, error_message
+                FROM notification_history
+                ORDER BY sent_at DESC
+                LIMIT ?
+            ''', (limit,))
+            
+            history = []
+            for row in cursor.fetchall():
+                history.append({
+                    'type': row[0],
+                    'title': row[1],
+                    'message': row[2],
+                    'details': json.loads(row[3]) if row[3] else {},
+                    'priority': row[4],
+                    'channels_sent': row[5].split(',') if row[5] else [],
+                    'sent_at': row[6],
+                    'success': bool(row[7]),
+                    'error_message': row[8]
+                })
+            
+            conn.close()
+            return history
+            
+        except Exception as e:
+            logger.error(f"[NOTIFICATION] Erro ao obter histórico: {e}")
+            return []
+    
+    def get_notification_stats(self) -> Dict[str, Any]:
+        """Obtém estatísticas de notificações"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Total de notificações
+            cursor.execute('SELECT COUNT(*) FROM notification_history')
+            total_notifications = cursor.fetchone()[0]
+            
+            # Notificações bem-sucedidas
+            cursor.execute('SELECT COUNT(*) FROM notification_history WHERE success = 1')
+            successful_notifications = cursor.fetchone()[0]
+            
+            # Por tipo
+            cursor.execute('''
+                SELECT type, COUNT(*) 
+                FROM notification_history 
+                GROUP BY type 
+                ORDER BY COUNT(*) DESC
+            ''')
+            by_type = dict(cursor.fetchall())
+            
+            # Por prioridade
+            cursor.execute('''
+                SELECT priority, COUNT(*) 
+                FROM notification_history 
+                GROUP BY priority 
+                ORDER BY COUNT(*) DESC
+            ''')
+            by_priority = dict(cursor.fetchall())
+            
+            # Últimas 24h
+            from datetime import datetime, timedelta
+            yesterday = (datetime.now() - timedelta(days=1)).isoformat()
+            cursor.execute('SELECT COUNT(*) FROM notification_history WHERE sent_at > ?', (yesterday,))
+            last_24h = cursor.fetchone()[0]
+            
+            conn.close()
+            
+            return {
+                'total_notifications': total_notifications,
+                'successful_notifications': successful_notifications,
+                'success_rate': successful_notifications / total_notifications if total_notifications > 0 else 0,
+                'by_type': by_type,
+                'by_priority': by_priority,
+                'last_24h': last_24h,
+                'enabled_channels': [ch for ch, cfg in self.config.items() if cfg.get('enabled')],
+                'total_channels': len([ch for ch, cfg in self.config.items() if cfg.get('enabled')])
+            }
+            
+        except Exception as e:
+            logger.error(f"[NOTIFICATION] Erro ao obter estatísticas: {e}")
+            return {
+                'total_notifications': 0,
+                'successful_notifications': 0,
+                'success_rate': 0,
+                'by_type': {},
+                'by_priority': {},
+                'last_24h': 0,
+                'enabled_channels': [],
+                'total_channels': 0
+            }
+    
+    def update_channel_config(self, channel: str, config: Dict) -> bool:
+        """Atualiza configuração de um canal"""
+        if channel not in self.config:
+            logger.error(f"[NOTIFICATION] Canal desconhecido: {channel}")
+            return False
+        
+        self.config[channel].update(config)
+        return self.save_config()
+    
+    def enable_channel(self, channel: str) -> bool:
+        """Habilita um canal de notificação"""
+        if channel not in self.config:
+            logger.error(f"[NOTIFICATION] Canal desconhecido: {channel}")
+            return False
+        
+        self.config[channel]['enabled'] = True
+        return self.save_config()
+    
+    def disable_channel(self, channel: str) -> bool:
+        """Desabilita um canal de notificação"""
+        if channel not in self.config:
+            logger.error(f"[NOTIFICATION] Canal desconhecido: {channel}")
+            return False
+        
+        self.config[channel]['enabled'] = False
+        return self.save_config()
+    
+    def test_channel(self, channel: str) -> Dict[str, Any]:
+        """Testa um canal de notificação"""
+        if channel not in self.config:
+            return {'success': False, 'error': f'Canal desconhecido: {channel}'}
+        
+        if not self.config[channel].get('enabled'):
+            return {'success': False, 'error': f'Canal {channel} está desabilitado'}
+        
+        # Notificação de teste
+        test_notification = {
+            'type': 'TEST',
+            'title': f'Teste do Canal {channel.title()}',
+            'message': f'Esta é uma notificação de teste para verificar se o canal {channel} está funcionando corretamente.',
+            'details': {
+                'test_time': datetime.now().isoformat(),
+                'channel': channel
+            },
+            'priority': 'low',
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        try:
+            success = self._send_to_channel(channel, test_notification)
+            return {
+                'success': success,
+                'message': f'Teste do canal {channel} {"bem-sucedido" if success else "falhou"}'
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
 
 
-# ==================== GLOBAL INSTANCE ====================
+# ==================== INSTÂNCIA GLOBAL E FUNÇÕES AUXILIARES ====================
 
 # Instância global do serviço de notificações
 notification_service = NotificationService()
 
-def send_config_notification(notification_type: str, title: str, message: str, details: Dict = None):
-    """Função utilitária para enviar notificações relacionadas a configurações"""
-    return notification_service.send_notification(notification_type, title, message, details)
-
 def setup_notification_integration():
-    """Configura integração entre notificações e middleware de configuração"""
+    """Configura integração com outros sistemas"""
     try:
-        from middleware.config_middleware import config_middleware
+        # Configurar notificações básicas para desenvolvimento/teste
+        # Em produção, estas configurações viriam do banco ou arquivo de config
         
-        # Criar callbacks
-        callbacks = create_config_notification_callbacks()
+        # Por enquanto, apenas inicializar sem configurações específicas
+        # O usuário pode configurar via interface web ou API
         
-        # Registrar callbacks no middleware
-        config_middleware.add_config_change_callback(callbacks['on_config_changed'])
-        
-        logger.info("[NOTIFICATIONS] Integração com middleware configurada")
+        logger.info("[NOTIFICATION] Integração configurada")
         return True
         
-    except ImportError:
-        logger.warning("[NOTIFICATIONS] Middleware de configuração não disponível")
-        return False
     except Exception as e:
-        logger.error(f"[NOTIFICATIONS] Erro na integração: {e}")
+        logger.error(f"[NOTIFICATION] Erro na configuração de integração: {e}")
         return False
+
+def send_system_notification(title: str, message: str, priority: str = 'medium', 
+                           notification_type: str = 'SYSTEM_STATUS', details: Dict = None):
+    """Função auxiliar para enviar notificações do sistema"""
+    return notification_service.send_notification(
+        notification_type=notification_type,
+        title=title,
+        message=message,
+        details=details,
+        priority=priority
+    )
+
+def configure_email_notifications(smtp_server: str, smtp_port: int, username: str, 
+                                password: str, from_email: str, to_emails: List[str]) -> bool:
+    """Configura notificações por email"""
+    config = {
+        'enabled': True,
+        'smtp_server': smtp_server,
+        'smtp_port': smtp_port,
+        'username': username,
+        'password': password,
+        'from_email': from_email,
+        'to_emails': to_emails
+    }
+    
+    return notification_service.update_channel_config('email', config)
+
+def configure_slack_notifications(webhook_url: str, channel: str = '#trading-alerts', 
+                                 username: str = 'Trading System') -> bool:
+    """Configura notificações do Slack"""
+    config = {
+        'enabled': True,
+        'webhook_url': webhook_url,
+        'channel': channel,
+        'username': username
+    }
+    
+    return notification_service.update_channel_config('slack', config)
+
+def configure_discord_notifications(webhook_url: str, username: str = 'Trading System') -> bool:
+    """Configura notificações do Discord"""
+    config = {
+        'enabled': True,
+        'webhook_url': webhook_url,
+        'username': username
+    }
+    
+    return notification_service.update_channel_config('discord', config)
+
+def configure_telegram_notifications(bot_token: str, chat_id: str, 
+                                   parse_mode: str = 'Markdown') -> bool:
+    """Configura notificações do Telegram"""
+    config = {
+        'enabled': True,
+        'bot_token': bot_token,
+        'chat_id': chat_id,
+        'parse_mode': parse_mode
+    }
+    
+    return notification_service.update_channel_config('telegram', config)

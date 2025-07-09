@@ -1,138 +1,106 @@
-# services/backup_service.py - Sistema de backup automático
+# services/backup_service.py - Sistema de backup automático e manual
 
 import os
+import json
 import shutil
 import sqlite3
-import gzip
-import json
+import zipfile
+import hashlib
+import schedule
 import threading
 import time
-import schedule
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, Any, List, Optional
 from pathlib import Path
-import hashlib
-import zipfile
-
 from utils.logging_config import logger
-from config import app_config
-
 
 class BackupService:
     """
-    Serviço de backup automático para bancos de dados e configurações
-    Suporta: backup completo, incremental, compressão, rotação automática
+    Serviço de backup que oferece:
+    - Backup automático agendado
+    - Backup manual sob demanda
+    - Compressão e verificação de integridade
+    - Rotação automática de backups antigos
+    - Restauração de backups
     """
     
-    def __init__(self, backup_dir: str = None):
-        self.backup_dir = Path(backup_dir or os.path.join(app_config.DATA_DIR, 'backups'))
-        self.backup_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self, backup_dir: Optional[str] = None):
+        self.backup_dir = backup_dir or os.path.join('data', 'backups')
+        self.metadata_db = os.path.join(self.backup_dir, 'backup_metadata.db')
         
-        # Configurações de backup
+        # Configurações padrão
         self.config = {
             'auto_backup_enabled': True,
             'backup_schedule': '02:00',  # 2:00 AM
             'retention_days': 30,
             'max_backups': 50,
             'compression_enabled': True,
-            'include_configs': True,
-            'include_databases': True,
-            'include_logs': False,
-            'backup_types': ['daily', 'weekly', 'monthly'],
-            'weekly_day': 'sunday',
-            'monthly_day': 1,
-            'incremental_enabled': True,
-            'verify_backups': True
+            'verify_backups': True,
+            'backup_types': ['daily', 'weekly', 'monthly']
         }
         
         # Estado do serviço
+        self.backup_thread = None
         self.is_running = False
         self.last_backup_time = None
-        self.backup_thread = None
-        self.scheduler_thread = None
         
-        # Estatísticas
-        self.backup_stats = {
-            'total_backups': 0,
-            'successful_backups': 0,
-            'failed_backups': 0,
-            'total_size_bytes': 0,
-            'last_backup_duration': 0,
-            'last_backup_status': 'never'
+        # Caminhos dos dados para backup
+        self.data_paths = {
+            'databases': 'data',
+            'configs': 'data',
+            'logs': 'data/logs'
         }
         
-        # Lock para operações thread-safe
-        self.backup_lock = threading.Lock()
-        
-        self.load_config()
-        self.init_backup_database()
+        self.setup_backup_directory()
+        self.setup_metadata_db()
     
-    def load_config(self):
-        """Carrega configuração de backup"""
+    def setup_backup_directory(self):
+        """Configura diretório de backups"""
         try:
-            config_file = self.backup_dir / 'backup_config.json'
-            if config_file.exists():
-                with open(config_file, 'r') as f:
-                    loaded_config = json.load(f)
-                    self.config.update(loaded_config)
-                    logger.info("[BACKUP] Configuração carregada")
+            os.makedirs(self.backup_dir, exist_ok=True)
+            logger.info(f"[BACKUP] Diretório de backup: {self.backup_dir}")
         except Exception as e:
-            logger.error(f"[BACKUP] Erro ao carregar configuração: {e}")
+            logger.error(f"[BACKUP] Erro ao criar diretório: {e}")
     
-    def save_config(self):
-        """Salva configuração de backup"""
+    def setup_metadata_db(self):
+        """Configura banco de metadados dos backups"""
         try:
-            config_file = self.backup_dir / 'backup_config.json'
-            with open(config_file, 'w') as f:
-                json.dump(self.config, f, indent=2)
-            logger.info("[BACKUP] Configuração salva")
-        except Exception as e:
-            logger.error(f"[BACKUP] Erro ao salvar configuração: {e}")
-    
-    def init_backup_database(self):
-        """Inicializa banco de dados de backup"""
-        try:
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            conn = sqlite3.connect(str(backup_db))
+            conn = sqlite3.connect(self.metadata_db)
             cursor = conn.cursor()
             
-            # Tabela de metadados de backups
+            # Tabela de metadados dos backups
             cursor.execute('''
-                CREATE TABLE IF NOT EXISTS backup_history (
+                CREATE TABLE IF NOT EXISTS backup_metadata (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     backup_id TEXT UNIQUE NOT NULL,
                     backup_type TEXT NOT NULL,
+                    backup_file TEXT NOT NULL,
                     created_at TEXT NOT NULL,
-                    file_path TEXT NOT NULL,
-                    file_size_bytes INTEGER,
-                    compressed BOOLEAN DEFAULT 0,
-                    verification_status TEXT,
-                    checksum TEXT,
-                    included_databases TEXT,
-                    included_configs TEXT,
-                    duration_seconds REAL,
-                    status TEXT NOT NULL,
-                    error_message TEXT
+                    size_bytes INTEGER NOT NULL,
+                    checksum TEXT NOT NULL,
+                    verified BOOLEAN DEFAULT 0,
+                    file_exists BOOLEAN DEFAULT 1,
+                    includes_databases BOOLEAN DEFAULT 1,
+                    includes_configs BOOLEAN DEFAULT 1,
+                    includes_logs BOOLEAN DEFAULT 0,
+                    compression_ratio REAL,
+                    notes TEXT
                 )
             ''')
             
-            # Tabela de arquivos incluídos
+            # Tabela de histórico de operações
             cursor.execute('''
-                CREATE TABLE IF NOT EXISTS backup_files (
+                CREATE TABLE IF NOT EXISTS backup_operations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    backup_id TEXT NOT NULL,
-                    file_path TEXT NOT NULL,
-                    file_size_bytes INTEGER,
-                    checksum TEXT,
-                    last_modified TEXT,
-                    FOREIGN KEY (backup_id) REFERENCES backup_history (backup_id)
+                    operation_type TEXT NOT NULL,
+                    backup_id TEXT,
+                    status TEXT NOT NULL,
+                    started_at TEXT NOT NULL,
+                    completed_at TEXT,
+                    error_message TEXT,
+                    details TEXT
                 )
             ''')
-            
-            # Índices para performance
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_backup_created_at ON backup_history(created_at)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_backup_type ON backup_history(backup_type)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_backup_files_backup_id ON backup_files(backup_id)')
             
             conn.commit()
             conn.close()
@@ -140,697 +108,307 @@ class BackupService:
             logger.info("[BACKUP] Banco de metadados inicializado")
             
         except Exception as e:
-            logger.error(f"[BACKUP] Erro ao inicializar banco de metadados: {e}")
+            logger.error(f"[BACKUP] Erro ao configurar metadados: {e}")
     
-    def start_auto_backup(self):
-        """Inicia serviço de backup automático"""
-        if self.is_running:
-            logger.warning("[BACKUP] Serviço já está em execução")
-            return
-        
-        self.is_running = True
-        
-        # Configurar agendamento
-        schedule.clear()
-        
-        if self.config['auto_backup_enabled']:
-            schedule.every().day.at(self.config['backup_schedule']).do(self._scheduled_backup, 'daily')
-            
-            if 'weekly' in self.config['backup_types']:
-                getattr(schedule.every(), self.config['weekly_day']).at(self.config['backup_schedule']).do(
-                    self._scheduled_backup, 'weekly'
-                )
-            
-            if 'monthly' in self.config['backup_types']:
-                # Backup mensal no dia especificado
-                schedule.every().month.do(self._scheduled_backup, 'monthly')
-        
-        # Thread para executar agendamentos
-        self.scheduler_thread = threading.Thread(target=self._scheduler_worker, daemon=True)
-        self.scheduler_thread.start()
-        
-        logger.info("[BACKUP] Serviço de backup automático iniciado")
-    
-    def stop_auto_backup(self):
-        """Para serviço de backup automático"""
-        self.is_running = False
-        schedule.clear()
-        
-        if self.scheduler_thread and self.scheduler_thread.is_alive():
-            self.scheduler_thread.join(timeout=5)
-        
-        logger.info("[BACKUP] Serviço de backup automático parado")
-    
-    def _scheduler_worker(self):
-        """Worker thread para executar agendamentos"""
-        while self.is_running:
-            try:
-                schedule.run_pending()
-                time.sleep(60)  # Verificar a cada minuto
-            except Exception as e:
-                logger.error(f"[BACKUP] Erro no scheduler: {e}")
-                time.sleep(60)
-    
-    def _scheduled_backup(self, backup_type: str):
-        """Executa backup agendado"""
-        try:
-            logger.info(f"[BACKUP] Iniciando backup agendado: {backup_type}")
-            result = self.create_backup(backup_type=backup_type, auto_cleanup=True)
-            
-            if result['success']:
-                logger.info(f"[BACKUP] Backup {backup_type} concluído: {result['backup_file']}")
-            else:
-                logger.error(f"[BACKUP] Falha no backup {backup_type}: {result['error']}")
-                
-        except Exception as e:
-            logger.error(f"[BACKUP] Erro no backup agendado: {e}")
-    
-    def create_backup(self, 
-                     backup_type: str = 'manual',
-                     include_databases: bool = None,
-                     include_configs: bool = None,
-                     include_logs: bool = None,
+    def create_backup(self, backup_type: str = 'manual', include_databases: bool = True,
+                     include_configs: bool = True, include_logs: bool = False,
                      auto_cleanup: bool = False) -> Dict[str, Any]:
         """
-        Cria backup completo do sistema
+        Cria um backup do sistema
         
         Args:
             backup_type: Tipo do backup (manual, daily, weekly, monthly)
-            include_databases: Se deve incluir bancos de dados
-            include_configs: Se deve incluir configurações
-            include_logs: Se deve incluir logs
-            auto_cleanup: Se deve fazer limpeza automática após backup
+            include_databases: Incluir arquivos de banco de dados
+            include_configs: Incluir arquivos de configuração
+            include_logs: Incluir arquivos de log
+            auto_cleanup: Executar limpeza automática após backup
             
         Returns:
             Resultado da operação
         """
-        with self.backup_lock:
-            try:
-                start_time = time.time()
-                backup_id = self._generate_backup_id(backup_type)
-                
-                # Usar configurações padrão se não especificado
-                if include_databases is None:
-                    include_databases = self.config['include_databases']
-                if include_configs is None:
-                    include_configs = self.config['include_configs']
-                if include_logs is None:
-                    include_logs = self.config['include_logs']
-                
-                logger.info(f"[BACKUP] Criando backup {backup_id}")
-                
-                # Criar estrutura temporária
-                temp_dir = self.backup_dir / f"temp_{backup_id}"
-                temp_dir.mkdir(exist_ok=True)
-                
-                try:
-                    # Coletar arquivos para backup
-                    files_to_backup = []
-                    included_items = []
-                    
-                    if include_databases:
-                        db_files = self._collect_database_files()
-                        files_to_backup.extend(db_files)
-                        included_items.extend([f['source'] for f in db_files])
-                    
-                    if include_configs:
-                        config_files = self._collect_config_files()
-                        files_to_backup.extend(config_files)
-                        included_items.extend([f['source'] for f in config_files])
-                    
-                    if include_logs:
-                        log_files = self._collect_log_files()
-                        files_to_backup.extend(log_files)
-                        included_items.extend([f['source'] for f in log_files])
-                    
-                    if not files_to_backup:
-                        return {
-                            'success': False,
-                            'error': 'Nenhum arquivo encontrado para backup'
-                        }
-                    
-                    # Copiar arquivos para diretório temporário
-                    total_size = 0
-                    file_info = []
-                    
-                    for file_item in files_to_backup:
-                        source_path = Path(file_item['source'])
-                        dest_path = temp_dir / file_item['relative_path']
-                        dest_path.parent.mkdir(parents=True, exist_ok=True)
-                        
-                        # Copiar arquivo
-                        if source_path.exists():
-                            shutil.copy2(source_path, dest_path)
-                            
-                            # Calcular checksum e tamanho
-                            file_size = dest_path.stat().st_size
-                            checksum = self._calculate_checksum(dest_path)
-                            
-                            total_size += file_size
-                            file_info.append({
-                                'path': file_item['relative_path'],
-                                'size': file_size,
-                                'checksum': checksum,
-                                'modified': datetime.fromtimestamp(source_path.stat().st_mtime).isoformat()
-                            })
-                    
-                    # Criar metadados do backup
-                    metadata = {
-                        'backup_id': backup_id,
-                        'backup_type': backup_type,
-                        'created_at': datetime.now().isoformat(),
-                        'included_databases': include_databases,
-                        'included_configs': include_configs,
-                        'included_logs': include_logs,
-                        'total_files': len(file_info),
-                        'total_size_bytes': total_size,
-                        'files': file_info
-                    }
-                    
-                    # Salvar metadados
-                    metadata_file = temp_dir / 'backup_metadata.json'
-                    with open(metadata_file, 'w') as f:
-                        json.dump(metadata, f, indent=2)
-                    
-                    # Criar arquivo de backup
-                    if self.config['compression_enabled']:
-                        backup_file = self.backup_dir / f"{backup_id}.zip"
-                        self._create_compressed_backup(temp_dir, backup_file)
-                    else:
-                        backup_file = self.backup_dir / f"{backup_id}.tar"
-                        self._create_tar_backup(temp_dir, backup_file)
-                    
-                    # Calcular checksum do backup
-                    backup_checksum = self._calculate_checksum(backup_file)
-                    backup_size = backup_file.stat().st_size
-                    
-                    # Verificar backup se habilitado
-                    verification_status = 'not_verified'
-                    if self.config['verify_backups']:
-                        verification_status = self._verify_backup(backup_file)
-                    
-                    # Registrar no banco de metadados
-                    duration = time.time() - start_time
-                    self._record_backup(
-                        backup_id=backup_id,
-                        backup_type=backup_type,
-                        file_path=str(backup_file),
-                        file_size=backup_size,
-                        compressed=self.config['compression_enabled'],
-                        verification_status=verification_status,
-                        checksum=backup_checksum,
-                        included_databases=json.dumps(included_items) if include_databases else None,
-                        included_configs='yes' if include_configs else 'no',
-                        duration=duration,
-                        status='success'
-                    )
-                    
-                    # Registrar arquivos individuais
-                    self._record_backup_files(backup_id, file_info)
-                    
-                    # Atualizar estatísticas
-                    self._update_stats(success=True, size=backup_size, duration=duration)
-                    
-                    # Limpeza automática se solicitada
-                    if auto_cleanup:
-                        self.cleanup_old_backups()
-                    
-                    logger.info(f"[BACKUP] Backup concluído: {backup_file} ({self._format_size(backup_size)})")
-                    
-                    return {
-                        'success': True,
-                        'backup_id': backup_id,
-                        'backup_file': str(backup_file),
-                        'size_bytes': backup_size,
-                        'duration_seconds': duration,
-                        'files_included': len(file_info),
-                        'verification_status': verification_status
-                    }
-                    
-                finally:
-                    # Limpar diretório temporário
-                    if temp_dir.exists():
-                        shutil.rmtree(temp_dir, ignore_errors=True)
-                
-            except Exception as e:
-                logger.error(f"[BACKUP] Erro ao criar backup: {e}")
-                
-                # Registrar falha
-                try:
-                    self._record_backup(
-                        backup_id=backup_id,
-                        backup_type=backup_type,
-                        file_path='',
-                        file_size=0,
-                        compressed=False,
-                        verification_status='failed',
-                        checksum='',
-                        included_databases='',
-                        included_configs='',
-                        duration=time.time() - start_time,
-                        status='failed',
-                        error_message=str(e)
-                    )
-                    self._update_stats(success=False)
-                except:
-                    pass
-                
-                return {
-                    'success': False,
-                    'error': str(e)
-                }
-    
-    def _collect_database_files(self) -> List[Dict]:
-        """Coleta arquivos de banco de dados para backup"""
-        files = []
-        
-        # Bitcoin stream database
-        if hasattr(app_config, 'BITCOIN_STREAM_DB') and os.path.exists(app_config.BITCOIN_STREAM_DB):
-            files.append({
-                'source': app_config.BITCOIN_STREAM_DB,
-                'relative_path': 'databases/bitcoin_stream.db'
-            })
-        
-        # Trading analyzer database
-        if hasattr(app_config, 'TRADING_ANALYZER_DB') and os.path.exists(app_config.TRADING_ANALYZER_DB):
-            files.append({
-                'source': app_config.TRADING_ANALYZER_DB,
-                'relative_path': 'databases/trading_analyzer.db'
-            })
-        
-        # Dynamic config database
-        dynamic_config_db = os.path.join(app_config.DATA_DIR, 'dynamic_config.db')
-        if os.path.exists(dynamic_config_db):
-            files.append({
-                'source': dynamic_config_db,
-                'relative_path': 'databases/dynamic_config.db'
-            })
-        
-        # Settings database
-        settings_db = os.path.join(app_config.DATA_DIR, 'settings.db')
-        if os.path.exists(settings_db):
-            files.append({
-                'source': settings_db,
-                'relative_path': 'databases/settings.db'
-            })
-        
-        # Backup metadata database
-        backup_db = self.backup_dir / 'backup_metadata.db'
-        if backup_db.exists():
-            files.append({
-                'source': str(backup_db),
-                'relative_path': 'databases/backup_metadata.db'
-            })
-        
-        return files
-    
-    def _collect_config_files(self) -> List[Dict]:
-        """Coleta arquivos de configuração para backup"""
-        files = []
-        
-        # Arquivo de configuração principal
-        if hasattr(app_config, 'CONFIG_FILE') and os.path.exists(app_config.CONFIG_FILE):
-            files.append({
-                'source': app_config.CONFIG_FILE,
-                'relative_path': 'configs/app_config.py'
-            })
-        
-        # Configurações de notificação
-        notification_config = os.path.join(app_config.DATA_DIR, 'notification_config.json')
-        if os.path.exists(notification_config):
-            files.append({
-                'source': notification_config,
-                'relative_path': 'configs/notification_config.json'
-            })
-        
-        # Configurações de backup
-        backup_config = self.backup_dir / 'backup_config.json'
-        if backup_config.exists():
-            files.append({
-                'source': str(backup_config),
-                'relative_path': 'configs/backup_config.json'
-            })
-        
-        return files
-    
-    def _collect_log_files(self) -> List[Dict]:
-        """Coleta arquivos de log para backup (últimos 7 dias)"""
-        files = []
+        operation_id = self._start_operation('CREATE_BACKUP', backup_type)
         
         try:
-            log_dir = Path(app_config.DATA_DIR) / 'logs'
-            if log_dir.exists():
-                cutoff_date = datetime.now() - timedelta(days=7)
-                
-                for log_file in log_dir.glob('*.log'):
-                    if log_file.is_file():
-                        mod_time = datetime.fromtimestamp(log_file.stat().st_mtime)
-                        if mod_time > cutoff_date:
-                            files.append({
-                                'source': str(log_file),
-                                'relative_path': f'logs/{log_file.name}'
-                            })
+            # Gerar ID único para o backup
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_id = f"backup_{backup_type}_{timestamp}"
+            backup_filename = f"{backup_id}.zip"
+            backup_filepath = os.path.join(self.backup_dir, backup_filename)
+            
+            logger.info(f"[BACKUP] Iniciando backup: {backup_id}")
+            
+            # Coletar arquivos para backup
+            files_to_backup = []
+            
+            if include_databases:
+                db_files = self._collect_database_files()
+                files_to_backup.extend(db_files)
+            
+            if include_configs:
+                config_files = self._collect_config_files()
+                files_to_backup.extend(config_files)
+            
+            if include_logs:
+                log_files = self._collect_log_files()
+                files_to_backup.extend(log_files)
+            
+            if not files_to_backup:
+                error = "Nenhum arquivo encontrado para backup"
+                self._complete_operation(operation_id, 'FAILED', error)
+                return {'success': False, 'error': error}
+            
+            # Criar arquivo zip
+            total_size_before = sum(os.path.getsize(f['source']) for f in files_to_backup if os.path.exists(f['source']))
+            
+            with zipfile.ZipFile(backup_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file_info in files_to_backup:
+                    source_path = file_info['source']
+                    archive_path = file_info['relative_path']
+                    
+                    if os.path.exists(source_path):
+                        zipf.write(source_path, archive_path)
+                        logger.debug(f"[BACKUP] Adicionado: {archive_path}")
+            
+            # Calcular informações do backup
+            backup_size = os.path.getsize(backup_filepath)
+            compression_ratio = backup_size / total_size_before if total_size_before > 0 else 0
+            checksum = self._calculate_checksum(backup_filepath)
+            
+            # Verificar integridade se habilitado
+            verified = False
+            if self.config.get('verify_backups', True):
+                verified = self._verify_backup(backup_filepath)
+            
+            # Salvar metadados
+            self._save_backup_metadata(
+                backup_id, backup_type, backup_filename, backup_size,
+                checksum, verified, include_databases, include_configs,
+                include_logs, compression_ratio
+            )
+            
+            # Executar limpeza se solicitado
+            if auto_cleanup:
+                self._cleanup_old_backups()
+            
+            self.last_backup_time = datetime.now()
+            
+            result = {
+                'success': True,
+                'backup_id': backup_id,
+                'backup_file': backup_filepath,
+                'size_bytes': backup_size,
+                'compression_ratio': compression_ratio,
+                'verified': verified,
+                'files_included': len(files_to_backup),
+                'created_at': datetime.now().isoformat()
+            }
+            
+            self._complete_operation(operation_id, 'SUCCESS', json.dumps(result))
+            logger.info(f"[BACKUP] Backup criado com sucesso: {backup_id} ({backup_size} bytes)")
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"[BACKUP] Erro ao coletar logs: {e}")
+            error_msg = str(e)
+            logger.error(f"[BACKUP] Erro ao criar backup: {e}")
+            self._complete_operation(operation_id, 'FAILED', error_msg)
+            
+            return {
+                'success': False,
+                'error': error_msg,
+                'backup_type': backup_type
+            }
+    
+    def _collect_database_files(self) -> List[Dict[str, str]]:
+        """Coleta arquivos de banco de dados"""
+        db_files = []
+        data_dir = self.data_paths['databases']
         
-        return files
-    
-    def _create_compressed_backup(self, source_dir: Path, output_file: Path):
-        """Cria backup comprimido em ZIP"""
-        with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zipf:
-            for file_path in source_dir.rglob('*'):
-                if file_path.is_file():
-                    arcname = file_path.relative_to(source_dir)
-                    zipf.write(file_path, arcname)
-    
-    def _create_tar_backup(self, source_dir: Path, output_file: Path):
-        """Cria backup em formato TAR"""
-        import tarfile
+        if os.path.exists(data_dir):
+            for root, dirs, files in os.walk(data_dir):
+                for file in files:
+                    if file.endswith('.db') or file.endswith('.sqlite'):
+                        full_path = os.path.join(root, file)
+                        relative_path = os.path.join('databases', os.path.relpath(full_path, data_dir))
+                        
+                        db_files.append({
+                            'source': full_path,
+                            'relative_path': relative_path
+                        })
         
-        with tarfile.open(output_file, 'w') as tar:
-            tar.add(source_dir, arcname='.')
+        logger.debug(f"[BACKUP] Encontrados {len(db_files)} arquivos de banco")
+        return db_files
     
-    def _verify_backup(self, backup_file: Path) -> str:
+    def _collect_config_files(self) -> List[Dict[str, str]]:
+        """Coleta arquivos de configuração"""
+        config_files = []
+        
+        # Arquivos de configuração específicos
+        config_patterns = [
+            'config.py',
+            'config.json',
+            '*.conf',
+            'dynamic_config.db',
+            'notifications.db'
+        ]
+        
+        data_dir = self.data_paths['configs']
+        
+        if os.path.exists(data_dir):
+            for root, dirs, files in os.walk(data_dir):
+                for file in files:
+                    # Verificar se é arquivo de configuração
+                    if (file.endswith('.json') or file.endswith('.conf') or 
+                        file.endswith('.yaml') or file.endswith('.yml') or
+                        'config' in file.lower()):
+                        
+                        full_path = os.path.join(root, file)
+                        relative_path = os.path.join('configs', os.path.relpath(full_path, data_dir))
+                        
+                        config_files.append({
+                            'source': full_path,
+                            'relative_path': relative_path
+                        })
+        
+        logger.debug(f"[BACKUP] Encontrados {len(config_files)} arquivos de configuração")
+        return config_files
+    
+    def _collect_log_files(self) -> List[Dict[str, str]]:
+        """Coleta arquivos de log"""
+        log_files = []
+        logs_dir = self.data_paths['logs']
+        
+        if os.path.exists(logs_dir):
+            # Apenas logs dos últimos 7 dias
+            cutoff_date = datetime.now() - timedelta(days=7)
+            
+            for root, dirs, files in os.walk(logs_dir):
+                for file in files:
+                    if file.endswith('.log'):
+                        full_path = os.path.join(root, file)
+                        
+                        # Verificar data do arquivo
+                        file_time = datetime.fromtimestamp(os.path.getmtime(full_path))
+                        if file_time >= cutoff_date:
+                            relative_path = os.path.join('logs', os.path.relpath(full_path, logs_dir))
+                            
+                            log_files.append({
+                                'source': full_path,
+                                'relative_path': relative_path
+                            })
+        
+        logger.debug(f"[BACKUP] Encontrados {len(log_files)} arquivos de log")
+        return log_files
+    
+    def _calculate_checksum(self, filepath: str) -> str:
+        """Calcula checksum MD5 do arquivo"""
+        try:
+            hash_md5 = hashlib.md5()
+            with open(filepath, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_md5.update(chunk)
+            return hash_md5.hexdigest()
+        except Exception as e:
+            logger.error(f"[BACKUP] Erro ao calcular checksum: {e}")
+            return ""
+    
+    def _verify_backup(self, filepath: str) -> bool:
         """Verifica integridade do backup"""
         try:
-            if backup_file.suffix == '.zip':
-                with zipfile.ZipFile(backup_file, 'r') as zipf:
-                    # Testar integridade do ZIP
-                    bad_files = zipf.testzip()
-                    if bad_files:
-                        return f'corrupted ({bad_files})'
-                    
-                    # Verificar se contém metadados
-                    if 'backup_metadata.json' in zipf.namelist():
-                        return 'verified'
-                    else:
-                        return 'incomplete'
-            else:
-                # Para TAR, verificar se pode ser aberto
-                import tarfile
-                with tarfile.open(backup_file, 'r'):
-                    return 'verified'
-                    
+            with zipfile.ZipFile(filepath, 'r') as zipf:
+                # Testar se o arquivo pode ser aberto e lido
+                bad_files = zipf.testzip()
+                if bad_files:
+                    logger.error(f"[BACKUP] Arquivos corrompidos no backup: {bad_files}")
+                    return False
+                
+                # Verificar se contém arquivos
+                if len(zipf.namelist()) == 0:
+                    logger.error("[BACKUP] Backup vazio")
+                    return False
+                
+                return True
+                
         except Exception as e:
             logger.error(f"[BACKUP] Erro na verificação: {e}")
-            return f'error ({str(e)[:50]})'
+            return False
     
-    def _calculate_checksum(self, file_path: Path) -> str:
-        """Calcula checksum SHA256 do arquivo"""
-        sha256_hash = hashlib.sha256()
-        with open(file_path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(chunk)
-        return sha256_hash.hexdigest()
-    
-    def _generate_backup_id(self, backup_type: str) -> str:
-        """Gera ID único para o backup"""
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        return f"backup_{backup_type}_{timestamp}"
-    
-    def _record_backup(self, **kwargs):
-        """Registra backup no banco de metadados"""
+    def _save_backup_metadata(self, backup_id: str, backup_type: str, filename: str,
+                             size_bytes: int, checksum: str, verified: bool,
+                             includes_databases: bool, includes_configs: bool,
+                             includes_logs: bool, compression_ratio: float):
+        """Salva metadados do backup"""
         try:
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            conn = sqlite3.connect(str(backup_db))
+            conn = sqlite3.connect(self.metadata_db)
             cursor = conn.cursor()
             
             cursor.execute('''
-                INSERT INTO backup_history 
-                (backup_id, backup_type, created_at, file_path, file_size_bytes,
-                 compressed, verification_status, checksum, included_databases,
-                 included_configs, duration_seconds, status, error_message)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO backup_metadata 
+                (backup_id, backup_type, backup_file, created_at, size_bytes, checksum, 
+                 verified, includes_databases, includes_configs, includes_logs, compression_ratio)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
-                kwargs['backup_id'],
-                kwargs['backup_type'],
-                kwargs.get('created_at', datetime.now().isoformat()),
-                kwargs['file_path'],
-                kwargs['file_size'],
-                kwargs['compressed'],
-                kwargs['verification_status'],
-                kwargs['checksum'],
-                kwargs['included_databases'],
-                kwargs['included_configs'],
-                kwargs['duration'],
-                kwargs['status'],
-                kwargs.get('error_message')
+                backup_id, backup_type, filename, datetime.now().isoformat(),
+                size_bytes, checksum, verified, includes_databases,
+                includes_configs, includes_logs, compression_ratio
             ))
             
             conn.commit()
             conn.close()
             
         except Exception as e:
-            logger.error(f"[BACKUP] Erro ao registrar backup: {e}")
+            logger.error(f"[BACKUP] Erro ao salvar metadados: {e}")
     
-    def _record_backup_files(self, backup_id: str, file_info: List[Dict]):
-        """Registra arquivos individuais do backup"""
-        try:
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            conn = sqlite3.connect(str(backup_db))
-            cursor = conn.cursor()
-            
-            for file_data in file_info:
-                cursor.execute('''
-                    INSERT INTO backup_files 
-                    (backup_id, file_path, file_size_bytes, checksum, last_modified)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (
-                    backup_id,
-                    file_data['path'],
-                    file_data['size'],
-                    file_data['checksum'],
-                    file_data['modified']
-                ))
-            
-            conn.commit()
-            conn.close()
-            
-        except Exception as e:
-            logger.error(f"[BACKUP] Erro ao registrar arquivos: {e}")
-    
-    def _update_stats(self, success: bool, size: int = 0, duration: float = 0):
-        """Atualiza estatísticas de backup"""
-        self.backup_stats['total_backups'] += 1
-        
-        if success:
-            self.backup_stats['successful_backups'] += 1
-            self.backup_stats['total_size_bytes'] += size
-            self.backup_stats['last_backup_duration'] = duration
-            self.backup_stats['last_backup_status'] = 'success'
-            self.last_backup_time = datetime.now()
-        else:
-            self.backup_stats['failed_backups'] += 1
-            self.backup_stats['last_backup_status'] = 'failed'
-    
-    def cleanup_old_backups(self) -> Dict[str, Any]:
-        """Remove backups antigos baseado nas regras de retenção"""
-        try:
-            deleted_count = 0
-            deleted_size = 0
-            
-            # Obter lista de backups
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            conn = sqlite3.connect(str(backup_db))
-            cursor = conn.cursor()
-            
-            # Backups mais antigos que o período de retenção
-            cutoff_date = datetime.now() - timedelta(days=self.config['retention_days'])
-            
-            cursor.execute('''
-                SELECT backup_id, file_path, file_size_bytes 
-                FROM backup_history 
-                WHERE created_at < ? AND status = 'success'
-                ORDER BY created_at ASC
-            ''', (cutoff_date.isoformat(),))
-            
-            old_backups = cursor.fetchall()
-            
-            # Aplicar limite máximo de backups também
-            cursor.execute('''
-                SELECT backup_id, file_path, file_size_bytes 
-                FROM backup_history 
-                WHERE status = 'success'
-                ORDER BY created_at DESC
-            ''')
-            
-            all_backups = cursor.fetchall()
-            
-            # Se temos mais backups que o limite máximo, remover os mais antigos
-            if len(all_backups) > self.config['max_backups']:
-                excess_backups = all_backups[self.config['max_backups']:]
-                old_backups.extend(excess_backups)
-            
-            # Remover duplicatas
-            old_backups = list(set(old_backups))
-            
-            # Deletar backups antigos
-            for backup_id, file_path, file_size in old_backups:
-                try:
-                    backup_file = Path(file_path)
-                    if backup_file.exists():
-                        backup_file.unlink()
-                        deleted_size += file_size or 0
-                        deleted_count += 1
-                    
-                    # Remover do banco de dados
-                    cursor.execute('DELETE FROM backup_files WHERE backup_id = ?', (backup_id,))
-                    cursor.execute('DELETE FROM backup_history WHERE backup_id = ?', (backup_id,))
-                    
-                except Exception as e:
-                    logger.error(f"[BACKUP] Erro ao deletar backup {backup_id}: {e}")
-            
-            conn.commit()
-            conn.close()
-            
-            logger.info(f"[BACKUP] Limpeza concluída: {deleted_count} backups removidos ({self._format_size(deleted_size)})")
-            
-            return {
-                'success': True,
-                'deleted_count': deleted_count,
-                'deleted_size_bytes': deleted_size,
-                'space_freed': self._format_size(deleted_size)
-            }
-            
-        except Exception as e:
-            logger.error(f"[BACKUP] Erro na limpeza: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
-    
-    def restore_backup(self, backup_id: str, restore_path: str = None) -> Dict[str, Any]:
-        """
-        Restaura backup específico
-        
-        Args:
-            backup_id: ID do backup para restaurar
-            restore_path: Caminho onde restaurar (padrão: temporário)
-            
-        Returns:
-            Resultado da operação
-        """
-        try:
-            # Buscar informações do backup
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            conn = sqlite3.connect(str(backup_db))
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT file_path, compressed, verification_status 
-                FROM backup_history 
-                WHERE backup_id = ? AND status = 'success'
-            ''', (backup_id,))
-            
-            result = cursor.fetchone()
-            conn.close()
-            
-            if not result:
-                return {
-                    'success': False,
-                    'error': f'Backup {backup_id} não encontrado ou falhou'
-                }
-            
-            file_path, compressed, verification_status = result
-            backup_file = Path(file_path)
-            
-            if not backup_file.exists():
-                return {
-                    'success': False,
-                    'error': f'Arquivo de backup não encontrado: {file_path}'
-                }
-            
-            # Verificar integridade se não foi verificado antes
-            if verification_status != 'verified':
-                current_verification = self._verify_backup(backup_file)
-                if current_verification not in ['verified', 'incomplete']:
-                    return {
-                        'success': False,
-                        'error': f'Backup corrompido: {current_verification}'
-                    }
-            
-            # Definir caminho de restauração
-            if not restore_path:
-                restore_path = self.backup_dir / f"restore_{backup_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            
-            restore_dir = Path(restore_path)
-            restore_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Extrair backup
-            if compressed or backup_file.suffix == '.zip':
-                with zipfile.ZipFile(backup_file, 'r') as zipf:
-                    zipf.extractall(restore_dir)
-            else:
-                import tarfile
-                with tarfile.open(backup_file, 'r') as tar:
-                    tar.extractall(restore_dir)
-            
-            # Verificar se metadados foram extraídos
-            metadata_file = restore_dir / 'backup_metadata.json'
-            metadata = {}
-            
-            if metadata_file.exists():
-                with open(metadata_file, 'r') as f:
-                    metadata = json.load(f)
-            
-            logger.info(f"[BACKUP] Backup {backup_id} restaurado em: {restore_dir}")
-            
-            return {
-                'success': True,
-                'backup_id': backup_id,
-                'restore_path': str(restore_dir),
-                'metadata': metadata,
-                'files_restored': len(list(restore_dir.rglob('*')))
-            }
-            
-        except Exception as e:
-            logger.error(f"[BACKUP] Erro na restauração: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
-    
-    def list_backups(self, backup_type: str = None, limit: int = 50) -> List[Dict]:
+    def list_backups(self, backup_type: Optional[str] = None, limit: int = 50) -> List[Dict]:
         """Lista backups disponíveis"""
         try:
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            conn = sqlite3.connect(str(backup_db))
+            conn = sqlite3.connect(self.metadata_db)
             cursor = conn.cursor()
             
-            query = '''
-                SELECT backup_id, backup_type, created_at, file_path, file_size_bytes,
-                       compressed, verification_status, duration_seconds, status
-                FROM backup_history
-            '''
-            params = []
-            
             if backup_type:
-                query += ' WHERE backup_type = ?'
-                params.append(backup_type)
-            
-            query += ' ORDER BY created_at DESC LIMIT ?'
-            params.append(limit)
-            
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-            conn.close()
+                cursor.execute('''
+                    SELECT backup_id, backup_type, backup_file, created_at, size_bytes,
+                           verified, file_exists, includes_databases, includes_configs, includes_logs
+                    FROM backup_metadata
+                    WHERE backup_type = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                ''', (backup_type, limit))
+            else:
+                cursor.execute('''
+                    SELECT backup_id, backup_type, backup_file, created_at, size_bytes,
+                           verified, file_exists, includes_databases, includes_configs, includes_logs
+                    FROM backup_metadata
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                ''', (limit,))
             
             backups = []
-            for row in results:
-                backup_info = {
+            for row in cursor.fetchall():
+                backup_path = os.path.join(self.backup_dir, row[2])
+                file_exists = os.path.exists(backup_path)
+                
+                # Atualizar status no banco se necessário
+                if file_exists != bool(row[6]):
+                    cursor.execute('UPDATE backup_metadata SET file_exists = ? WHERE backup_id = ?',
+                                 (file_exists, row[0]))
+                
+                backups.append({
                     'backup_id': row[0],
                     'backup_type': row[1],
-                    'created_at': row[2],
-                    'file_path': row[3],
+                    'backup_file': row[2],
+                    'full_path': backup_path,
+                    'created_at': row[3],
                     'size_bytes': row[4],
-                    'size_formatted': self._format_size(row[4]),
-                    'compressed': bool(row[5]),
-                    'verification_status': row[6],
-                    'duration_seconds': row[7],
-                    'status': row[8],
-                    'file_exists': Path(row[3]).exists() if row[3] else False
-                }
-                backups.append(backup_info)
+                    'verified': bool(row[5]),
+                    'file_exists': file_exists,
+                    'includes_databases': bool(row[7]),
+                    'includes_configs': bool(row[8]),
+                    'includes_logs': bool(row[9])
+                })
+            
+            conn.commit()
+            conn.close()
             
             return backups
             
@@ -838,104 +416,341 @@ class BackupService:
             logger.error(f"[BACKUP] Erro ao listar backups: {e}")
             return []
     
-    def get_backup_stats(self) -> Dict[str, Any]:
-        """Retorna estatísticas de backup"""
-        try:
-            # Estatísticas básicas
-            stats = self.backup_stats.copy()
+    def restore_backup(self, backup_id: str, restore_path: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Restaura um backup
+        
+        Args:
+            backup_id: ID do backup para restaurar
+            restore_path: Caminho para restaurar (padrão: diretório original)
             
-            # Adicionar informações calculadas
-            stats['success_rate'] = (
-                (stats['successful_backups'] / stats['total_backups'] * 100)
-                if stats['total_backups'] > 0 else 0
+        Returns:
+            Resultado da operação
+        """
+        operation_id = self._start_operation('RESTORE_BACKUP', backup_id)
+        
+        try:
+            # Buscar metadados do backup
+            conn = sqlite3.connect(self.metadata_db)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT backup_file, size_bytes, verified, includes_databases, includes_configs, includes_logs
+                FROM backup_metadata
+                WHERE backup_id = ?
+            ''', (backup_id,))
+            
+            result = cursor.fetchone()
+            conn.close()
+            
+            if not result:
+                error = f"Backup não encontrado: {backup_id}"
+                self._complete_operation(operation_id, 'FAILED', error)
+                return {'success': False, 'error': error}
+            
+            backup_file, size_bytes, verified, inc_db, inc_config, inc_logs = result
+            backup_path = os.path.join(self.backup_dir, backup_file)
+            
+            if not os.path.exists(backup_path):
+                error = f"Arquivo de backup não encontrado: {backup_path}"
+                self._complete_operation(operation_id, 'FAILED', error)
+                return {'success': False, 'error': error}
+            
+            # Determinar diretório de restauração
+            if not restore_path:
+                restore_path = 'data_restored'
+            
+            os.makedirs(restore_path, exist_ok=True)
+            
+            # Extrair backup
+            extracted_files = []
+            
+            with zipfile.ZipFile(backup_path, 'r') as zipf:
+                for file_info in zipf.infolist():
+                    extracted_path = os.path.join(restore_path, file_info.filename)
+                    
+                    # Criar diretório se necessário
+                    os.makedirs(os.path.dirname(extracted_path), exist_ok=True)
+                    
+                    # Extrair arquivo
+                    with zipf.open(file_info) as source, open(extracted_path, 'wb') as target:
+                        shutil.copyfileobj(source, target)
+                    
+                    extracted_files.append(extracted_path)
+            
+            result = {
+                'success': True,
+                'backup_id': backup_id,
+                'restore_path': restore_path,
+                'files_restored': len(extracted_files),
+                'total_size': size_bytes,
+                'verified': bool(verified),
+                'restored_at': datetime.now().isoformat()
+            }
+            
+            self._complete_operation(operation_id, 'SUCCESS', json.dumps(result))
+            logger.info(f"[BACKUP] Backup restaurado: {backup_id} -> {restore_path}")
+            
+            return result
+            
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"[BACKUP] Erro ao restaurar backup: {e}")
+            self._complete_operation(operation_id, 'FAILED', error_msg)
+            
+            return {
+                'success': False,
+                'error': error_msg,
+                'backup_id': backup_id
+            }
+    
+    def _cleanup_old_backups(self):
+        """Remove backups antigos baseado na política de retenção"""
+        try:
+            retention_days = self.config.get('retention_days', 30)
+            max_backups = self.config.get('max_backups', 50)
+            
+            cutoff_date = (datetime.now() - timedelta(days=retention_days)).isoformat()
+            
+            conn = sqlite3.connect(self.metadata_db)
+            cursor = conn.cursor()
+            
+            # Buscar backups para remoção
+            cursor.execute('''
+                SELECT backup_id, backup_file 
+                FROM backup_metadata 
+                WHERE created_at < ? OR backup_id IN (
+                    SELECT backup_id FROM backup_metadata 
+                    ORDER BY created_at DESC 
+                    LIMIT -1 OFFSET ?
+                )
+            ''', (cutoff_date, max_backups))
+            
+            backups_to_remove = cursor.fetchall()
+            removed_count = 0
+            
+            for backup_id, backup_file in backups_to_remove:
+                backup_path = os.path.join(self.backup_dir, backup_file)
+                
+                try:
+                    if os.path.exists(backup_path):
+                        os.remove(backup_path)
+                    
+                    # Remover do banco
+                    cursor.execute('DELETE FROM backup_metadata WHERE backup_id = ?', (backup_id,))
+                    removed_count += 1
+                    
+                except Exception as e:
+                    logger.error(f"[BACKUP] Erro ao remover {backup_id}: {e}")
+            
+            conn.commit()
+            conn.close()
+            
+            if removed_count > 0:
+                logger.info(f"[BACKUP] Removidos {removed_count} backups antigos")
+                
+        except Exception as e:
+            logger.error(f"[BACKUP] Erro na limpeza: {e}")
+    
+    def start_auto_backup(self):
+        """Inicia backup automático agendado"""
+        if self.is_running:
+            logger.warning("[BACKUP] Backup automático já está rodando")
+            return
+        
+        try:
+            # Configurar agendamento
+            schedule_time = self.config.get('backup_schedule', '02:00')
+            schedule.every().day.at(schedule_time).do(self._run_scheduled_backup)
+            
+            # Thread para executar agendamentos
+            def backup_worker():
+                while self.is_running:
+                    schedule.run_pending()
+                    time.sleep(60)  # Verificar a cada minuto
+            
+            self.is_running = True
+            self.backup_thread = threading.Thread(target=backup_worker, daemon=True)
+            self.backup_thread.start()
+            
+            logger.info(f"[BACKUP] Backup automático iniciado (agendado para {schedule_time})")
+            
+        except Exception as e:
+            logger.error(f"[BACKUP] Erro ao iniciar backup automático: {e}")
+            self.is_running = False
+    
+    def stop_auto_backup(self):
+        """Para backup automático"""
+        self.is_running = False
+        schedule.clear()
+        
+        if self.backup_thread and self.backup_thread.is_alive():
+            self.backup_thread.join(timeout=5)
+        
+        logger.info("[BACKUP] Backup automático parado")
+    
+    def _run_scheduled_backup(self):
+        """Executa backup agendado"""
+        try:
+            # Determinar tipo de backup baseado na data
+            now = datetime.now()
+            
+            if now.day == 1:  # Primeiro dia do mês
+                backup_type = 'monthly'
+            elif now.weekday() == 6:  # Domingo
+                backup_type = 'weekly'
+            else:
+                backup_type = 'daily'
+            
+            # Executar backup
+            result = self.create_backup(
+                backup_type=backup_type,
+                include_databases=True,
+                include_configs=True,
+                include_logs=False,
+                auto_cleanup=True
             )
             
-            stats['total_size_formatted'] = self._format_size(stats['total_size_bytes'])
-            stats['last_backup_time'] = self.last_backup_time.isoformat() if self.last_backup_time else None
-            stats['service_running'] = self.is_running
-            stats['backup_directory'] = str(self.backup_dir)
+            if result['success']:
+                logger.info(f"[BACKUP] Backup agendado criado: {backup_type}")
+            else:
+                logger.error(f"[BACKUP] Falha no backup agendado: {result.get('error')}")
+                
+        except Exception as e:
+            logger.error(f"[BACKUP] Erro no backup agendado: {e}")
+    
+    def get_backup_stats(self) -> Dict[str, Any]:
+        """Obtém estatísticas dos backups"""
+        try:
+            conn = sqlite3.connect(self.metadata_db)
+            cursor = conn.cursor()
             
-            # Estatísticas do banco de dados
-            backup_db = self.backup_dir / 'backup_metadata.db'
-            if backup_db.exists():
-                conn = sqlite3.connect(str(backup_db))
-                cursor = conn.cursor()
-                
-                # Total de backups por tipo
-                cursor.execute('''
-                    SELECT backup_type, COUNT(*) 
-                    FROM backup_history 
-                    WHERE status = 'success'
-                    GROUP BY backup_type
-                ''')
-                stats['backups_by_type'] = dict(cursor.fetchall())
-                
-                # Backup mais recente
-                cursor.execute('''
-                    SELECT backup_id, created_at, backup_type 
-                    FROM backup_history 
-                    WHERE status = 'success'
-                    ORDER BY created_at DESC 
-                    LIMIT 1
-                ''')
-                recent = cursor.fetchone()
-                if recent:
-                    stats['most_recent_backup'] = {
-                        'backup_id': recent[0],
-                        'created_at': recent[1],
-                        'backup_type': recent[2]
-                    }
-                
-                conn.close()
+            # Total de backups
+            cursor.execute('SELECT COUNT(*) FROM backup_metadata')
+            total_backups = cursor.fetchone()[0]
             
-            return stats
+            # Backups por tipo
+            cursor.execute('''
+                SELECT backup_type, COUNT(*) 
+                FROM backup_metadata 
+                GROUP BY backup_type
+            ''')
+            by_type = dict(cursor.fetchall())
+            
+            # Tamanho total
+            cursor.execute('SELECT SUM(size_bytes) FROM backup_metadata WHERE file_exists = 1')
+            total_size = cursor.fetchone()[0] or 0
+            
+            # Último backup
+            cursor.execute('''
+                SELECT backup_id, backup_type, created_at 
+                FROM backup_metadata 
+                ORDER BY created_at DESC 
+                LIMIT 1
+            ''')
+            last_backup = cursor.fetchone()
+            
+            # Backups verificados
+            cursor.execute('SELECT COUNT(*) FROM backup_metadata WHERE verified = 1')
+            verified_backups = cursor.fetchone()[0]
+            
+            # Operações recentes
+            cursor.execute('''
+                SELECT COUNT(*) 
+                FROM backup_operations 
+                WHERE status = "SUCCESS" AND started_at > datetime("now", "-24 hours")
+            ''')
+            successful_last_24h = cursor.fetchone()[0]
+            
+            conn.close()
+            
+            return {
+                'service_running': self.is_running,
+                'total_backups': total_backups,
+                'by_type': by_type,
+                'total_size_bytes': total_size,
+                'last_backup': {
+                    'backup_id': last_backup[0] if last_backup else None,
+                    'backup_type': last_backup[1] if last_backup else None,
+                    'created_at': last_backup[2] if last_backup else None
+                } if last_backup else None,
+                'verified_backups': verified_backups,
+                'success_rate': verified_backups / total_backups if total_backups > 0 else 0,
+                'successful_last_24h': successful_last_24h,
+                'next_scheduled': self.config.get('backup_schedule', '02:00'),
+                'retention_days': self.config.get('retention_days', 30),
+                'auto_backup_enabled': self.config.get('auto_backup_enabled', True)
+            }
             
         except Exception as e:
             logger.error(f"[BACKUP] Erro ao obter estatísticas: {e}")
-            return self.backup_stats.copy()
+            return {
+                'service_running': self.is_running,
+                'total_backups': 0,
+                'by_type': {},
+                'total_size_bytes': 0,
+                'last_backup': None,
+                'verified_backups': 0,
+                'success_rate': 0,
+                'successful_last_24h': 0,
+                'next_scheduled': '02:00',
+                'retention_days': 30,
+                'auto_backup_enabled': True
+            }
     
-    def _format_size(self, size_bytes: int) -> str:
-        """Formata tamanho em bytes para formato legível"""
-        if size_bytes == 0:
-            return "0 B"
-        
-        size_names = ["B", "KB", "MB", "GB", "TB"]
-        import math
-        i = int(math.floor(math.log(size_bytes, 1024)))
-        p = math.pow(1024, i)
-        s = round(size_bytes / p, 2)
-        return f"{s} {size_names[i]}"
-    
-    def update_config(self, new_config: Dict) -> bool:
-        """Atualiza configuração do serviço"""
+    def _start_operation(self, operation_type: str, details: str = None) -> int:
+        """Inicia registro de operação"""
         try:
-            old_schedule = self.config.get('backup_schedule')
-            old_enabled = self.config.get('auto_backup_enabled')
+            conn = sqlite3.connect(self.metadata_db)
+            cursor = conn.cursor()
             
-            self.config.update(new_config)
-            self.save_config()
+            cursor.execute('''
+                INSERT INTO backup_operations 
+                (operation_type, backup_id, status, started_at, details)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (operation_type, details, 'RUNNING', datetime.now().isoformat(), details))
             
-            # Reiniciar se configurações de agendamento mudaram
-            if (self.is_running and 
-                (new_config.get('backup_schedule') != old_schedule or
-                 new_config.get('auto_backup_enabled') != old_enabled)):
-                
-                self.stop_auto_backup()
-                if new_config.get('auto_backup_enabled', True):
-                    self.start_auto_backup()
+            operation_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
             
-            logger.info("[BACKUP] Configuração atualizada")
-            return True
+            return operation_id
             
         except Exception as e:
-            logger.error(f"[BACKUP] Erro ao atualizar configuração: {e}")
-            return False
+            logger.error(f"[BACKUP] Erro ao iniciar operação: {e}")
+            return 0
+    
+    def _complete_operation(self, operation_id: int, status: str, details: str = None):
+        """Completa registro de operação"""
+        try:
+            conn = sqlite3.connect(self.metadata_db)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                UPDATE backup_operations 
+                SET status = ?, completed_at = ?, error_message = ?
+                WHERE id = ?
+            ''', (status, datetime.now().isoformat(), details if status == 'FAILED' else None, operation_id))
+            
+            conn.commit()
+            conn.close()
+            
+        except Exception as e:
+            logger.error(f"[BACKUP] Erro ao completar operação: {e}")
 
 
-# ==================== GLOBAL INSTANCE ====================
+# ==================== INSTÂNCIA GLOBAL ====================
 
 # Instância global do serviço de backup
 backup_service = BackupService()
+
+def create_system_backup(backup_type: str = 'manual', **kwargs) -> Dict[str, Any]:
+    """Função auxiliar para criar backup do sistema"""
+    return backup_service.create_backup(backup_type=backup_type, **kwargs)
+
+def get_backup_status() -> Dict[str, Any]:
+    """Função auxiliar para obter status dos backups"""
+    return backup_service.get_backup_stats()
 
 def start_backup_service():
     """Inicia serviço de backup automático"""
@@ -944,11 +759,3 @@ def start_backup_service():
 def stop_backup_service():
     """Para serviço de backup automático"""
     backup_service.stop_auto_backup()
-
-def create_manual_backup(backup_type: str = 'manual') -> Dict[str, Any]:
-    """Cria backup manual"""
-    return backup_service.create_backup(backup_type=backup_type)
-
-def get_backup_service() -> BackupService:
-    """Retorna instância do serviço de backup"""
-    return backup_service

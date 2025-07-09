@@ -61,3 +61,157 @@
 2025-07-09 03:19:34,670 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
 2025-07-09 03:20:33,795 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
 2025-07-09 03:20:33,796 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:28:19,383 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,384 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:28:19,559 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,566 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,566 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,568 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,573 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,594 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,601 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,601 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,607 - INFO - [CONFIG_MGR] Perfil criado: aggressive
+2025-07-09 03:28:19,627 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,633 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,633 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,654 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,678 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,679 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,698 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,703 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,704 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,709 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,728 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,735 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,735 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,754 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,760 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,760 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,762 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:28:19,780 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,786 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,786 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,792 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,794 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:28:19,814 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,819 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,820 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,821 - INFO - [CONFIG_MGR] Configuração aplicada: streaming.fetch_interval, streaming.max_queue_size
+2025-07-09 03:28:19,836 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,842 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,842 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,844 - INFO - [CONFIG_MGR] Configuração aplicada: trading.ta_params, trading.signal_config, trading.indicator_weights
+2025-07-09 03:28:19,860 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,865 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,865 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,871 - INFO - [CONFIG_MGR] Configuração salva: 2 itens
+2025-07-09 03:28:19,872 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:28:19,890 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,896 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,896 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,917 - INFO - [CONFIG_MGR] Configuração salva: 2 itens
+2025-07-09 03:28:19,920 - ERROR - [CONFIG_MGR] Erro ao carregar configuração: invalid literal for int() with base 10: 'True'
+2025-07-09 03:28:19,937 - INFO - [CONFIG_MGR] Banco de configurações dinâmicas inicializado
+2025-07-09 03:28:19,943 - INFO - [CONFIG_MGR] Configuração salva: 3 itens
+2025-07-09 03:28:19,944 - INFO - [CONFIG_MGR] Configuração carregada: 3 itens
+2025-07-09 03:28:19,945 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,950 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,955 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,960 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,966 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,971 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,976 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,981 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,987 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,992 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:19,997 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,002 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,008 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,013 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,019 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,026 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,031 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,036 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,041 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,047 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,053 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,059 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,064 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,069 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,075 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,081 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,086 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,092 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,097 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,102 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,108 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,113 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,119 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,124 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,129 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,135 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,141 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,146 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,151 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,157 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,162 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,167 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,173 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,178 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,184 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,189 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,195 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,201 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,207 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,212 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,218 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,225 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,230 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,236 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,241 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,246 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,252 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,257 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,263 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,268 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,274 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,279 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,285 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,290 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,296 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,300 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,306 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,311 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,316 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,323 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,328 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,333 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,339 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,344 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,349 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,355 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,360 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,365 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,371 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,377 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,384 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,389 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,394 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,400 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,405 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,411 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,416 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,422 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,427 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,432 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,438 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,444 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,448 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,454 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,459 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,464 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,470 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,475 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,481 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
+2025-07-09 03:28:20,486 - INFO - [CONFIG_MGR] Configuração salva: 1 itens
