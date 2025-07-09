@@ -1,733 +1,703 @@
-// static/js/dashboard.js - JavaScript principal do Dashboard
+/**
+ * Dashboard JavaScript - Modular e Limpo
+ * Gerencia o dashboard principal sem gráficos, focado em indicadores
+ */
 
-// ==================== ESTADO DA APLICAÇÃO ====================
-var DashboardApp = {
-    charts: {},
-    updateInterval: null,
-    isSystemRunning: false,
-    lastDataUpdate: null,
-    debugMode: false,
-    
-    // Configurações
-    config: {
-        updateInterval: 5000, // 5 segundos
-        debugMaxLines: 100,
-        chartAnimationDuration: 300
-    }
-};
-
-// ==================== FUNÇÕES DE DEBUG ====================
-function debugLog(message, data) {
-    var timestamp = new Date().toLocaleTimeString();
-    console.log('[DASHBOARD]', timestamp, message, data || '');
-    
-    if (DashboardApp.debugMode) {
-        var debugDiv = document.getElementById('debug-info');
-        if (debugDiv) {
-            var logEntry = document.createElement('div');
-            logEntry.innerHTML = timestamp + ' - ' + message + 
-                (data ? ': ' + JSON.stringify(data).substring(0, 100) + '...' : '');
-            
-            debugDiv.appendChild(logEntry);
-            
-            // Limitar número de linhas
-            var lines = debugDiv.children;
-            if (lines.length > DashboardApp.config.debugMaxLines) {
-                debugDiv.removeChild(lines[0]);
-            }
-            
-            debugDiv.scrollTop = debugDiv.scrollHeight;
-        }
-    }
-}
-
-function toggleDebug() {
-    DashboardApp.debugMode = !DashboardApp.debugMode;
-    var debugSection = document.getElementById('debug-section');
-    
-    if (debugSection) {
-        debugSection.style.display = DashboardApp.debugMode ? 'block' : 'none';
+class TradingDashboard {
+    constructor() {
+        this.currentCrypto = 'BTC';
+        this.updateInterval = null;
+        this.isUpdating = false;
         
-        if (DashboardApp.debugMode) {
-            document.getElementById('debug-info').innerHTML = 
-                '<div>Debug mode ativado - ' + new Date().toLocaleTimeString() + '</div>';
-            debugLog('Debug mode ativado');
-        }
-    }
-}
-
-// ==================== FUNÇÕES AUXILIARES ====================
-function formatCurrency(amount) {
-    if (!amount && amount !== 0) return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    }).format(amount);
-}
-
-function formatPercentage(value, decimals) {
-    decimals = decimals || 1;
-    if (!value && value !== 0) return '0.0%';
-    return value.toFixed(decimals) + '%';
-}
-
-function formatVolume(volume) {
-    if (!volume || volume === 0) return 'N/A';
-    if (volume >= 1000000000) {
-        return '$' + (volume / 1000000000).toFixed(1) + 'B';
-    }
-    return '$' + (volume / 1000000).toFixed(1) + 'M';
-}
-
-function formatDateTime(timestamp) {
-    if (!timestamp) return '-';
-    return new Date(timestamp).toLocaleString('pt-BR');
-}
-
-function formatTime(timestamp) {
-    if (!timestamp) return '-';
-    return new Date(timestamp).toLocaleTimeString('pt-BR');
-}
-
-function getTimeElapsed(timestamp) {
-    if (!timestamp) return '-';
-    var now = new Date();
-    var time = new Date(timestamp);
-    var diffMs = now - time;
-    var diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) {
-        return 'agora';
-    } else if (diffMins < 60) {
-        return diffMins + ' min atrás';
-    } else if (diffMins < 1440) {
-        return Math.floor(diffMins / 60) + 'h atrás';
-    } else {
-        return Math.floor(diffMins / 1440) + 'd atrás';
-    }
-}
-
-// ==================== FUNÇÕES DE FORMATAÇÃO DE TRADING ====================
-function formatPatternName(pattern) {
-    if (!pattern) return '';
-    return pattern.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function(l) {
-        return l.toUpperCase();
-    });
-}
-
-function getPatternColor(pattern) {
-    var colors = {
-        'DOUBLE_BOTTOM': 'success',
-        'HEAD_AND_SHOULDERS': 'warning',
-        'TRIANGLE_BREAKOUT_UP': 'info',
-        'TRIANGLE_BREAKOUT_DOWN': 'secondary',
-        'INDICATORS_BUY': 'primary',
-        'INDICATORS_SELL': 'danger'
-    };
-    return colors[pattern] || 'secondary';
-}
-
-function getStatusClass(status) {
-    var classes = {
-        'ACTIVE': 'status-active',
-        'HIT_TARGET': 'status-target', 
-        'HIT_STOP': 'status-stop',
-        'EXPIRED': 'status-expired'
-    };
-    return classes[status] || 'status-active';
-}
-
-function getStatusText(status) {
-    var texts = {
-        'ACTIVE': 'Ativo',
-        'HIT_TARGET': 'Target',
-        'HIT_STOP': 'Stop',
-        'EXPIRED': 'Expirado'
-    };
-    return texts[status] || status;
-}
-
-function formatIndicatorValue(key, value) {
-    if (!value && value !== 0) return 'N/A';
-    
-    if (key.includes('SMA') || key.includes('EMA')) {
-        return formatCurrency(value);
-    } else {
-        return value.toFixed(2);
-    }
-}
-
-function getIndicatorSignal(key, value) {
-    if (!value && value !== 0) return 'neutral';
-    
-    // RSI
-    if (key === 'RSI') {
-        if (value < 30) return 'bullish';
-        if (value > 70) return 'bearish';
-        return 'neutral';
-    }
-    
-    // Stochastic
-    if (key === 'STOCH_K') {
-        if (value < 20) return 'bullish';
-        if (value > 80) return 'bearish';
-        return 'neutral';
-    }
-    
-    // MACD
-    if (key === 'MACD') {
-        return value > 0 ? 'bullish' : 'bearish';
-    }
-    
-    return 'neutral';
-}
-
-// ==================== API CALLS ====================
-function makeAPICall(url, options) {
-    debugLog('API Call', {url: url, method: options?.method || 'GET'});
-    options = options || {};
-    
-    return fetch(url, {
-        method: options.method || 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
-        },
-        body: options.body ? JSON.stringify(options.body) : undefined
-    })
-    .then(function(response) {
-        debugLog('API Response', {url: url, status: response.status, ok: response.ok});
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-        }
-        return response.json();
-    })
-    .catch(function(error) {
-        debugLog('API Error', {url: url, error: error.message});
-        showNotification('Erro na comunicação com o servidor: ' + url, 'danger');
-        throw error;
-    });
-}
-
-// ==================== NOTIFICAÇÕES ====================
-function showNotification(message, type, duration) {
-    debugLog('Notification', {message: message, type: type});
-    duration = duration || 5000;
-    
-    // Remove notificações existentes
-    var existing = document.querySelector('.notification');
-    if (existing) {
-        existing.remove();
-    }
-    
-    // Cria nova notificação
-    var notification = document.createElement('div');
-    notification.className = 'notification alert alert-' + type + ' position-fixed fade-in';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    
-    // Determina ícone
-    var iconClass = 'exclamation';
-    if (type === 'success') {
-        iconClass = 'check';
-    } else if (type === 'danger') {
-        iconClass = 'times';
-    } else if (type === 'info') {
-        iconClass = 'info';
-    }
-    
-    notification.innerHTML = 
-        '<div class="d-flex align-items-center">' +
-            '<i class="fas fa-' + iconClass + '-circle me-2"></i>' +
-            '<span>' + message + '</span>' +
-            '<button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>' +
-        '</div>';
-    
-    document.body.appendChild(notification);
-    
-    // Remove automaticamente
-    setTimeout(function() {
-        if (notification.parentElement) {
-            notification.style.opacity = '0';
-            setTimeout(function() {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 300);
-        }
-    }, duration);
-}
-
-// ==================== INICIALIZAÇÃO DOS GRÁFICOS ====================
-function initializeCharts() {
-    try {
-        debugLog('Inicializando gráficos...');
-        
-        // Gráfico principal (overview)
-        var overviewCtx = document.getElementById('overviewChart').getContext('2d');
-        DashboardApp.charts.overview = new Chart(overviewCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Preço Bitcoin (USD)',
-                    data: [],
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#007bff',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2
-                }]
+        this.cryptoConfig = {
+            'BTC': {
+                name: 'Bitcoin',
+                symbol: 'BTCUSDT',
+                color: '#f7931a',
+                icon: 'fab fa-bitcoin'
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                return 'Preço: ' + formatCurrency(context.parsed.y);
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        ticks: {
-                            callback: function(value) {
-                                return formatCurrency(value);
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0,0,0,0.1)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(0,0,0,0.1)'
-                        }
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                }
-            }
-        });
-
-        // Gráfico de estatísticas de padrões
-        var patternCtx = document.getElementById('patternStatsChart').getContext('2d');
-        DashboardApp.charts.patterns = new Chart(patternCtx, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: [
-                        '#28a745', '#dc3545', '#ffc107', 
-                        '#17a2b8', '#6f42c1', '#fd7e14'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff',
-                    hoverBorderWidth: 3
-                }]
+            'ETH': {
+                name: 'Ethereum', 
+                symbol: 'ETHUSDT',
+                color: '#627eea',
+                icon: 'fab fa-ethereum'
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + formatPercentage(context.parsed) + ' sucesso';
-                            }
-                        }
-                    }
+            'SOL': {
+                name: 'Solana',
+                symbol: 'SOLUSDT', 
+                color: '#9945ff',
+                icon: 'fas fa-sun'
+            }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.setupEventListeners();
+        this.startUpdates();
+        console.log('[DASHBOARD] Trading Dashboard inicializado');
+    }
+    
+    setupEventListeners() {
+        // Crypto tabs
+        document.querySelectorAll('#crypto-tabs .nav-link').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                const crypto = e.target.closest('.nav-link').dataset.crypto;
+                this.switchCrypto(crypto);
+            });
+        });
+        
+        // System controls
+        this.setupSystemControls();
+        
+        // Action buttons
+        this.setupActionButtons();
+    }
+    
+    setupSystemControls() {
+        // Bitcoin controls
+        document.getElementById('start-bitcoin')?.addEventListener('click', () => {
+            this.controlBitcoin('start');
+        });
+        
+        document.getElementById('stop-bitcoin')?.addEventListener('click', () => {
+            this.controlBitcoin('stop');
+        });
+        
+        // Multi-asset controls
+        document.getElementById('start-multi')?.addEventListener('click', () => {
+            this.controlMultiAsset('start');
+        });
+        
+        document.getElementById('stop-multi')?.addEventListener('click', () => {
+            this.controlMultiAsset('stop');
+        });
+    }
+    
+    setupActionButtons() {
+        // Force signal generation
+        document.getElementById('force-signal')?.addEventListener('click', () => {
+            this.generateTestSignal();
+        });
+        
+        // Refresh data
+        document.getElementById('refresh-data')?.addEventListener('click', () => {
+            this.forceUpdate();
+        });
+    }
+    
+    switchCrypto(crypto) {
+        // Update active tab
+        document.querySelectorAll('#crypto-tabs .nav-link').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.getElementById(`${crypto.toLowerCase()}-tab`).classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+        });
+        document.getElementById(`${crypto.toLowerCase()}-content`).classList.add('show', 'active');
+        
+        this.currentCrypto = crypto;
+        this.updateCryptoData(crypto);
+        
+        console.log(`[DASHBOARD] Switched to ${crypto}`);
+    }
+    
+    async updateCryptoData(crypto) {
+        try {
+            // Update price data
+            await this.updatePrice(crypto);
+            
+            // Update indicators
+            await this.updateIndicators(crypto);
+            
+            // Update analysis
+            await this.updateAnalysis(crypto);
+            
+        } catch (error) {
+            console.error(`[DASHBOARD] Erro ao atualizar dados de ${crypto}:`, error);
+        }
+    }
+    
+    async updatePrice(crypto) {
+        try {
+            let endpoint;
+            if (crypto === 'BTC') {
+                endpoint = '/api/bitcoin/current';
+            } else {
+                endpoint = `/multi-asset/api/asset/${crypto}`;
+            }
+            
+            const response = await fetch(endpoint);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            
+            let price, change, updated;
+            
+            if (crypto === 'BTC') {
+                price = data.current_price;
+                change = 0; // Bitcoin endpoint não retorna mudança
+                updated = data.timestamp;
+            } else {
+                price = data.streaming_data?.last_price || 0;
+                change = 0; // Implementar se necessário
+                updated = data.streaming_data?.last_update;
+            }
+            
+            // Update price display
+            const priceElement = document.getElementById(`${crypto.toLowerCase()}-price`);
+            const changeElement = document.getElementById(`${crypto.toLowerCase()}-change`);
+            const updatedElement = document.getElementById(`${crypto.toLowerCase()}-updated`);
+            
+            if (priceElement) {
+                priceElement.textContent = this.formatPrice(price);
+            }
+            
+            if (changeElement) {
+                changeElement.textContent = this.formatChange(change);
+                changeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+            }
+            
+            if (updatedElement) {
+                updatedElement.textContent = updated ? new Date(updated).toLocaleTimeString() : 'N/A';
+            }
+            
+        } catch (error) {
+            console.error(`[DASHBOARD] Erro ao atualizar preço de ${crypto}:`, error);
+            this.showError(`Erro ao carregar preço de ${crypto}`);
+        }
+    }
+    
+    async updateIndicators(crypto) {
+        try {
+            let endpoint;
+            if (crypto === 'BTC') {
+                endpoint = '/trading/api/analysis';
+            } else {
+                endpoint = `/multi-asset/api/asset/${crypto}/analysis`;
+            }
+            
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+                // Se multi-asset não disponível, mostrar placeholder
+                if (crypto !== 'BTC') {
+                    this.showIndicatorsPlaceholder(crypto);
+                    return;
                 }
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const indicators = data.technical_indicators || {};
+            
+            this.displayIndicators(crypto, indicators);
+            
+        } catch (error) {
+            console.error(`[DASHBOARD] Erro ao atualizar indicadores de ${crypto}:`, error);
+            this.showIndicatorsPlaceholder(crypto);
+        }
+    }
+    
+    displayIndicators(crypto, indicators) {
+        const container = document.getElementById(`${crypto.toLowerCase()}-indicators`);
+        if (!container) return;
+        
+        if (Object.keys(indicators).length === 0) {
+            container.innerHTML = '<div class="text-center text-muted">Nenhum indicador disponível</div>';
+            return;
+        }
+        
+        const indicatorsList = [
+            { key: 'RSI', name: 'RSI (14)', format: 'number' },
+            { key: 'MACD_Histogram', name: 'MACD', format: 'number' },
+            { key: 'BB_Position', name: 'Bollinger', format: 'percentage' },
+            { key: 'Stoch_K', name: 'Stochastic', format: 'number' },
+            { key: 'Volume_Ratio', name: 'Volume', format: 'ratio' },
+            { key: 'Trend_Strength', name: 'Tendência', format: 'percentage' }
+        ];
+        
+        let html = '';
+        
+        indicatorsList.forEach(indicator => {
+            const value = indicators[indicator.key];
+            if (value !== undefined && value !== null) {
+                const formattedValue = this.formatIndicatorValue(value, indicator.format);
+                const signal = this.getIndicatorSignal(indicator.key, value);
+                
+                html += `
+                    <div class="indicator-item">
+                        <div class="indicator-name">${indicator.name}</div>
+                        <div class="indicator-value">${formattedValue}</div>
+                        <div class="indicator-signal ${signal}">${signal}</div>
+                    </div>
+                `;
             }
         });
-
-        // Gráfico de volume de sinais
-        var volumeCtx = document.getElementById('volumeChart').getContext('2d');
-        DashboardApp.charts.volume = new Chart(volumeCtx, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Sinais por Padrão',
-                    data: [],
-                    backgroundColor: 'rgba(0, 123, 255, 0.8)',
-                    borderColor: '#007bff',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed.y + ' sinais';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        },
-                        grid: {
-                            color: 'rgba(0,0,0,0.1)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+        
+        container.innerHTML = html || '<div class="text-center text-muted">Carregando indicadores...</div>';
+    }
+    
+    showIndicatorsPlaceholder(crypto) {
+        const container = document.getElementById(`${crypto.toLowerCase()}-indicators`);
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                <p>Indicadores para ${crypto} não disponíveis</p>
+                <small>Multi-Asset pode não estar configurado</small>
+            </div>
+        `;
+    }
+    
+    async updateAnalysis(crypto) {
+        try {
+            let endpoint;
+            if (crypto === 'BTC') {
+                endpoint = '/trading/api/analysis';
+            } else {
+                endpoint = `/multi-asset/api/asset/${crypto}/analysis`;
+            }
+            
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+                if (crypto !== 'BTC') {
+                    this.showAnalysisPlaceholder(crypto);
+                    return;
                 }
+                throw new Error(`HTTP ${response.status}`);
             }
-        });
-
-        debugLog('Gráficos inicializados com sucesso');
-    } catch (error) {
-        debugLog('Erro ao inicializar gráficos', error);
-        showNotification('Erro ao inicializar gráficos', 'danger');
-    }
-}
-
-// ==================== EVENT LISTENERS ====================
-function setupEventListeners() {
-    try {
-        // Botões de controle
-        var startBtn = document.getElementById('start-bitcoin');
-        var stopBtn = document.getElementById('stop-bitcoin');
-        
-        if (startBtn) {
-            startBtn.addEventListener('click', startBitcoinStream);
+            
+            const data = await response.json();
+            const signalAnalysis = data.signal_analysis || {};
+            
+            this.displayAnalysis(crypto, signalAnalysis);
+            
+        } catch (error) {
+            console.error(`[DASHBOARD] Erro ao atualizar análise de ${crypto}:`, error);
+            this.showAnalysisPlaceholder(crypto);
         }
-        if (stopBtn) {
-            stopBtn.addEventListener('click', stopBitcoinStream);
-        }
+    }
+    
+    displayAnalysis(crypto, analysis) {
+        const container = document.getElementById(`${crypto.toLowerCase()}-analysis`);
+        if (!container) return;
         
-        debugLog('Event listeners configurados');
-    } catch (error) {
-        debugLog('Erro ao configurar event listeners', error);
-    }
-}
-
-// ==================== CONTROLES BITCOIN ====================
-function startBitcoinStream() {
-    debugLog('Iniciando Bitcoin stream...');
-    var startBtn = document.getElementById('start-bitcoin');
-    
-    if (startBtn) {
-        startBtn.disabled = true;
-        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando...';
-    }
-    
-    makeAPICall('/api/bitcoin/start-stream', { method: 'POST' })
-        .then(function(data) {
-            debugLog('Resposta start stream', data);
-            if (data.status === 'started') {
-                DashboardApp.isSystemRunning = true;
-                updateSystemStatus('running');
-                showNotification('Pipeline Bitcoin iniciado!', 'success');
-            } else {
-                showNotification('Erro: ' + (data.message || 'Status inesperado'), 'warning');
-            }
-        })
-        .catch(function(error) {
-            debugLog('Erro ao iniciar stream', error);
-            showNotification('Erro ao iniciar pipeline Bitcoin', 'danger');
-        })
-        .finally(function() {
-            if (startBtn) {
-                startBtn.disabled = false;
-                startBtn.innerHTML = '<i class="fas fa-play"></i> Iniciar Bitcoin';
-            }
-        });
-}
-
-function stopBitcoinStream() {
-    debugLog('Parando Bitcoin stream...');
-    var stopBtn = document.getElementById('stop-bitcoin');
-    
-    if (stopBtn) {
-        stopBtn.disabled = true;
-        stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Parando...';
-    }
-    
-    makeAPICall('/api/bitcoin/stop-stream', { method: 'POST' })
-        .then(function(data) {
-            debugLog('Resposta stop stream', data);
-            if (data.status === 'stopped') {
-                DashboardApp.isSystemRunning = false;
-                updateSystemStatus('stopped');
-                showNotification('Pipeline Bitcoin parado!', 'warning');
-            } else {
-                showNotification('Erro: ' + (data.message || 'Status inesperado'), 'warning');
-            }
-        })
-        .catch(function(error) {
-            debugLog('Erro ao parar stream', error);
-            showNotification('Erro ao parar pipeline Bitcoin', 'danger');
-        })
-        .finally(function() {
-            if (stopBtn) {
-                stopBtn.disabled = false;
-                stopBtn.innerHTML = '<i class="fas fa-stop"></i> Parar Bitcoin';
-            }
-        });
-}
-
-// ==================== ATUALIZAÇÃO DE STATUS ====================
-function updateSystemStatus(status) {
-    try {
-        var statusDot = document.getElementById('system-status-dot');
-        var statusText = document.getElementById('system-status-text');
-        
-        if (statusDot && statusText) {
-            if (status === 'running') {
-                statusDot.className = 'status-dot status-running';
-                statusText.textContent = 'Sistema Ativo';
-            } else {
-                statusDot.className = 'status-dot status-stopped';
-                statusText.textContent = 'Sistema Parado';
-            }
+        if (Object.keys(analysis).length === 0) {
+            this.showAnalysisPlaceholder(crypto);
+            return;
         }
         
-        debugLog('Status atualizado para: ' + status);
-    } catch (error) {
-        debugLog('Erro ao atualizar status', error);
+        const recommendedAction = analysis.recommended_action || 'HOLD';
+        const confidence = analysis.confidence || 0;
+        const confluenceScore = analysis.confluence_score || 0;
+        const volumeConfirmed = analysis.volume_confirmed || false;
+        
+        const html = `
+            <div class="analysis-item">
+                <span class="analysis-label">Ação Recomendada:</span>
+                <span class="analysis-value ${recommendedAction.toLowerCase()}">${recommendedAction}</span>
+            </div>
+            <div class="analysis-item">
+                <span class="analysis-label">Confiança:</span>
+                <span class="analysis-value">${Math.round(confidence)}%</span>
+            </div>
+            <div class="analysis-item">
+                <span class="analysis-label">Score de Confluência:</span>
+                <span class="analysis-value">${Math.round(confluenceScore)}%</span>
+            </div>
+            <div class="analysis-item">
+                <span class="analysis-label">Volume Confirmado:</span>
+                <span class="analysis-value ${volumeConfirmed ? 'buy' : 'hold'}">
+                    ${volumeConfirmed ? 'Sim' : 'Não'}
+                </span>
+            </div>
+        `;
+        
+        container.innerHTML = html;
     }
-}
-
-// ==================== ATUALIZAÇÕES EM TEMPO REAL ====================
-function startRealTimeUpdates() {
-    debugLog('Iniciando atualizações em tempo real...');
     
-    // Primeira atualização imediata
-    updateDashboardData();
+    showAnalysisPlaceholder(crypto) {
+        const container = document.getElementById(`${crypto.toLowerCase()}-analysis`);
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-brain fa-2x mb-2"></i>
+                <p>Análise para ${crypto} não disponível</p>
+                <small>Sistema pode estar carregando ou configurando</small>
+            </div>
+        `;
+    }
     
-    // Configurar intervalo de atualizações
-    DashboardApp.updateInterval = setInterval(function() {
-        updateDashboardData();
-    }, DashboardApp.config.updateInterval);
-}
-
-function updateDashboardData() {
-    debugLog('Buscando dados do dashboard...');
+    async updateSignalsTable() {
+        try {
+            // Tentar buscar sinais de Bitcoin primeiro
+            const response = await fetch('/trading/api/signals');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            const signals = [
+                ...(data.active_signals || []),
+                ...(data.recent_signals || [])
+            ];
+            
+            // Tentar buscar sinais consolidados multi-asset
+            try {
+                const multiResponse = await fetch('/multi-asset/api/consolidated/signals');
+                if (multiResponse.ok) {
+                    const multiData = await multiResponse.json();
+                    signals.push(...(multiData.consolidated_signals || []));
+                }
+            } catch (error) {
+                console.debug('[DASHBOARD] Multi-asset signals não disponível:', error);
+            }
+            
+            this.displaySignalsTable(signals);
+            this.updateSignalsCounts(signals);
+            
+        } catch (error) {
+            console.error('[DASHBOARD] Erro ao atualizar tabela de sinais:', error);
+            this.showSignalsError();
+        }
+    }
     
-    makeAPICall('/api/integrated/dashboard-data')
-        .then(function(data) {
-            debugLog('Dados recebidos', {
-                bitcoin_data_count: data.bitcoin?.recent_data?.length || 0,
-                trading_signals_count: data.trading?.recent_signals?.length || 0,
-                system_healthy: data.integrated_status?.system_healthy
+    displaySignalsTable(signals) {
+        const tbody = document.getElementById('signals-table-body');
+        if (!tbody) return;
+        
+        if (!signals || signals.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="text-center text-muted">
+                        <i class="fas fa-signal fa-2x mb-2"></i><br>
+                        Nenhum sinal disponível
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        
+        // Ordenar sinais por data (mais recentes primeiro)
+        signals.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        signals.slice(0, 20).forEach(signal => {
+            const crypto = signal.asset_symbol || 'BTC';
+            const type = signal.type || signal.signal_type || signal.pattern_type || 'UNKNOWN';
+            const entry = signal.entry || signal.entry_price || 0;
+            const target = signal.targets ? signal.targets[0] : (signal.target_price || signal.target_1 || 0);
+            const stopLoss = signal.stop_loss || 0;
+            const confidence = signal.confidence || 0;
+            const pnl = signal.current_pnl || signal.profit_loss || 0;
+            const status = signal.status || 'ACTIVE';
+            const created = signal.created_at ? new Date(signal.created_at).toLocaleString() : 'N/A';
+            
+            const pnlClass = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-neutral';
+            const typeClass = type.toLowerCase().includes('buy') ? 'buy' : 'sell';
+            
+            html += `
+                <tr>
+                    <td>#${signal.id || 'N/A'}</td>
+                    <td>
+                        <span style="color: ${this.cryptoConfig[crypto]?.color || '#666'}">
+                            <i class="${this.cryptoConfig[crypto]?.icon || 'fas fa-coins'}"></i>
+                            ${crypto}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="signal-type ${typeClass}">${type}</span>
+                    </td>
+                    <td>${this.formatPrice(entry)}</td>
+                    <td>${this.formatPrice(target)}</td>
+                    <td>${this.formatPrice(stopLoss)}</td>
+                    <td>${confidence}%</td>
+                    <td class="${pnlClass}">
+                        ${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}%
+                    </td>
+                    <td>
+                        <span class="signal-status ${status.toLowerCase().replace('_', '-')}">${status}</span>
+                    </td>
+                    <td>${created}</td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    updateSignalsCounts(signals) {
+        const activeSignals = signals.filter(s => s.status === 'ACTIVE').length;
+        const totalSignals = signals.length;
+        
+        const activeElement = document.getElementById('active-signals-count');
+        const totalElement = document.getElementById('total-signals-count');
+        
+        if (activeElement) {
+            activeElement.textContent = `${activeSignals} Ativos`;
+        }
+        
+        if (totalElement) {
+            totalElement.textContent = `${totalSignals} Total`;
+        }
+    }
+    
+    showSignalsError() {
+        const tbody = document.getElementById('signals-table-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center text-danger">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i><br>
+                    Erro ao carregar sinais
+                </td>
+            </tr>
+        `;
+    }
+    
+    async updateSystemStatus() {
+        try {
+            // Bitcoin status
+            const bitcoinResponse = await fetch('/api/bitcoin/status');
+            if (bitcoinResponse.ok) {
+                const bitcoinData = await bitcoinResponse.json();
+                this.updateStatusDisplay('bitcoin-status', bitcoinData.is_running);
+            }
+            
+            // Multi-asset status
+            try {
+                const multiResponse = await fetch('/api/multi-asset/health');
+                if (multiResponse.ok) {
+                    const multiData = await multiResponse.json();
+                    const isHealthy = multiData.overall_status === 'HEALTHY' || multiData.overall_status === 'PARTIAL';
+                    this.updateStatusDisplay('multi-status', isHealthy);
+                } else {
+                    this.updateStatusDisplay('multi-status', false, 'Não disponível');
+                }
+            } catch (error) {
+                this.updateStatusDisplay('multi-status', false, 'Não configurado');
+            }
+            
+        } catch (error) {
+            console.error('[DASHBOARD] Erro ao atualizar status do sistema:', error);
+        }
+    }
+    
+    updateStatusDisplay(elementId, isOnline, customText = null) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        if (customText) {
+            element.textContent = `Status: ${customText}`;
+            element.className = 'status-text';
+        } else {
+            element.textContent = `Status: ${isOnline ? 'Online' : 'Offline'}`;
+            element.className = `status-text ${isOnline ? 'online' : 'offline'}`;
+        }
+    }
+    
+    // Control Methods
+    async controlBitcoin(action) {
+        try {
+            const endpoint = action === 'start' ? '/api/bitcoin/start-stream' : '/api/bitcoin/stop-stream';
+            const response = await fetch(endpoint, { method: 'POST' });
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            this.showNotification(data.message, 'success');
+            
+            // Update status immediately
+            setTimeout(() => this.updateSystemStatus(), 1000);
+            
+        } catch (error) {
+            console.error(`[DASHBOARD] Erro ao ${action} Bitcoin:`, error);
+            this.showNotification(`Erro ao ${action === 'start' ? 'iniciar' : 'parar'} Bitcoin`, 'error');
+        }
+    }
+    
+    async controlMultiAsset(action) {
+        try {
+            const endpoint = action === 'start' ? '/api/multi-asset/start' : '/api/multi-asset/stop';
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assets: ['BTC', 'ETH', 'SOL'] })
             });
             
-            DashboardApp.lastDataUpdate = new Date();
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
-            if (data && !data.error) {
-                updateQuickStats(data);
-                updateOverviewChart(data.bitcoin.recent_data || []);
-                updateBitcoinTab(data.bitcoin);
-                updateTradingTab(data.trading);
-                updateSystemInfo(data.integrated_status);
-                updateLastUpdate();
-                
-                // Atualizar status baseado nos dados
-                if (data.bitcoin.streaming) {
-                    DashboardApp.isSystemRunning = true;
-                    updateSystemStatus('running');
-                } else {
-                    DashboardApp.isSystemRunning = false;
-                    updateSystemStatus('stopped');
-                }
-            } else {
-                debugLog('Dados inválidos ou erro', data);
-                if (data && data.error) {
-                    showNotification('Erro nos dados: ' + data.error, 'warning');
-                }
-            }
-        })
-        .catch(function(error) {
-            debugLog('Erro ao atualizar dados', error);
-            // Não mostrar notificação para cada erro de conexão
-            // showNotification('Erro de conexão com o servidor', 'danger');
-        });
-}
-
-// ==================== INICIALIZAÇÃO ====================
-document.addEventListener('DOMContentLoaded', function() {
-    debugLog('Dashboard inicializando...');
-    
-    // Configurar tudo
-    initializeCharts();
-    setupEventListeners();
-    startRealTimeUpdates();
-    loadInitialData();
-    
-    debugLog('Dashboard inicializado com sucesso');
-});
-
-// ==================== CLEANUP ====================
-window.addEventListener('beforeunload', function() {
-    if (DashboardApp.updateInterval) {
-        clearInterval(DashboardApp.updateInterval);
-        debugLog('Interval de atualização limpo');
-    }
-});
-
-// ==================== CARREGAMENTO INICIAL ====================
-function loadInitialData() {
-    debugLog('Carregando dados iniciais...');
-    
-    // Carregar sinais recentes
-    updateRecentSignals();
-    
-    // Configurar atualização dos sinais recentes (mais frequente)
-    setInterval(updateRecentSignals, 10000);
-}
-
-// static/js/dashboard.js - JavaScript principal do Dashboard
-
-// ==================== ESTADO DA APLICAÇÃO ====================
-var DashboardApp = {
-    charts: {},
-    updateInterval: null,
-    isSystemRunning: false,
-    lastDataUpdate: null,
-    debugMode: false,
-    
-    // Configurações
-    config: {
-        updateInterval: 5000, // 5 segundos
-        debugMaxLines: 100,
-        chartAnimationDuration: 300
-    }
-};
-
-// ==================== FUNÇÕES DE DEBUG ====================
-function debugLog(message, data) {
-    var timestamp = new Date().toLocaleTimeString();
-    console.log('[DASHBOARD]', timestamp, message, data || '');
-    
-    if (DashboardApp.debugMode) {
-        var debugDiv = document.getElementById('debug-info');
-        if (debugDiv) {
-            var logEntry = document.createElement('div');
-            logEntry.innerHTML = timestamp + ' - ' + message + 
-                (data ? ': ' + JSON.stringify(data).substring(0, 100) + '...' : '');
+            const data = await response.json();
+            this.showNotification(data.message, 'success');
             
-            debugDiv.appendChild(logEntry);
+            // Update status immediately
+            setTimeout(() => this.updateSystemStatus(), 1000);
             
-            // Limitar número de linhas
-            var lines = debugDiv.children;
-            if (lines.length > DashboardApp.config.debugMaxLines) {
-                debugDiv.removeChild(lines[0]);
-            }
-            
-            debugDiv.scrollTop = debugDiv.scrollHeight;
+        } catch (error) {
+            console.error(`[DASHBOARD] Erro ao ${action} Multi-Asset:`, error);
+            this.showNotification(`Multi-Asset pode não estar disponível`, 'warning');
         }
     }
+    
+    async generateTestSignal() {
+        try {
+            const response = await fetch('/api/trading/generate-test-signal', { method: 'POST' });
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            this.showNotification('Sinal de teste gerado com sucesso!', 'success');
+            
+            // Update signals table immediately
+            setTimeout(() => this.updateSignalsTable(), 1000);
+            
+        } catch (error) {
+            console.error('[DASHBOARD] Erro ao gerar sinal de teste:', error);
+            this.showNotification('Erro ao gerar sinal de teste', 'error');
+        }
+    }
+    
+    // Update Methods
+    async updateAll() {
+        if (this.isUpdating) return;
+        this.isUpdating = true;
+        
+        try {
+            await Promise.all([
+                this.updateCryptoData(this.currentCrypto),
+                this.updateSignalsTable(),
+                this.updateSystemStatus()
+            ]);
+        } catch (error) {
+            console.error('[DASHBOARD] Erro na atualização geral:', error);
+        } finally {
+            this.isUpdating = false;
+        }
+    }
+    
+    forceUpdate() {
+        this.showNotification('Atualizando dados...', 'info');
+        this.updateAll();
+    }
+    
+    startUpdates() {
+        // Initial update
+        this.updateAll();
+        
+        // Set up interval updates
+        this.updateInterval = setInterval(() => {
+            this.updateAll();
+        }, 10000); // Update every 10 seconds
+        
+        console.log('[DASHBOARD] Updates iniciados (10s interval)');
+    }
+    
+    stopUpdates() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+            console.log('[DASHBOARD] Updates parados');
+        }
+    }
+    
+    // Utility Methods
+    formatPrice(price) {
+        if (!price || price === 0) return '$0.00';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 8
+        }).format(price);
+    }
+    
+    formatChange(change) {
+        if (!change) return '0.00%';
+        return `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+    }
+    
+    formatIndicatorValue(value, format) {
+        if (value === null || value === undefined) return 'N/A';
+        
+        switch (format) {
+            case 'percentage':
+                return `${(value * 100).toFixed(1)}%`;
+            case 'ratio':
+                return `${value.toFixed(2)}x`;
+            case 'number':
+            default:
+                return value.toFixed(2);
+        }
+    }
+    
+    getIndicatorSignal(key, value) {
+        if (typeof value !== 'number') return 'neutral';
+        
+        const signals = {
+            'RSI': (v) => v < 30 ? 'bullish' : v > 70 ? 'bearish' : 'neutral',
+            'MACD_Histogram': (v) => v > 0 ? 'bullish' : 'bearish',
+            'BB_Position': (v) => v < 0.2 ? 'bullish' : v > 0.8 ? 'bearish' : 'neutral',
+            'Stoch_K': (v) => v < 20 ? 'bullish' : v > 80 ? 'bearish' : 'neutral',
+            'Volume_Ratio': (v) => v > 1.5 ? 'bullish' : v < 0.7 ? 'bearish' : 'neutral',
+            'Trend_Strength': (v) => v > 0.7 ? 'bullish' : v < 0.3 ? 'bearish' : 'neutral'
+        };
+        
+        return signals[key] ? signals[key](value) : 'neutral';
+    }
+    
+    showNotification(message, type = 'info') {
+        const toast = document.getElementById('notification-toast');
+        const messageElement = document.getElementById('toast-message');
+        
+        if (!toast || !messageElement) return;
+        
+        messageElement.textContent = message;
+        toast.className = `toast ${type}`;
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        console.log(`[NOTIFICATION] ${type.toUpperCase()}: ${message}`);
+    }
+    
+    showError(message) {
+        this.showNotification(message, 'error');
+    }
 }
 
-// ==================== FUNÇÕES DE ATUALIZAÇÃO PRINCIPAIS ====================
-
-// Função para buscar e atualizar todos os dados do dashboard
-function fetchAndUpdateDashboardData() {
-    debugLog('Buscando dados do dashboard...');
-    makeAPICall('/api/integrated/status')
-        .then(function(data) {
-            if (data && data.status) {
-                debugLog('Dados recebidos', data);
-
-                // Update quick stats
-                updateQuickStats({
-                    currentPrice: data.bitcoin.trading_price,
-                    activeSignals: data.trading.active_signals,
-                    dataPoints: data.integrated_status.total_data_points,
-                    successRate: data.trading.success_rate || 0
-                });
-
-                // Update main chart (only if data is present)
-                if (data.bitcoin && data.bitcoin.recent_data) {
-                    updateBitcoinPriceChart(data.bitcoin.recent_data);
-                } else {
-                    debugLog('Nenhum dado recente de Bitcoin para atualizar o gráfico.');
-                }
-                
-                // Update tabs content
-                updateBitcoinTab(data.bitcoin);
-                updateTradingTab(data.trading);
-                updateAnalyticsTab(data.trading); // Assuming analytics are part of trading data
-
-                // Update system status
-                updateSystemStatus(data.integrated_status);
-
-            } else {
-                debugLog('Dados inválidos ou erro', data);
-                if (data && data.error) {
-                    showNotification('Erro nos dados: ' + data.error, 'warning');
-                }
-            }
-        })
-        .catch(function(error) {
-            debugLog('Erro ao atualizar dados', error);
-            // Não mostrar notificação para cada erro de conexão
-            // showNotification('Erro de conexão com o servidor', 'danger');
-        });
-}
-
-// ==================== INICIALIZAÇÃO ====================
+// Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    debugLog('Dashboard inicializando...');
-    
-    // Configurar tudo
-    // initializeCharts(); // REMOVIDO: Gráficos serão gerenciados por EnhancedDashboard
-    setupEventListeners();
-    startRealTimeUpdates();
-    loadInitialData();
-    
-    debugLog('Dashboard inicializado com sucesso');
+    console.log('[DASHBOARD] Inicializando Trading Dashboard...');
+    window.tradingDashboard = new TradingDashboard();
 });
 
-// ==================== CLEANUP ====================
+// Cleanup on page unload
 window.addEventListener('beforeunload', function() {
-    if (DashboardApp.updateInterval) {
-        clearInterval(DashboardApp.updateInterval);
-        debugLog('Interval de atualização limpo');
+    if (window.tradingDashboard) {
+        window.tradingDashboard.stopUpdates();
     }
 });
 
-// ==================== CARREGAMENTO INICIAL ====================
-function loadInitialData() {
-    debugLog('Carregando dados iniciais...');
-    
-    // Carregar sinais recentes
-    updateRecentSignals();
-    
-    // Configurar atualização dos sinais recentes (mais frequente)
-    setInterval(updateRecentSignals, 10000);
-}
+// Global functions for debugging
+window.debugDashboard = function() {
+    console.log('[DEBUG] Dashboard State:', {
+        currentCrypto: window.tradingDashboard?.currentCrypto,
+        isUpdating: window.tradingDashboard?.isUpdating,
+        updateInterval: !!window.tradingDashboard?.updateInterval
+    });
+};
+
+window.forceUpdate = function() {
+    window.tradingDashboard?.forceUpdate();
+};
+
+window.generateTestSignal = function() {
+    window.tradingDashboard?.generateTestSignal();
+};

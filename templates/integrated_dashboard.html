@@ -1,687 +1,257 @@
-<!-- templates/integrated_dashboard.html - ADICIONAR estas modificações ao arquivo existente -->
-
-<!-- === MODIFICAR: Navbar (adicionar link multi-asset) === -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
-        <a class="navbar-brand" href="/">
-            <i class="fas fa-rocket"></i> Bitcoin Trading System
-            <span class="enhanced-badge">
-                <i class="fas fa-star"></i> Enhanced
-            </span>
-            <!-- === NOVO: Badge Multi-Asset === -->
-            <span class="multi-asset-badge">
-                <i class="fas fa-layer-group"></i> Multi-Asset
-            </span>
-        </a>
-        
-        <div class="navbar-nav ms-auto">
-            <!-- === NOVO: Link para Multi-Asset Dashboard === -->
-            <a href="/multi-asset" class="nav-link">
-                <i class="fas fa-layer-group"></i> Multi-Asset
-            </a>
-            <a href="/bitcoin" class="nav-link">
-                <i class="fab fa-bitcoin"></i> Bitcoin
-            </a>
-            <a href="/trading" class="nav-link">
-                <i class="fas fa-chart-line"></i> Trading
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Trading System - Dashboard</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line"></i> Trading System
             </a>
             
-            <div class="status-enhanced">
-                <span class="pulse">
-                    <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
-                </span>
-                <span id="system-status-text">Enhanced Active</span>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<!-- === ADICIONAR: CSS para Multi-Asset Badge === -->
-<style>
-.multi-asset-badge {
-    background: linear-gradient(45deg, #8b5cf6, #7c3aed);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: 10px;
-    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-}
-
-.quick-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-/* === NOVO: Estilo para asset selector no dashboard principal === */
-.asset-quick-selector {
-    background: white;
-    border-radius: 8px;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.asset-quick-tab {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    margin: 0.25rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.asset-quick-tab.btc {
-    background: rgba(247, 147, 26, 0.1);
-    color: #f7931a;
-    border: 1px solid rgba(247, 147, 26, 0.3);
-}
-
-.asset-quick-tab.eth {
-    background: rgba(98, 126, 234, 0.1);
-    color: #627eea;
-    border: 1px solid rgba(98, 126, 234, 0.3);
-}
-
-.asset-quick-tab.sol {
-    background: rgba(153, 69, 255, 0.1);
-    color: #9945ff;
-    border: 1px solid rgba(153, 69, 255, 0.3);
-}
-
-.asset-quick-tab:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.asset-quick-tab.active {
-    font-weight: 700;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-</style>
-
-<!-- === MODIFICAR: Quick Stats (adicionar seletor de asset) === -->
-<div class="container mt-4">
-    <!-- === NOVO: Asset Quick Selector === -->
-    <div class="asset-quick-selector">
-        <div class="d-flex align-items-center justify-content-between">
-            <div>
-                <strong><i class="fas fa-coins"></i> Asset Selecionado:</strong>
-                <span id="current-asset-display">Bitcoin (BTC)</span>
-            </div>
-            <div id="asset-quick-selector">
-                <span class="asset-quick-tab btc active" data-asset="BTC">
-                    <i class="fab fa-bitcoin"></i> BTC
-                </span>
-                <span class="asset-quick-tab eth" data-asset="ETH">
-                    <i class="fab fa-ethereum"></i> ETH
-                </span>
-                <span class="asset-quick-tab sol" data-asset="SOL">
-                    <i class="fas fa-sun"></i> SOL
-                </span>
-                <a href="/multi-asset" class="btn btn-sm btn-outline-primary ms-3">
-                    <i class="fas fa-layer-group"></i> Dashboard Completo
+            <div class="navbar-nav ms-auto">
+                <a href="/bitcoin" class="nav-link">Bitcoin Dashboard</a>
+                <a href="/trading" class="nav-link">Trading Dashboard</a>
+                <a href="/settings" class="nav-link">
+                    <i class="fas fa-cogs"></i> Configurações
                 </a>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- === MANTER: Quick stats existentes === -->
-    <div class="quick-stats">
-        <div class="enhanced-stat-card">
-            <div class="stat-header">
-                <div class="stat-icon price">
-                    <i class="fab fa-bitcoin" id="current-asset-icon"></i>
-                </div>
+    <div class="container mt-4">
+        <!-- Cryptocurrency Tabs -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-coins"></i> Monitoramento de Criptomoedas
+                </h5>
             </div>
-            <div class="stat-value" id="current-price">$0.00</div>
-            <div class="stat-label">Preço <span id="current-asset-name">Bitcoin</span></div>
-            <div class="stat-change positive" id="price-change">+2.4% 24h</div>
-        </div>
-        
-        <!-- === MANTER: Outros stats cards existentes === -->
-        <div class="enhanced-stat-card">
-            <div class="stat-header">
-                <div class="stat-icon signals">
-                    <i class="fas fa-crosshairs"></i>
-                </div>
-            </div>
-            <div class="stat-value" id="active-signals">0</div>
-            <div class="stat-label">Sinais Enhanced Ativos</div>
-            <div class="stat-change positive" id="signals-change">Quality Focused</div>
-        </div>
-        
-        <div class="enhanced-stat-card">
-            <div class="stat-header">
-                <div class="stat-icon confidence">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-            </div>
-            <div class="stat-value" id="confidence-level">0%</div>
-            <div class="stat-label">Confiança Atual</div>
-            <div class="confidence-bar">
-                <div class="confidence-fill confidence-medium" style="width: 0%"></div>
-            </div>
-        </div>
-        
-        <div class="enhanced-stat-card">
-            <div class="stat-header">
-                <div class="stat-icon performance">
-                    <i class="fas fa-trophy"></i>
-                </div>
-            </div>
-            <div class="stat-value" id="win-rate">0%</div>
-            <div class="stat-label">Taxa de Sucesso</div>
-            <div class="stat-change positive" id="performance-change">Enhanced Quality</div>
-        </div>
-    </div>
+            <div class="card-body">
+                <!-- Crypto Selector Tabs -->
+                <ul class="nav nav-pills mb-3" id="crypto-tabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="btc-tab" data-crypto="BTC">
+                            <i class="fab fa-bitcoin"></i> Bitcoin (BTC)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="eth-tab" data-crypto="ETH">
+                            <i class="fab fa-ethereum"></i> Ethereum (ETH)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="sol-tab" data-crypto="SOL">
+                            <i class="fas fa-sun"></i> Solana (SOL)
+                        </button>
+                    </li>
+                </ul>
 
-    <!-- === MODIFICAR: Controles (adicionar multi-asset) === -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="enhanced-card">
-                <div class="enhanced-card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-cogs"></i> Controles Enhanced Multi-Asset System
-                    </h5>
-                </div>
-                <div class="enhanced-card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <h6><i class="fab fa-bitcoin"></i> Pipeline Bitcoin</h6>
-                            <button id="start-bitcoin" class="btn btn-success me-2">
-                                <i class="fas fa-play"></i> Iniciar
-                            </button>
-                            <button id="stop-bitcoin" class="btn btn-outline-danger">
-                                <i class="fas fa-stop"></i> Parar
-                            </button>
+                <!-- Crypto Content -->
+                <div class="tab-content" id="crypto-content">
+                    <!-- BTC Tab -->
+                    <div class="tab-pane fade show active" id="btc-content">
+                        <div class="row">
+                            <!-- Price Display -->
+                            <div class="col-md-4">
+                                <div class="price-card">
+                                    <h3 class="price-value" id="btc-price">$0.00</h3>
+                                    <p class="price-change" id="btc-change">0.00%</p>
+                                    <small class="text-muted">Última atualização: <span id="btc-updated">-</span></small>
+                                </div>
+                            </div>
+                            
+                            <!-- Technical Indicators -->
+                            <div class="col-md-8">
+                                <h6>Indicadores Técnicos</h6>
+                                <div class="indicators-grid" id="btc-indicators">
+                                    <!-- Indicators will be populated by JavaScript -->
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <h6><i class="fas fa-brain"></i> Enhanced Analyzer</h6>
-                            <span class="status-enhanced">
-                                <i class="fas fa-check-circle"></i> Active
-                            </span>
+                        
+                        <!-- Market Analysis -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Análise de Mercado</h6>
+                                <div id="btc-analysis" class="analysis-box">
+                                    <div class="text-center text-muted">Carregando análise...</div>
+                                </div>
+                            </div>
                         </div>
-                        <!-- === NOVO: Controles Multi-Asset === -->
-                        <div class="col-md-3">
-                            <h6><i class="fas fa-layer-group"></i> Multi-Asset</h6>
-                            <button id="start-multi-asset" class="btn btn-primary me-2">
-                                <i class="fas fa-play"></i> Iniciar
-                            </button>
-                            <button id="stop-multi-asset" class="btn btn-outline-warning">
-                                <i class="fas fa-stop"></i> Parar
-                            </button>
+                    </div>
+
+                    <!-- ETH Tab -->
+                    <div class="tab-pane fade" id="eth-content">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="price-card">
+                                    <h3 class="price-value" id="eth-price">$0.00</h3>
+                                    <p class="price-change" id="eth-change">0.00%</p>
+                                    <small class="text-muted">Última atualização: <span id="eth-updated">-</span></small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h6>Indicadores Técnicos</h6>
+                                <div class="indicators-grid" id="eth-indicators">
+                                    <!-- Indicators will be populated by JavaScript -->
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <h6><i class="fas fa-external-link-alt"></i> Navegação</h6>
-                            <a href="/multi-asset" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-layer-group"></i> Multi-Asset
-                            </a>
-                            <a href="/bitcoin" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-bitcoin"></i> Bitcoin
-                            </a>
-                            <a href="/trading" class="btn btn-outline-info">
-                                <i class="fas fa-chart-line"></i> Trading
-                            </a>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Análise de Mercado</h6>
+                                <div id="eth-analysis" class="analysis-box">
+                                    <div class="text-center text-muted">Carregando análise...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SOL Tab -->
+                    <div class="tab-pane fade" id="sol-content">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="price-card">
+                                    <h3 class="price-value" id="sol-price">$0.00</h3>
+                                    <p class="price-change" id="sol-change">0.00%</p>
+                                    <small class="text-muted">Última atualização: <span id="sol-updated">-</span></small>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h6>Indicadores Técnicos</h6>
+                                <div class="indicators-grid" id="sol-indicators">
+                                    <!-- Indicators will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h6>Análise de Mercado</h6>
+                                <div id="sol-analysis" class="analysis-box">
+                                    <div class="text-center text-muted">Carregando análise...</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- === MANTER: Tabs existentes === -->
-    <div class="row">
-        <div class="col-12">
-            <ul class="nav nav-tabs nav-tabs-enhanced mb-4" id="mainTabs">
-                <li class="nav-item">
-                    <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">
-                        <i class="fas fa-tachometer-alt"></i> Enhanced Overview
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="indicators-tab" data-bs-toggle="tab" href="#indicators">
-                        <i class="fas fa-chart-bar"></i> Technical Indicators
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="signals-tab" data-bs-toggle="tab" href="#signals">
-                        <i class="fas fa-crosshairs"></i> Enhanced Signals
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="scanner-tab" data-bs-toggle="tab" href="#scanner">
-                        <i class="fas fa-radar"></i> Market Scanner
-                    </a>
-                </li>
-                <!-- === NOVO: Tab Multi-Asset === -->
-                <li class="nav-item">
-                    <a class="nav-link" id="multi-asset-tab" data-bs-toggle="tab" href="#multi-asset">
-                        <i class="fas fa-layer-group"></i> Multi-Asset Overview
-                    </a>
-                </li>
-            </ul>
-
-            <div class="tab-content">
-                <!-- === MANTER: Todas as tabs existentes === -->
-                <div class="tab-pane fade show active" id="overview">
-                    <!-- Conteúdo existente mantido -->
-                </div>
-
-                <div class="tab-pane fade" id="indicators">
-                    <!-- Conteúdo existente mantido -->
-                </div>
-
-                <div class="tab-pane fade" id="signals">
-                    <!-- Conteúdo existente mantido -->
-                </div>
-
-                <div class="tab-pane fade" id="scanner">
-                    <!-- Conteúdo existente mantido -->
-                </div>
-
-                <!-- === NOVA: Tab Multi-Asset === -->
-                <div class="tab-pane fade" id="multi-asset">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="enhanced-card">
-                                <div class="enhanced-card-header">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-chart-line"></i> Comparação Multi-Asset
-                                    </h5>
-                                </div>
-                                <div class="enhanced-card-body">
-                                    <div class="chart-container">
-                                        <canvas id="multiAssetComparisonChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="enhanced-card">
-                                <div class="enhanced-card-header">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-layer-group"></i> Assets Overview
-                                    </h5>
-                                </div>
-                                <div class="enhanced-card-body">
-                                    <div id="multi-asset-overview">
-                                        <div class="text-center text-muted">Carregando dados multi-asset...</div>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- System Controls -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-play-circle"></i> Controles do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Bitcoin Streaming</h6>
+                        <button id="start-bitcoin" class="btn btn-success me-2">
+                            <i class="fas fa-play"></i> Iniciar
+                        </button>
+                        <button id="stop-bitcoin" class="btn btn-outline-secondary">
+                            <i class="fas fa-stop"></i> Parar
+                        </button>
+                        <div class="mt-2">
+                            <small class="status-text" id="bitcoin-status">Status: Verificando...</small>
                         </div>
                     </div>
                     
-                    <div class="enhanced-card mt-3">
-                        <div class="enhanced-card-header">
-                            <h5 class="mb-0">
-                                <i class="fas fa-crosshairs"></i> Sinais Consolidados
-                            </h5>
+                    <div class="col-md-4">
+                        <h6>Multi-Asset</h6>
+                        <button id="start-multi" class="btn btn-primary me-2">
+                            <i class="fas fa-layer-group"></i> Iniciar Todos
+                        </button>
+                        <button id="stop-multi" class="btn btn-outline-secondary">
+                            <i class="fas fa-stop"></i> Parar Todos
+                        </button>
+                        <div class="mt-2">
+                            <small class="status-text" id="multi-status">Status: Parado</small>
                         </div>
-                        <div class="enhanced-card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover signals-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Asset</th>
-                                            <th>Tipo</th>
-                                            <th>Entry</th>
-                                            <th>Status</th>
-                                            <th>PnL</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="multi-asset-signals-table">
-                                        <tr><td colspan="5" class="text-center text-muted">Carregando sinais...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6>Ações</h6>
+                        <button id="force-signal" class="btn btn-warning me-2">
+                            <i class="fas fa-bolt"></i> Gerar Sinal Teste
+                        </button>
+                        <button id="refresh-data" class="btn btn-info">
+                            <i class="fas fa-sync"></i> Atualizar
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- === ADICIONAR: JavaScript para Multi-Asset no Dashboard Principal === -->
-<script>
-// === ADICIONAR estas funções ao JavaScript existente ===
-
-// Variável global para asset selecionado
-let currentSelectedAsset = 'BTC';
-let multiAssetChart = null;
-
-// Configurações dos assets
-const assetConfigs = {
-    'BTC': { name: 'Bitcoin', icon: 'fab fa-bitcoin', color: '#f7931a' },
-    'ETH': { name: 'Ethereum', icon: 'fab fa-ethereum', color: '#627eea' },
-    'SOL': { name: 'Solana', icon: 'fas fa-sun', color: '#9945ff' }
-};
-
-// === ADICIONAR ao DOMContentLoaded existente ===
-document.addEventListener('DOMContentLoaded', function() {
-    // Setup existing dashboard...
-    
-    // === NOVO: Setup Multi-Asset functionality ===
-    setupMultiAssetControls();
-    setupAssetSelector();
-    
-    // === NOVO: Tab change handler para multi-asset ===
-    document.addEventListener('shown.bs.tab', (event) => {
-        const tabId = event.target.getAttribute('href');
-        if (tabId === '#multi-asset') {
-            loadMultiAssetData();
-        }
-    });
-});
-
-function setupMultiAssetControls() {
-    // Botão iniciar multi-asset
-    document.getElementById('start-multi-asset')?.addEventListener('click', async () => {
-        try {
-            showNotification('Iniciando streaming multi-asset...', 'info');
-            const response = await fetch('/api/multi-asset/start', { method: 'POST' });
-            const data = await response.json();
-            
-            if (data.status === 'started') {
-                showNotification('Multi-asset streaming iniciado!', 'success');
-            } else {
-                showNotification('Erro: ' + data.message, 'warning');
-            }
-        } catch (error) {
-            console.error('Erro ao iniciar multi-asset:', error);
-            showNotification('Erro ao iniciar multi-asset streaming', 'danger');
-        }
-    });
-
-    // Botão parar multi-asset
-    document.getElementById('stop-multi-asset')?.addEventListener('click', async () => {
-        try {
-            showNotification('Parando streaming multi-asset...', 'info');
-            const response = await fetch('/api/multi-asset/stop', { method: 'POST' });
-            const data = await response.json();
-            
-            if (data.status === 'stopped') {
-                showNotification('Multi-asset streaming parado!', 'warning');
-            } else {
-                showNotification('Erro: ' + data.message, 'warning');
-            }
-        } catch (error) {
-            console.error('Erro ao parar multi-asset:', error);
-            showNotification('Erro ao parar multi-asset streaming', 'danger');
-        }
-    });
-}
-
-function setupAssetSelector() {
-    const selector = document.getElementById('asset-quick-selector');
-    if (!selector) return;
-    
-    selector.addEventListener('click', (e) => {
-        const tab = e.target.closest('.asset-quick-tab');
-        if (tab) {
-            const asset = tab.dataset.asset;
-            selectAsset(asset);
-        }
-    });
-}
-
-function selectAsset(assetSymbol) {
-    currentSelectedAsset = assetSymbol;
-    
-    // Atualizar visual do seletor
-    document.querySelectorAll('.asset-quick-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelector(`[data-asset="${assetSymbol}"]`)?.classList.add('active');
-    
-    // Atualizar display do asset atual
-    const config = assetConfigs[assetSymbol];
-    if (config) {
-        document.getElementById('current-asset-display').textContent = `${config.name} (${assetSymbol})`;
-        document.getElementById('current-asset-icon').className = config.icon;
-        document.getElementById('current-asset-name').textContent = config.name;
-    }
-    
-    // Atualizar dados específicos do asset
-    updateSelectedAssetData(assetSymbol);
-}
-
-async function updateSelectedAssetData(assetSymbol) {
-    try {
-        // Obter dados específicos do asset
-        const response = await fetch(`/multi-asset/api/asset/${assetSymbol}`);
-        const data = await response.json();
-        
-        if (data.error) {
-            console.warn('Erro ao obter dados do asset:', data.error);
-            return;
-        }
-        
-        // Atualizar preço atual
-        const currentPrice = data.streaming_data?.last_price;
-        if (currentPrice) {
-            document.getElementById('current-price').textContent = formatCurrency(currentPrice);
-        }
-        
-        // Atualizar sinais ativos
-        const analysisData = data.analysis_data;
-        if (analysisData && analysisData.active_signals) {
-            document.getElementById('active-signals').textContent = analysisData.active_signals.length;
-        }
-        
-        // Atualizar confiança
-        if (analysisData && analysisData.signal_analysis) {
-            const confidence = analysisData.signal_analysis.confidence || 0;
-            document.getElementById('confidence-level').textContent = confidence + '%';
-            
-            const fillElement = document.querySelector('.confidence-fill');
-            if (fillElement) {
-                fillElement.style.width = confidence + '%';
-                fillElement.className = 'confidence-fill ' + 
-                    (confidence >= 70 ? 'confidence-high' : 
-                     confidence >= 40 ? 'confidence-medium' : 'confidence-low');
-            }
-        }
-        
-    } catch (error) {
-        console.error('Erro ao atualizar dados do asset:', error);
-    }
-}
-
-async function loadMultiAssetData() {
-    try {
-        // Carregar overview multi-asset
-        const overviewResponse = await fetch('/api/multi-asset/overview');
-        const overviewData = await overviewResponse.json();
-        
-        updateMultiAssetOverview(overviewData);
-        updateMultiAssetChart(overviewData);
-        
-        // Carregar sinais consolidados
-        const signalsResponse = await fetch('/multi-asset/api/consolidated/signals');
-        const signalsData = await signalsResponse.json();
-        
-        updateMultiAssetSignalsTable(signalsData.consolidated_signals || []);
-        
-    } catch (error) {
-        console.error('Erro ao carregar dados multi-asset:', error);
-    }
-}
-
-function updateMultiAssetOverview(data) {
-    const container = document.getElementById('multi-asset-overview');
-    if (!container) return;
-    
-    let html = '';
-    
-    if (data.assets) {
-        Object.entries(data.assets).forEach(([symbol, assetData]) => {
-            if (assetData.error) return;
-            
-            const config = assetConfigs[symbol];
-            const streaming = assetData.streaming || {};
-            const trading = assetData.trading || {};
-            
-            html += `
-                <div class="d-flex align-items-center justify-content-between mb-3 p-2" style="background: rgba(${config ? config.color : '#6b7280'}, 0.1); border-radius: 8px;">
-                    <div class="d-flex align-items-center">
-                        <i class="${config ? config.icon : 'fas fa-coins'}" style="color: ${config ? config.color : '#6b7280'}; font-size: 1.5rem; margin-right: 0.75rem;"></i>
-                        <div>
-                            <div class="fw-bold">${config ? config.name : symbol}</div>
-                            <small class="text-muted">${formatCurrency(streaming.current_price || 0)}</small>
-                        </div>
-                    </div>
-                    <div class="text-end">
-                        <div class="small">
-                            <span class="${streaming.is_running ? 'text-success' : 'text-danger'}">
-                                <i class="fas fa-circle"></i> ${streaming.is_running ? 'Ativo' : 'Parado'}
-                            </span>
-                        </div>
-                        <div class="small text-muted">
-                            ${trading.active_signals || 0} sinais
-                        </div>
-                    </div>
+        <!-- Signals Table -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-signal"></i> Sinais de Trading
+                </h5>
+                <div>
+                    <span class="badge bg-success" id="active-signals-count">0 Ativos</span>
+                    <span class="badge bg-secondary" id="total-signals-count">0 Total</span>
                 </div>
-            `;
-        });
-    }
-    
-    if (html === '') {
-        html = '<div class="text-center text-muted">Nenhum dado multi-asset disponível</div>';
-    }
-    
-    container.innerHTML = html;
-}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Crypto</th>
+                                <th>Tipo</th>
+                                <th>Entry</th>
+                                <th>Target</th>
+                                <th>Stop Loss</th>
+                                <th>Confiança</th>
+                                <th>PnL</th>
+                                <th>Status</th>
+                                <th>Criado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="signals-table-body">
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">
+                                    Carregando sinais...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-function updateMultiAssetChart(data) {
-    const canvas = document.getElementById('multiAssetComparisonChart');
-    if (!canvas) return;
-    
-    // Destruir gráfico existente
-    if (multiAssetChart) {
-        multiAssetChart.destroy();
-    }
-    
-    const ctx = canvas.getContext('2d');
-    const datasets = [];
-    
-    if (data.assets) {
-        Object.entries(data.assets).forEach(([symbol, assetData]) => {
-            if (assetData.error) return;
-            
-            const config = assetConfigs[symbol];
-            const price = assetData.streaming?.current_price || 0;
-            
-            if (price > 0) {
-                // Simular dados históricos para demonstração
-                const historicalData = [];
-                const now = new Date();
-                
-                for (let i = 19; i >= 0; i--) {
-                    const timestamp = new Date(now.getTime() - i * 60000);
-                    const variation = (Math.random() - 0.5) * 0.02; // ±1%
-                    historicalData.push({
-                        x: timestamp,
-                        y: price * (1 + variation)
-                    });
-                }
-                
-                datasets.push({
-                    label: config ? config.name : symbol,
-                    data: historicalData,
-                    borderColor: config ? config.color : '#6b7280',
-                    backgroundColor: (config ? config.color : '#6b7280') + '20',
-                    tension: 0.3,
-                    fill: false
-                });
-            }
-        });
-    }
-    
-    multiAssetChart = new Chart(ctx, {
-        type: 'line',
-        data: { datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
-            },
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'minute'
-                    }
-                },
-                y: {
-                    beginAtZero: false,
-                    title: {
-                        display: true,
-                        text: 'Preço (USD)'
-                    }
-                }
-            }
-        }
-    });
-}
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="notification-toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Trading System</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Mensagem
+            </div>
+        </div>
+    </div>
 
-function updateMultiAssetSignalsTable(signals) {
-    const tableBody = document.getElementById('multi-asset-signals-table');
-    if (!tableBody) return;
-    
-    tableBody.innerHTML = '';
-    
-    if (signals.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum sinal disponível</td></tr>';
-        return;
-    }
-    
-    signals.slice(0, 10).forEach(signal => {
-        const row = tableBody.insertRow();
-        
-        // Asset
-        const assetCell = row.insertCell();
-        const config = assetConfigs[signal.asset_symbol];
-        assetCell.innerHTML = `
-            <span style="color: ${config ? config.color : '#6b7280'}; font-weight: 600;">
-                <i class="${config ? config.icon : 'fas fa-coins'}"></i> ${signal.asset_symbol}
-            </span>
-        `;
-        
-        // Tipo
-        row.insertCell().textContent = signal.signal_type || signal.pattern_type;
-        
-        // Entry
-        row.insertCell().textContent = formatCurrency(signal.entry_price);
-        
-        // Status
-        const statusCell = row.insertCell();
-        statusCell.textContent = signal.status;
-        statusCell.className = signal.status === 'ACTIVE' ? 'text-warning' : 
-                              signal.profit_loss > 0 ? 'text-success' : 'text-danger';
-        
-        // PnL
-        const pnlCell = row.insertCell();
-        const pnl = signal.profit_loss || 0;
-        pnlCell.textContent = `${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}%`;
-        pnlCell.className = pnl > 0 ? 'text-success' : pnl < 0 ? 'text-danger' : 'text-muted';
-    });
-}
-
-// === MODIFICAR: Função updateData existente para incluir multi-asset ===
-// Adicionar esta chamada na função updateData existente:
-// if (currentSelectedAsset !== 'BTC') {
-//     updateSelectedAssetData(currentSelectedAsset);
-// }
-</script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

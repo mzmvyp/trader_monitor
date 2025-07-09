@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - Trading System</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/settings.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line"></i> Trading System
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="nav-link">Dashboard</a>
+                <a href="/bitcoin" class="nav-link">Bitcoin</a>
+                <a href="/trading" class="nav-link">Trading</a>
+                <a href="/settings" class="nav-link active">
+                    <i class="fas fa-cogs"></i> Configurações
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-cogs"></i> Configurações do Sistema</h2>
+                <p class="text-muted">Configure os parâmetros de geração de sinais e análise técnica</p>
+            </div>
+        </div>
+
+        <!-- Trading Parameters -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-signal"></i> Parâmetros de Sinais
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="signal-params-form">
+                            <div class="mb-3">
+                                <label for="min-confidence" class="form-label">
+                                    Confiança Mínima (%)
+                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                       title="Nível mínimo de confiança para gerar um sinal"></i>
+                                </label>
+                                <input type="range" class="form-range" id="min-confidence" 
+                                       min="30" max="90" value="50" step="5">
+                                <div class="d-flex justify-content-between">
+                                    <small>30%</small>
+                                    <strong id="confidence-value">50%</strong>
+                                    <small>90%</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="cooldown-minutes" class="form-label">
+                                    Intervalo entre Sinais (minutos)
+                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                       title="Tempo mínimo entre a geração de novos sinais"></i>
+                                </label>
+                                <input type="range" class="form-range" id="cooldown-minutes" 
+                                       min="5" max="180" value="30" step="5">
+                                <div class="d-flex justify-content-between">
+                                    <small>5min</small>
+                                    <strong id="cooldown-value">30min</strong>
+                                    <small>180min</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="max-signals" class="form-label">
+                                    Máximo de Sinais Ativos
+                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                       title="Número máximo de sinais que podem estar ativos simultaneamente"></i>
+                                </label>
+                                <input type="range" class="form-range" id="max-signals" 
+                                       min="1" max="20" value="10" step="1">
+                                <div class="d-flex justify-content-between">
+                                    <small>1</small>
+                                    <strong id="max-signals-value">10</strong>
+                                    <small>20</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="risk-reward" class="form-label">
+                                    Risk/Reward Mínimo
+                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                       title="Relação mínima entre risco e recompensa para gerar sinal"></i>
+                                </label>
+                                <input type="range" class="form-range" id="risk-reward" 
+                                       min="1.0" max="5.0" value="1.5" step="0.1">
+                                <div class="d-flex justify-content-between">
+                                    <small>1:1</small>
+                                    <strong id="risk-reward-value">1.5:1</strong>
+                                    <small>5:1</small>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar"></i> Indicadores Técnicos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="indicators-form">
+                            <div class="mb-3">
+                                <label for="rsi-overbought" class="form-label">RSI Overbought</label>
+                                <input type="range" class="form-range" id="rsi-overbought" 
+                                       min="60" max="85" value="65" step="1">
+                                <div class="d-flex justify-content-between">
+                                    <small>60</small>
+                                    <strong id="rsi-overbought-value">65</strong>
+                                    <small>85</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="rsi-oversold" class="form-label">RSI Oversold</label>
+                                <input type="range" class="form-range" id="rsi-oversold" 
+                                       min="15" max="40" value="35" step="1">
+                                <div class="d-flex justify-content-between">
+                                    <small>15</small>
+                                    <strong id="rsi-oversold-value">35</strong>
+                                    <small>40</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="volume-ratio" class="form-label">
+                                    Volume Ratio Mínimo
+                                    <i class="fas fa-info-circle" data-bs-toggle="tooltip" 
+                                       title="Multiplicador de volume para confirmar sinais"></i>
+                                </label>
+                                <input type="range" class="form-range" id="volume-ratio" 
+                                       min="0.5" max="3.0" value="1.0" step="0.1">
+                                <div class="d-flex justify-content-between">
+                                    <small>0.5x</small>
+                                    <strong id="volume-ratio-value">1.0x</strong>
+                                    <small>3.0x</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="require-volume" checked>
+                                    <label class="form-check-label" for="require-volume">
+                                        Exigir Confirmação de Volume
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enable-auto-signals" checked>
+                                    <label class="form-check-label" for="enable-auto-signals">
+                                        Geração Automática de Sinais
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Settings -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-server"></i> Configurações do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">

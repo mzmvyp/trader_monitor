@@ -23,6 +23,11 @@ class Config:
     # Multi-asset consolidated database
     MULTI_ASSET_DB = os.path.join(DATA_DIR, 'multi_asset.db')
     
+    # === ADICIONAR: Variáveis que estão faltando (causando erros críticos) ===
+    MIN_EXPECTED_PRICE = 0.01  # Preço mínimo geral
+    MAX_EXPECTED_PRICE = 1000000  # Preço máximo geral  
+    PRICE_CHANGE_THRESHOLD_PCT = 0.10  # 10% threshold para mudanças de preço
+    
     # === NOVO: Asset Configuration ===
     SUPPORTED_ASSETS = {
         'BTC': {

@@ -1,590 +1,454 @@
-/* static/css/dashboard.css - Estilos específicos do Dashboard */
+/* Dashboard CSS - Modular e Limpo */
 
-/* ==================== DASHBOARD LAYOUT ==================== */
-.dashboard-section {
-    margin-bottom: 2rem;
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --dark-color: #212529;
+    --light-bg: #f8f9fa;
+    --border-color: #dee2e6;
+    
+    /* Crypto Colors */
+    --btc-color: #f7931a;
+    --eth-color: #627eea;
+    --sol-color: #9945ff;
 }
 
-.section-header {
-    background: linear-gradient(135deg, var(--primary-color), #0056b3);
-    color: white;
+body {
+    background-color: var(--light-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 12px 12px 0 0 !important;
     padding: 1rem 1.5rem;
-    border-radius: 10px 10px 0 0;
-    margin-bottom: 0;
 }
 
-.section-content {
-    background: white;
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* ==================== NAVIGATION TABS ==================== */
-.nav-tabs-custom {
-    border: none;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-radius: 10px;
-    padding: 0.5rem;
-}
-
-.nav-tabs-custom .nav-link {
-    border: none;
-    border-radius: 8px;
+.card-header h5 {
     color: var(--dark-color);
     font-weight: 600;
+}
+
+/* Crypto Tabs */
+.nav-pills .nav-link {
+    border-radius: 25px;
+    margin-right: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border: 2px solid transparent;
     transition: all 0.3s ease;
 }
 
-.nav-tabs-custom .nav-link.active {
-    background: var(--primary-color);
+.nav-pills .nav-link:not(.active) {
+    background-color: transparent;
+    color: var(--dark-color);
+    border-color: var(--border-color);
+}
+
+.nav-pills .nav-link:not(.active):hover {
+    background-color: var(--light-bg);
+    transform: translateY(-1px);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary-color);
     color: white;
-    box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
 }
 
-.nav-tabs-custom .nav-link:hover {
-    background: rgba(0, 123, 255, 0.1);
-    color: var(--primary-color);
+/* Specific crypto tab colors */
+#btc-tab.active {
+    background-color: var(--btc-color) !important;
 }
 
-/* ==================== QUICK STATS ==================== */
-.quick-stats {
+#eth-tab.active {
+    background-color: var(--eth-color) !important;
+}
+
+#sol-tab.active {
+    background-color: var(--sol-color) !important;
+}
+
+/* Price Card */
+.price-card {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    height: 100%;
+}
+
+.price-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+}
+
+.price-change {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.price-change.positive {
+    color: var(--success-color);
+}
+
+.price-change.negative {
+    color: var(--danger-color);
+}
+
+/* Indicators Grid */
+.indicators-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-top: 1rem;
 }
 
-.quick-stat-card {
-    background: linear-gradient(135deg, var(--primary-color), #0056b3);
-    color: white;
-    padding: 1.5rem;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
-    transition: transform 0.3s ease;
-}
-
-.quick-stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(0, 123, 255, 0.4);
-}
-
-.quick-stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.quick-stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* ==================== SYSTEM STATUS ==================== */
-.system-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-.status-running {
-    background: var(--success-color);
-    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
-}
-
-.status-stopped {
-    background: var(--danger-color);
-    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
-}
-
-/* ==================== CHARTS ==================== */
-.chart-container {
-    position: relative;
-    height: 400px;
-    padding: 1rem;
-    background: white;
-    border-radius: 10px;
-}
-
-.chart-container canvas {
-    max-height: 100% !important;
-}
-
-/* Loading overlay for charts */
-.chart-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    border-radius: 10px;
-}
-
-/* ==================== SIGNAL CARDS ==================== */
-.signal-card {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-color);
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.signal-card:hover {
-    transform: translateX(3px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.signal-active {
-    border-left-color: var(--warning-color);
-    background: rgba(255, 193, 7, 0.05);
-}
-
-.signal-profit {
-    border-left-color: var(--success-color);
-    background: rgba(40, 167, 69, 0.05);
-}
-
-.signal-loss {
-    border-left-color: var(--danger-color);
-    background: rgba(220, 53, 69, 0.05);
-}
-
-.signal-expired {
-    border-left-color: var(--dark-color);
-    background: rgba(108, 117, 125, 0.05);
-    opacity: 0.7;
-}
-
-/* ==================== INDICATORS ==================== */
 .indicator-item {
     background: white;
     padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 0.5rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--border-color);
+    text-align: center;
     transition: all 0.3s ease;
 }
 
 .indicator-item:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.indicator-bullish {
-    color: var(--success-color);
-    font-weight: 600;
-}
-
-.indicator-bearish {
-    color: var(--danger-color);
-    font-weight: 600;
-}
-
-.indicator-neutral {
-    color: var(--dark-color);
+.indicator-name {
+    font-size: 0.875rem;
+    color: #6c757d;
     font-weight: 500;
-}
-
-/* ==================== PATTERN BADGES ==================== */
-.pattern-badge {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-badge {
-    padding: 0.3rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.status-active {
-    background: var(--warning-color);
-    color: white;
-}
-
-.status-target {
-    background: var(--success-color);
-    color: white;
-}
-
-.status-stop {
-    background: var(--danger-color);
-    color: white;
-}
-
-.status-expired {
-    background: var(--dark-color);
-    color: white;
-}
-
-/* ==================== DEBUG SECTION ==================== */
-.debug-info {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
-    padding: 1rem;
-    margin-top: 1rem;
-    font-family: 'Courier New', monospace;
-    font-size: 0.8rem;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.debug-info div {
     margin-bottom: 0.5rem;
-    padding: 0.25rem 0;
-    border-bottom: 1px solid #e9ecef;
 }
 
-.debug-info div:last-child {
+.indicator-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.indicator-signal {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.indicator-signal.bullish {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(25, 135, 84, 0.2);
+}
+
+.indicator-signal.bearish {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.indicator-signal.neutral {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* Analysis Box */
+.analysis-box {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.analysis-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--light-bg);
+}
+
+.analysis-item:last-child {
     border-bottom: none;
 }
 
-/* ==================== LOADING STATES ==================== */
-.loading-spinner {
-    text-align: center;
-    padding: 2rem;
-    color: var(--primary-color);
-}
-
-.loading-spinner i {
-    font-size: 1.5rem;
-    margin-right: 0.5rem;
-}
-
-/* Skeleton loading effect */
-.skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* ==================== METRIC CARDS ==================== */
-.metric-card {
-    text-align: center;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary-color);
-}
-
-.metric-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+.analysis-label {
+    font-weight: 500;
     color: var(--dark-color);
 }
 
-.metric-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-}
-
-/* ==================== TABLE ENHANCEMENTS ==================== */
-.table-signals {
-    font-size: 0.9rem;
-}
-
-.table-signals th {
-    background: linear-gradient(135deg, var(--primary-color), #0056b3);
-    color: white;
-    border: none;
-    padding: 1rem 0.8rem;
+.analysis-value {
     font-weight: 600;
-    text-align: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
 }
 
-.table-signals td {
-    vertical-align: middle;
-    text-align: center;
-    padding: 0.8rem;
+.analysis-value.buy {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
 }
 
-.table-signals tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.05);
-    transform: translateX(2px);
+.analysis-value.sell {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+.analysis-value.hold {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+/* System Controls */
+.status-text {
+    display: block;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background-color: var(--light-bg);
+    color: #6c757d;
+}
+
+.status-text.online {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+}
+
+.status-text.offline {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
     transition: all 0.3s ease;
 }
 
-/* ==================== PRICE COLORS ==================== */
-.price-up {
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-success:hover {
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-warning:hover {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.btn-info:hover {
+    box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
+}
+
+/* Signals Table */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: var(--light-bg);
+    font-weight: 600;
+    color: var(--dark-color);
+    border-bottom: 2px solid var(--border-color);
+    padding: 1rem 0.75rem;
+}
+
+.table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Signal Status Badges */
+.signal-type {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.signal-type.buy {
+    background: linear-gradient(45deg, var(--success-color), #20c997);
+    color: white;
+}
+
+.signal-type.sell {
+    background: linear-gradient(45deg, var(--danger-color), #e91e63);
+    color: white;
+}
+
+.signal-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.signal-status.active {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #996404;
+}
+
+.signal-status.closed {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #495057;
+}
+
+.signal-status.hit-target {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: var(--success-color);
+}
+
+.signal-status.hit-stop {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger-color);
+}
+
+/* PnL Display */
+.pnl-positive {
     color: var(--success-color);
     font-weight: 600;
 }
 
-.price-down {
+.pnl-negative {
     color: var(--danger-color);
     font-weight: 600;
 }
 
-.profit-positive {
-    color: var(--success-color);
-    font-weight: 600;
+.pnl-neutral {
+    color: #6c757d;
+    font-weight: 500;
 }
 
-.profit-positive::before {
-    content: "+";
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
 }
 
-.profit-negative {
-    color: var(--danger-color);
-    font-weight: 600;
+/* Loading States */
+.loading {
+    position: relative;
+    overflow: hidden;
 }
 
-/* ==================== ANIMATIONS ==================== */
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Animations */
 .fade-in {
     animation: fadeIn 0.5s ease-in;
 }
 
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(20px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.slide-up {
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from { 
-        transform: translateY(30px); 
-        opacity: 0; 
-    }
-    to { 
-        transform: translateY(0); 
-        opacity: 1; 
-    }
-}
-
-.pulse-glow {
-    animation: pulseGlow 2s infinite;
-}
-
-@keyframes pulseGlow {
-    0%, 100% {
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-    50% {
-        box-shadow: 0 0 20px rgba(0, 123, 255, 0.8);
-    }
-}
-
-/* ==================== RESPONSIVE DESIGN ==================== */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .quick-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
+    .price-value {
+        font-size: 2rem;
     }
     
-    .quick-stat-card {
-        padding: 1rem;
+    .indicators-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
     }
     
-    .quick-stat-value {
-        font-size: 1.5rem;
-    }
-    
-    .metric-card {
-        padding: 1rem;
-    }
-    
-    .metric-value {
-        font-size: 1.5rem;
-    }
-    
-    .chart-container {
-        height: 300px;
-        padding: 0.5rem;
-    }
-    
-    .nav-tabs-custom {
-        padding: 0.25rem;
-    }
-    
-    .nav-tabs-custom .nav-link {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.9rem;
+    .indicator-item {
+        padding: 0.75rem;
     }
     
     .table-responsive {
-        font-size: 0.8rem;
+        font-size: 0.875rem;
     }
     
-    .debug-info {
-        font-size: 0.7rem;
-        max-height: 200px;
+    .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
     }
 }
 
 @media (max-width: 576px) {
-    .quick-stats {
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .nav-pills .nav-link {
+        padding: 0.5rem 1rem;
+        margin-right: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .price-card {
+        padding: 1.5rem;
+    }
+    
+    .indicators-grid {
         grid-template-columns: 1fr;
-    }
-    
-    .container {
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-    
-    .card {
-        margin-bottom: 1rem;
-    }
-    
-    .nav-tabs-custom .nav-link {
-        padding: 0.4rem 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .nav-tabs-custom .nav-link i {
-        display: none;
-    }
-}
-
-/* ==================== DARK MODE SUPPORT ==================== */
-@media (prefers-color-scheme: dark) {
-    .debug-info {
-        background: #2d3748;
-        border-color: #4a5568;
-        color: #e2e8f0;
-    }
-    
-    .debug-info div {
-        border-bottom-color: #4a5568;
-    }
-    
-    .indicator-item {
-        background: #2d3748;
-        border-color: #4a5568;
-        color: #e2e8f0;
-    }
-    
-    .metric-card {
-        background: #2d3748;
-        border-color: #4a5568;
-        color: #e2e8f0;
-    }
-    
-    .signal-card {
-        background: #2d3748;
-        color: #e2e8f0;
-    }
-}
-
-/* ==================== UTILITY CLASSES ==================== */
-.text-gradient {
-    background: linear-gradient(135deg, var(--primary-color), #0056b3);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.glass-effect {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.shadow-soft {
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-}
-
-.shadow-strong {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-}
-
-/* ==================== CUSTOM SCROLLBAR ==================== */
-.debug-info::-webkit-scrollbar {
-    width: 6px;
-}
-
-.debug-info::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.debug-info::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.debug-info::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* ==================== PRINT STYLES ==================== */
-@media print {
-    .footer,
-    .navbar,
-    .nav-tabs-custom,
-    #debug-section,
-    .btn {
-        display: none !important;
-    }
-    
-    .card {
-        break-inside: avoid;
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-    
-    .quick-stats {
-        display: block;
-    }
-    
-    .quick-stat-card {
-        display: inline-block;
-        width: 23%;
-        margin: 1%;
-        page-break-inside: avoid;
     }
 }
