@@ -64,21 +64,52 @@ def get_trading_signals():
         active_signals = analysis.get('active_signals', [])
         all_signals = current_app.trading_analyzer.signals
         
+        # CORREÇÃO: Converter objetos para dict serializável
+        def make_serializable(obj):
+            """Converte objetos para formato JSON serializável"""
+            if isinstance(obj, dict):
+                return {k: make_serializable(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [make_serializable(item) for item in obj]
+            elif isinstance(obj, bool):
+                return obj  # Booleans são válidos em JSON
+            elif hasattr(obj, '__dict__'):
+                # Converter objetos personalizados para dict
+                return make_serializable(obj.__dict__)
+            else:
+                return obj
+        
+        # Aplicar conversão aos sinais
+        safe_active_signals = make_serializable(active_signals)
+        safe_all_signals = make_serializable(all_signals)
+        
         # Ordenar por data de criação (mais recentes primeiro)
-        sorted_signals = sorted(all_signals, key=lambda x: x.get('created_at', ''), reverse=True)
+        sorted_signals = sorted(safe_all_signals, key=lambda x: x.get('created_at', ''), reverse=True)
         
         # Retornar os últimos N sinais
-        return jsonify({
-            'active_signals': active_signals,
+        response_data = {
+            'active_signals': safe_active_signals,
             'recent_signals': sorted_signals[:limit],
-            'total_signals': len(all_signals),
-            'system_health': analysis.get('system_health', {})
-        })
+            'total_signals': len(safe_all_signals),
+            'system_health': make_serializable(analysis.get('system_health', {}))
+        }
+        
+        return jsonify(response_data)
         
     except Exception as e:
         logger.error(f"Erro ao obter sinais de trading: {e}")
-        return jsonify({'error': str(e)}), 500
-
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        # Retornar resposta de erro segura
+        return jsonify({
+            'active_signals': [],
+            'recent_signals': [],
+            'total_signals': 0,
+            'system_health': {'status': 'error', 'message': str(e)},
+            'error': 'Erro interno ao processar sinais'
+        }), 500
+    
 @trading_bp.route('/api/active-signals')
 def get_active_signals():
     """API endpoint para sinais ativos com informações detalhadas"""

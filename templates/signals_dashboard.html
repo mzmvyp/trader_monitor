@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signals Dashboard - Trading System</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card { 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1); 
+            border: none; 
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        
+        .card-header { 
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-bottom: 1px solid #e9ecef; 
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .card-header h5 {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0;
+        }
+        
+        /* Stat Cards */
+        .stat-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
+            pointer-events: none;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(0,123,255,0.3);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card.success { background: linear-gradient(135deg, #28a745, #20c997); }
+        .stat-card.info { background: linear-gradient(135deg, #17a2b8, #138496); }
+        .stat-card.warning { background: linear-gradient(135deg, #ffc107, #e0a800); }
+        .stat-card.danger { background: linear-gradient(135deg, #dc3545, #c82333); }
+        .stat-card.secondary { background: linear-gradient(135deg, #6c757d, #545b62); }
+        
+        /* Monitor Status */
+        .monitor-status {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-size: 0.85rem;
+            border-left: 4px solid #28a745;
+            max-width: 300px;
+        }
+        
+        .monitor-status.warning { border-left-color: #ffc107; }
+        .monitor-status.error { border-left-color: #dc3545; }
+        
+        /* Table improvements */
+        .table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .table th {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            padding: 1rem 0.75rem;
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background: linear-gradient(90deg, rgba(0,123,255,0.05), rgba(0,123,255,0.02));
+            transform: scale(1.01);
+        }
+        
+        .table td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+            border-top: 1px solid #f1f3f4;
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        .status-indicator.online { background: #28a745; box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3); }
+        .status-indicator.offline { background: #dc3545; box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3); }
+        .status-indicator.warning { background: #ffc107; box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3); }
+        
+        /* Badges */
+        .badge {
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        
+        /* Navigation */
+        .navbar {
+            background: linear-gradient(135deg, #007bff, #0056b3) !important;
+            box-shadow: 0 4px 16px rgba(0,123,255,0.3);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0 0.25rem;
+            padding: 0.5rem 1rem !important;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+        
+        /* Buttons */
+        .btn {
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            border: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+        
+        .btn-outline-danger {
+            border: 2px solid #dc3545;
+            color: #dc3545;
+            background: transparent;
+        }
+        
+        .btn-outline-danger:hover {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .filter-section {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        /* Signal specific styles */
+        .signal-type.buy {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .signal-type.sell {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .pnl-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .pnl-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .pnl-neutral {
+            color: #6c757d;
+        }
+        
+        .confidence-badge {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        /* Row highlighting based on status */
+        tr.signal-active {
+            background: rgba(0, 123, 255, 0.05) !important;
+            border-left: 4px solid #007bff;
+        }
+        
+        tr.signal-profit {
+            background: rgba(40, 167, 69, 0.05) !important;
+            border-left: 4px solid #28a745;
+        }
+        
+        tr.signal-loss {
+            background: rgba(220, 53, 69, 0.05) !important;
+            border-left: 4px solid #dc3545;
+        }
+        
+        tr.signal-expired {
+            background: rgba(108, 117, 125, 0.05) !important;
+            border-left: 4px solid #6c757d;
+        }
+        
+        /* Loading states */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .last-update {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Filters */
+        .filter-btn {
+            margin: 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .filter-btn.active {
+            background: #007bff;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Monitor Status -->
+    <div id="monitor-status" class="monitor-status" style="display: none;">
+        <div><i class="fas fa-robot"></i> <strong>Signal Monitor</strong></div>
+        <div id="monitor-text">Verificando status...</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-signal"></i> Signals Dashboard
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-chart-line"></i> Dashboard Principal
+                </a>
+                <a href="/trading" class="nav-link">
+                    <i class="fas fa-chart-bar"></i> Trading
+                </a>
+                <a href="/bitcoin" class="nav-link">
+                    <i class="fab fa-bitcoin"></i> Bitcoin
+                </a>
+                <a href="/settings" class="nav-link">
+                    <i class="fas fa-cogs"></i> Configurações
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- System Status Row -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-heartbeat text-primary"></i> Status do Sistema
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="status-indicator" id="monitor-indicator"></span>
+                                    <strong>Signal Monitor:</strong>
+                                    <span id="monitor-status-text" class="ms-2">Verificando...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="status-indicator" id="analyzer-indicator"></span>
+                                    <strong>Trading Analyzer:</strong>
+                                    <span id="analyzer-status-text" class="ms-2">Verificando...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="status-indicator" id="signals-indicator"></span>
+                                    <strong>Total Sinais:</strong>
+                                    <span id="signals-count-text" class="ms-2">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="last-update">
+                                    <i class="fas fa-clock"></i> 
+                                    Última atualização: <span id="last-update-time">--:--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards Row - BASEADO EM TODOS OS SINAIS -->
+        <div class="row mb-4">
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number" id="dashboard-total-signals">0</div>
+                    <div class="stat-label">Total de Sinais</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card success">
+                    <div class="stat-number" id="dashboard-active-signals">0</div>
+                    <div class="stat-label">Sinais Ativos</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card warning">
+                    <div class="stat-number" id="dashboard-profitable-signals">0</div>
+                    <div class="stat-label">Sinais Lucrativos</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card info">
+                    <div class="stat-number" id="dashboard-success-rate">0%</div>
+                    <div class="stat-label">Taxa de Sucesso</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card danger">
+                    <div class="stat-number" id="dashboard-avg-profit">+0%</div>
+                    <div class="stat-label">Lucro Médio</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card secondary">
+                    <div class="stat-number" id="dashboard-best-signal">+0%</div>
+                    <div class="stat-label">Melhor Sinal</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="filter-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="signal-asset-select" class="form-label fw-bold">Asset:</label>
+                                    <select id="signal-asset-select" class="form-select">
+                                        <option value="BTC">Bitcoin (BTC)</option>
+                                        <option value="ETH">Ethereum (ETH)</option>
+                                        <option value="SOL">Solana (SOL)</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="signal-type-select" class="form-label fw-bold">Tipo:</label>
+                                    <select id="signal-type-select" class="form-select">
+                                        <option value="BUY">BUY</option>
+                                        <option value="SELL">SELL</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8 d-flex gap-2 align-items-end">
+                            <button id="dashboard-generate-signal" class="btn btn-warning">
+                                <i class="fas fa-plus"></i> Gerar Sinal Teste
+                            </button>
+                            <button id="dashboard-refresh-signals" class="btn btn-primary">
+                                <i class="fas fa-sync"></i> Atualizar Dados
+                            </button>
+                            <button id="dashboard-force-check" class="btn btn-info">
+                                <i class="fas fa-search"></i> Verificar Sinais
+                            </button>
+                            <button id="dashboard-cleanup-signals" class="btn btn-outline-danger">
+                                <i class="fas fa-broom"></i> Limpar Duplicados
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtros de Status -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Filtrar por Status:</label>
+                            <div>
+                                <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                                    <i class="fas fa-list"></i> Todos
+                                </button>
+                                <button class="btn btn-outline-primary filter-btn" data-filter="ACTIVE">
+                                    <i class="fas fa-play"></i> Ativos
+                                </button>
+                                <button class="btn btn-outline-success filter-btn" data-filter="profit">
+                                    <i class="fas fa-arrow-up"></i> Lucro
+                                </button>
+                                <button class="btn btn-outline-danger filter-btn" data-filter="loss">
+                                    <i class="fas fa-arrow-down"></i> Prejuízo
+                                </button>
+                                <button class="btn btn-outline-secondary filter-btn" data-filter="closed">
+                                    <i class="fas fa-check"></i> Fechados
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico Completo de Sinais -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history text-info"></i> Histórico Completo de Sinais
+                            <span class="status-indicator online" id="signals-status"></span>
+                        </h5>
+                        <div>
+                            <span class="badge bg-info" id="visible-signals-count">0</span>
+                            <small class="text-muted ms-2">sinais visíveis</small>
+                            <span class="badge bg-secondary ms-2" id="total-signals-count">0</span>
+                            <small class="text-muted ms-2">total</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-hashtag"></i> ID</th>
+                                        <th><i class="fas fa-coins"></i> Crypto</th>
+                                        <th><i class="fas fa-exchange-alt"></i> Tipo</th>
+                                        <th><i class="fas fa-sign-in-alt"></i> Entry</th>
+                                        <th><i class="fas fa-chart-line"></i> Preço Final</th>
+                                        <th><i class="fas fa-bullseye"></i> Target</th>
+                                        <th><i class="fas fa-stop-circle"></i> Stop Loss</th>
+                                        <th><i class="fas fa-percentage"></i> Confiança</th>
+                                        <th><i class="fas fa-chart-area"></i> PnL</th>
+                                        <th><i class="fas fa-info-circle"></i> Status</th>
+                                        <th><i class="fas fa-calendar"></i> Criado</th>
+                                        <th><i class="fas fa-clock"></i> Fechado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="signals-table-body">
+                                    <tr>
+                                        <td colspan="12" class="text-center text-muted">
+                                            Carregando histórico completo de sinais...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="d-none position-fixed top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.7); z-index: 9999; backdrop-filter: blur(4px);">
+        <div class="d-flex justify-content-center align-items-center h-100 flex-column">
+            <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5 class="text-light">Carregando histórico completo...</h5>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /**
+         * Full History Signals Dashboard
+         * MODIFICAÇÕES PRINCIPAIS:
+         * 1. Carrega TODOS os sinais (não apenas ativos)
+         * 2. Estatísticas baseadas no histórico completo
+         * 3. Filtros de status para encontrar sinais específicos
+         * 4. Ordenação por data (mais recentes primeiro)
+         * 5. Busca em múltiplas APIs para pegar histórico completo
+         */
+        class FullHistorySignalsDashboard {
+            constructor() {
+                this.allSignals = []; // NOVO: Array com TODOS os sinais
+                this.filteredSignals = []; // NOVO: Sinais filtrados
+                this.currentFilter = 'all'; // NOVO: Filtro atual
+                this.monitorStatus = {};
+                this.updateInterval = null;
+                this.isUpdating = false;
+                this.rawData = null;
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('[FULL-HISTORY] Inicializando dashboard de histórico completo...');
+                this.setupEventListeners();
+                this.startDataFlow();
+                this.startAutoUpdate();
+            }
+            
+            setupEventListeners() {
+                // Botões de ação
+                document.getElementById('dashboard-generate-signal')?.addEventListener('click', () => {
+                    this.generateTestSignal();
+                });
+                
+                document.getElementById('dashboard-refresh-signals')?.addEventListener('click', () => {
+                    this.refreshSignals();
+                });
+                
+                document.getElementById('dashboard-force-check')?.addEventListener('click', () => {
+                    this.forceSignalCheck();
+                });
+                
+                document.getElementById('dashboard-cleanup-signals')?.addEventListener('click', () => {
+                    this.cleanupDuplicates();
+                });
+                
+                // NOVO: Filtros de status
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const filter = e.target.closest('.filter-btn').dataset.filter;
+                        this.applyFilter(filter);
+                    });
+                });
+                
+                console.log('[FULL-HISTORY] Event listeners configurados');
+            }
+            
+            async startDataFlow() {
+                console.log('[FULL-HISTORY] Iniciando carregamento completo...');
+                
+                try {
+                    // 1. Verificar status do Signal Monitor
+                    await this.checkSignalMonitorStatus();
+                    
+                    // 2. Carregar TODOS os sinais de múltiplas fontes
+                    await this.loadAllSignalsData();
+                    
+                    // 3. Processar e calcular estatísticas
+                    this.processAllSignalsData();
+                    
+                    // 4. Aplicar filtro atual
+                    this.applyFilter(this.currentFilter);
+                    
+                    // 5. Atualizar displays
+                    this.updateAllDisplays();
+                    
+                } catch (error) {
+                    console.error('[FULL-HISTORY] Erro no fluxo de dados:', error);
+                    this.showError('Erro ao carregar histórico completo');
+                }
+            }
+            
+            async checkSignalMonitorStatus() {
+                try {
+                    const response = await fetch('/api/signals/monitor/status');
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.monitorStatus = result.monitor_status;
+                            console.log('[FULL-HISTORY] Status do monitor obtido:', this.monitorStatus);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('[FULL-HISTORY] Erro ao verificar monitor:', error);
+                    this.monitorStatus = { is_running: false, error: error.message };
+                }
+            }
+            
+            // NOVO: Carrega TODOS os sinais de múltiplas fontes
+            async loadAllSignalsData() {
+                console.log('[FULL-HISTORY] Carregando dados de múltiplas fontes...');
+                
+                let allSignalsData = [];
+                
+                try {
+                    // 1. Dashboard data (dados atuais + some history)
+                    const dashboardResponse = await fetch('/api/signals/dashboard-data');
+                    if (dashboardResponse.ok) {
+                        const dashboardResult = await dashboardResponse.json();
+                        if (dashboardResult.success && dashboardResult.data) {
+                            console.log('[FULL-HISTORY] Dashboard data:', dashboardResult.data);
+                            
+                            // Extrair sinais de diferentes campos
+                            if (dashboardResult.data.active_signals) {
+                                allSignalsData.push(...dashboardResult.data.active_signals);
+                            }
+                            if (dashboardResult.data.signals) {
+                                allSignalsData.push(...dashboardResult.data.signals);
+                            }
+                            if (Array.isArray(dashboardResult.data)) {
+                                allSignalsData.push(...dashboardResult.data);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('[FULL-HISTORY] Erro no dashboard data:', error);
+                }
+                
+                try {
+                    // 2. Sinais recentes (histórico mais amplo)
+                    const recentResponse = await fetch('/api/signals/recent?limit=100');
+                    if (recentResponse.ok) {
+                        const recentResult = await recentResponse.json();
+                        if (recentResult.success && recentResult.data) {
+                            console.log('[FULL-HISTORY] Recent signals:', recentResult.data.length);
+                            allSignalsData.push(...recentResult.data);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('[FULL-HISTORY] Erro nos sinais recentes:', error);
+                }
+                
+                try {
+                    // 3. Sinais ativos
+                    const activeResponse = await fetch('/api/signals/active');
+                    if (activeResponse.ok) {
+                        const activeResult = await activeResponse.json();
+                        if (activeResult.success && activeResult.data) {
+                            console.log('[FULL-HISTORY] Active signals:', activeResult.data.length);
+                            allSignalsData.push(...activeResult.data);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('[FULL-HISTORY] Erro nos sinais ativos:', error);
+                }
+                
+                // NOVO: Tentar buscar diretamente do trading analyzer
+                try {
+                    const analyzerResponse = await fetch('/trading/api/analysis');
+                    if (analyzerResponse.ok) {
+                        const analyzerResult = await analyzerResponse.json();
+                        if (analyzerResult.signals) {
+                            console.log('[FULL-HISTORY] Analyzer signals:', analyzerResult.signals.length);
+                            allSignalsData.push(...analyzerResult.signals);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('[FULL-HISTORY] Erro no trading analyzer:', error);
+                }
+                
+                console.log('[FULL-HISTORY] Total raw signals coletados:', allSignalsData.length);
+                this.rawData = allSignalsData;
+                
+                // Remover duplicados baseado no ID
+                const uniqueSignals = this.removeDuplicateSignals(allSignalsData);
+                console.log('[FULL-HISTORY] Sinais únicos após deduplicação:', uniqueSignals.length);
+                
+                return uniqueSignals;
+            }
+            
+            // NOVO: Remove sinais duplicados
+            removeDuplicateSignals(signals) {
+                const seen = new Set();
+                return signals.filter(signal => {
+                    const id = signal.id || signal.signal_id || `${signal.entry || 0}_${signal.timestamp || Date.now()}`;
+                    if (seen.has(id)) {
+                        return false;
+                    }
+                    seen.add(id);
+                    return true;
+                });
+            }
+            
+            // NOVO: Processa TODOS os sinais
+            async processAllSignalsData() {
+                const rawSignals = await this.loadAllSignalsData();
+                
+                // Normalizar todos os sinais
+                this.allSignals = rawSignals.map(signal => this.normalizeSignal(signal));
+                
+                // Ordenar por data (mais recentes primeiro)
+                this.allSignals.sort((a, b) => {
+                    const dateA = new Date(a.created_at || a.timestamp || 0);
+                    const dateB = new Date(b.created_at || b.timestamp || 0);
+                    return dateB - dateA;
+                });
+                
+                console.log('[FULL-HISTORY] Total de sinais processados:', this.allSignals.length);
+                console.log('[FULL-HISTORY] Exemplo de sinal processado:', this.allSignals[0]);
+                
+                // Calcular estatísticas baseadas em TODOS os sinais
+                this.calculateFullHistoryStats();
+            }
+            
+            // MELHORADA: Normalização mais robusta
+            normalizeSignal(signal) {
+                const normalized = {
+                    id: signal.id || signal.signal_id || 'N/A',
+                    asset: signal.asset || signal.asset_symbol || signal.symbol || 'BTC',
+                    type: signal.type || signal.signal_type || signal.action || 'BUY',
+                    entry_price: signal.entry_price || signal.entry || signal.price || 0,
+                    current_price: signal.current_price || signal.price || signal.entry_price || 0,
+                    final_price: signal.final_price || signal.exit_price || signal.current_price || 0,
+                    target_1: signal.target_1 || signal.target || (signal.targets && signal.targets[0]) || 0,
+                    target_2: signal.target_2 || (signal.targets && signal.targets[1]) || 0,
+                    target_3: signal.target_3 || (signal.targets && signal.targets[2]) || 0,
+                    stop_loss: signal.stop_loss || signal.stop || 0,
+                    confidence: signal.confidence || signal.probability || 0,
+                    current_pnl: signal.current_pnl || signal.pnl || signal.current_pnl_pct || 0,
+                    final_pnl: signal.final_pnl || signal.final_pnl_pct || signal.current_pnl || 0,
+                    status: signal.status || 'ACTIVE',
+                    created_at: signal.created_at || signal.timestamp || new Date().toISOString(),
+                    closed_at: signal.closed_at || signal.updated_at || null,
+                    duration: signal.duration || signal.duration_minutes || 0,
+                    // Propriedades originais preservadas
+                    ...signal
+                };
+                
+                // NOVO: Calcular PnL se não estiver disponível
+                if (!normalized.current_pnl && normalized.entry_price && normalized.current_price) {
+                    const pnl = ((normalized.current_price - normalized.entry_price) / normalized.entry_price) * 100;
+                    normalized.current_pnl = normalized.type.toLowerCase().includes('sell') ? -pnl : pnl;
+                }
+                
+                if (!normalized.final_pnl && normalized.final_price && normalized.entry_price) {
+                    const pnl = ((normalized.final_price - normalized.entry_price) / normalized.entry_price) * 100;
+                    normalized.final_pnl = normalized.type.toLowerCase().includes('sell') ? -pnl : pnl;
+                }
+                
+                return normalized;
+            }
+            
+            // NOVO: Calcula estatísticas baseadas em TODOS os sinais
+            calculateFullHistoryStats() {
+                const signals = this.allSignals;
+                
+                let totalSignals = signals.length;
+                let activeSignals = 0;
+                let profitableSignals = 0;
+                let lossSignals = 0;
+                let totalProfit = 0;
+                let totalLoss = 0;
+                let bestSignal = 0;
+                let worstSignal = 0;
+                
+                signals.forEach(signal => {
+                    // Contar ativos
+                    if (signal.status === 'ACTIVE') {
+                        activeSignals++;
+                    }
+                    
+                    // Usar PnL final se disponível, senão atual
+                    const pnl = signal.final_pnl !== 0 ? signal.final_pnl : signal.current_pnl || 0;
+                    
+                    if (pnl > 0) {
+                        profitableSignals++;
+                        totalProfit += pnl;
+                        if (pnl > bestSignal) bestSignal = pnl;
+                    } else if (pnl < 0) {
+                        lossSignals++;
+                        totalLoss += Math.abs(pnl);
+                        if (Math.abs(pnl) > worstSignal) worstSignal = Math.abs(pnl);
+                    }
+                });
+                
+                const totalWithPnl = profitableSignals + lossSignals;
+                
+                this.stats = {
+                    total_signals: totalSignals,
+                    active_signals: activeSignals,
+                    profitable_signals: profitableSignals,
+                    loss_signals: lossSignals,
+                    success_rate: totalWithPnl > 0 ? (profitableSignals / totalWithPnl) * 100 : 0,
+                    avg_profit: profitableSignals > 0 ? totalProfit / profitableSignals : 0,
+                    avg_loss: lossSignals > 0 ? totalLoss / lossSignals : 0,
+                    best_signal: bestSignal,
+                    worst_signal: worstSignal
+                };
+                
+                console.log('[FULL-HISTORY] Estatísticas completas calculadas:', this.stats);
+            }
+            
+            // NOVO: Aplica filtros de status
+            applyFilter(filterType) {
+                this.currentFilter = filterType;
+                
+                switch (filterType) {
+                    case 'all':
+                        this.filteredSignals = [...this.allSignals];
+                        break;
+                    case 'ACTIVE':
+                        this.filteredSignals = this.allSignals.filter(s => s.status === 'ACTIVE');
+                        break;
+                    case 'profit':
+                        this.filteredSignals = this.allSignals.filter(s => 
+                            (s.final_pnl || s.current_pnl || 0) > 0
+                        );
+                        break;
+                    case 'loss':
+                        this.filteredSignals = this.allSignals.filter(s => 
+                            (s.final_pnl || s.current_pnl || 0) < 0
+                        );
+                        break;
+                    case 'closed':
+                        this.filteredSignals = this.allSignals.filter(s => 
+                            s.status !== 'ACTIVE' && s.status !== 'PENDING'
+                        );
+                        break;
+                    default:
+                        this.filteredSignals = [...this.allSignals];
+                }
+                
+                // Atualizar botões de filtro
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.filter === filterType) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Atualizar tabela
+                this.updateSignalsTable();
+                
+                console.log(`[FULL-HISTORY] Filtro '${filterType}' aplicado: ${this.filteredSignals.length} sinais`);
+            }
+            
+            updateAllDisplays() {
+                this.updateStatsDisplay();
+                this.updateSignalsTable();
+                this.updateSystemStatusDisplay();
+                this.updateLastUpdateTime();
+            }
+            
+            // ATUALIZADA: Estatísticas baseadas no histórico completo
+            updateStatsDisplay() {
+                const stats = this.stats || {};
+                
+                document.getElementById('dashboard-total-signals').textContent = stats.total_signals || 0;
+                document.getElementById('dashboard-active-signals').textContent = stats.active_signals || 0;
+                document.getElementById('dashboard-profitable-signals').textContent = stats.profitable_signals || 0;
+                document.getElementById('dashboard-success-rate').textContent = `${(stats.success_rate || 0).toFixed(1)}%`;
+                document.getElementById('dashboard-avg-profit').textContent = `+${(stats.avg_profit || 0).toFixed(2)}%`;
+                document.getElementById('dashboard-best-signal').textContent = `+${(stats.best_signal || 0).toFixed(2)}%`;
+            }
+            
+            // ATUALIZADA: Tabela com histórico completo
+            updateSignalsTable() {
+                const tbody = document.getElementById('signals-table-body');
+                if (!tbody) {
+                    console.error('[FULL-HISTORY] Elemento signals-table-body não encontrado!');
+                    return;
+                }
+                
+                console.log(`[FULL-HISTORY] Atualizando tabela com ${this.filteredSignals.length} sinais filtrados`);
+                
+                if (this.filteredSignals.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="12" class="text-center text-muted py-5">
+                                <i class="fas fa-history fa-3x mb-3"></i><br>
+                                <strong>Nenhum sinal encontrado para o filtro selecionado</strong><br>
+                                <small>Tente selecionar "Todos" ou outro filtro</small>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = this.filteredSignals.map((signal, index) => {
+                    const pnl = signal.final_pnl !== 0 ? signal.final_pnl : (signal.current_pnl || 0);
+                    const pnlClass = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-neutral';
+                    
+                    const statusClass = this.getStatusClass(signal.status || 'ACTIVE');
+                    const typeClass = (signal.type || '').toLowerCase().includes('buy') ? 'buy' : 'sell';
+                    
+                    // NOVO: Classes de linha baseadas no status
+                    let rowClass = '';
+                    if (signal.status === 'ACTIVE') rowClass = 'signal-active';
+                    else if (pnl > 0) rowClass = 'signal-profit';
+                    else if (pnl < 0) rowClass = 'signal-loss';
+                    else rowClass = 'signal-expired';
+                    
+                    // Targets display
+                    let targetsDisplay = 'N/A';
+                    if (signal.target_1 || signal.target_2 || signal.target_3) {
+                        targetsDisplay = `
+                            <div><strong>T1:</strong> $${this.formatPrice(signal.target_1 || 0)}</div>
+                            ${signal.target_2 ? `<div><strong>T2:</strong> $${this.formatPrice(signal.target_2)}</div>` : ''}
+                            ${signal.target_3 ? `<div><strong>T3:</strong> $${this.formatPrice(signal.target_3)}</div>` : ''}
+                        `;
+                    }
+                    
+                    return `
+                        <tr class="${rowClass}">
+                            <td><strong>#${signal.id}</strong></td>
+                            <td>
+                                <span class="badge bg-warning">
+                                    <i class="fab fa-bitcoin"></i> ${signal.asset}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="signal-type ${typeClass}">
+                                    ${signal.type}
+                                </span>
+                            </td>
+                            <td class="fw-bold">$${this.formatPrice(signal.entry_price || 0)}</td>
+                            <td class="fw-bold">
+                                ${signal.final_price ? `$${this.formatPrice(signal.final_price)}` : 
+                                  signal.current_price ? `$${this.formatPrice(signal.current_price)}` : 'N/A'}
+                            </td>
+                            <td>
+                                <small>${targetsDisplay}</small>
+                            </td>
+                            <td class="text-danger fw-bold">$${this.formatPrice(signal.stop_loss || 0)}</td>
+                            <td>
+                                <span class="confidence-badge">
+                                    ${(signal.confidence || 0).toFixed(1)}%
+                                </span>
+                            </td>
+                            <td class="${pnlClass} fw-bold">
+                                ${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}%
+                            </td>
+                            <td>
+                                <span class="badge ${statusClass}">
+                                    ${signal.status || 'ACTIVE'}
+                                </span>
+                            </td>
+                            <td>
+                                <small>${signal.created_at ? new Date(signal.created_at).toLocaleString() : 'N/A'}</small>
+                            </td>
+                            <td>
+                                <small>${signal.closed_at ? new Date(signal.closed_at).toLocaleString() : 
+                                       signal.status === 'ACTIVE' ? 'Em andamento' : 'N/A'}</small>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                // Atualizar contadores
+                document.getElementById('visible-signals-count').textContent = this.filteredSignals.length;
+                document.getElementById('total-signals-count').textContent = this.allSignals.length;
+                
+                console.log('[FULL-HISTORY] Tabela atualizada com sucesso');
+            }
+            
+            updateSystemStatusDisplay() {
+                const analyzerIndicator = document.getElementById('analyzer-indicator');
+                const analyzerText = document.getElementById('analyzer-status-text');
+                const signalsIndicator = document.getElementById('signals-indicator');
+                const signalsText = document.getElementById('signals-count-text');
+                
+                // Trading Analyzer Status
+                analyzerIndicator.className = 'status-indicator online';
+                analyzerText.textContent = 'Online';
+                analyzerText.className = 'ms-2 text-success';
+                
+                // Signals Status
+                const totalCount = this.allSignals.length;
+                signalsIndicator.className = `status-indicator ${totalCount > 0 ? 'online' : 'warning'}`;
+                signalsText.textContent = `${totalCount} total`;
+                signalsText.className = `ms-2 ${totalCount > 0 ? 'text-success' : 'text-warning'}`;
+            }
+            
+            updateLastUpdateTime() {
+                const now = new Date();
+                document.getElementById('last-update-time').textContent = now.toLocaleTimeString();
+            }
+            
+            // Métodos de ação (mantidos do código anterior)
+            async generateTestSignal() {
+                try {
+                    const asset = document.getElementById('signal-asset-select')?.value || 'BTC';
+                    const signalType = document.getElementById('signal-type-select')?.value || 'BUY';
+                    
+                    this.showLoading(true);
+                    this.showNotification('Gerando sinal de teste...', 'info');
+                    
+                    const response = await fetch('/api/signals/generate-test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ asset, type: signalType })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.showNotification(`Sinal ${signalType} gerado para ${asset}!`, 'success');
+                        setTimeout(() => this.refreshSignals(), 2000);
+                    } else {
+                        this.showNotification('Erro ao gerar sinal de teste', 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('[FULL-HISTORY] Erro ao gerar sinal:', error);
+                    this.showNotification('Erro ao gerar sinal de teste', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            async refreshSignals() {
+                if (this.isUpdating) return;
+                
+                try {
+                    this.isUpdating = true;
+                    this.showNotification('Atualizando histórico completo...', 'info');
+                    
+                    await this.startDataFlow();
+                    
+                    this.showNotification('Histórico atualizado com sucesso!', 'success');
+                    
+                } catch (error) {
+                    console.error('[FULL-HISTORY] Erro ao atualizar:', error);
+                    this.showNotification('Erro ao atualizar histórico', 'error');
+                } finally {
+                    this.isUpdating = false;
+                }
+            }
+            
+            async forceSignalCheck() {
+                try {
+                    this.showLoading(true);
+                    this.showNotification('Forçando verificação de sinais...', 'info');
+                    
+                    const response = await fetch('/api/signals/force-check', {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.showNotification('Verificação de sinais concluída!', 'success');
+                            setTimeout(() => this.refreshSignals(), 1000);
+                        } else {
+                            this.showNotification(result.error || 'Erro na verificação', 'error');
+                        }
+                    } else {
+                        this.showNotification('Erro ao verificar sinais', 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('[FULL-HISTORY] Erro na verificação:', error);
+                    this.showNotification('Erro ao verificar sinais', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            async cleanupDuplicates() {
+                try {
+                    this.showLoading(true);
+                    this.showNotification('Limpando sinais duplicados...', 'info');
+                    
+                    const response = await fetch('/api/signals/cleanup-duplicates', {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.showNotification('Sinais duplicados removidos!', 'success');
+                            setTimeout(() => this.refreshSignals(), 1000);
+                        } else {
+                            this.showNotification(result.error || 'Erro na limpeza', 'error');
+                        }
+                    } else {
+                        this.showNotification('Erro ao limpar duplicados', 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('[FULL-HISTORY] Erro na limpeza:', error);
+                    this.showNotification('Erro ao limpar duplicados', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            startAutoUpdate() {
+                this.updateInterval = setInterval(() => {
+                    if (!this.isUpdating) {
+                        this.startDataFlow();
+                    }
+                }, 30000); // 30 segundos para histórico completo
+                
+                console.log('[FULL-HISTORY] Auto-update iniciado (30s)');
+            }
+            
+            stopAutoUpdate() {
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                    this.updateInterval = null;
+                }
+            }
+            
+            // Utility methods
+            formatPrice(price) {
+                return new Intl.NumberFormat('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(price || 0);
+            }
+            
+            getStatusClass(status) {
+                const classes = {
+                    'ACTIVE': 'bg-primary',
+                    'HIT_TARGET_1': 'bg-success',
+                    'HIT_TARGET_2': 'bg-success', 
+                    'HIT_TARGET_3': 'bg-success',
+                    'HIT_STOP': 'bg-danger',
+                    'EXPIRED': 'bg-secondary',
+                    'CANCELLED': 'bg-warning',
+                    'CLOSED': 'bg-info'
+                };
+                return classes[status] || 'bg-secondary';
+            }
+            
+            showNotification(message, type = 'info') {
+                const alertClass = type === 'success' ? 'alert-success' :
+                                  type === 'error' ? 'alert-danger' :
+                                  type === 'warning' ? 'alert-warning' : 'alert-info';
+                
+                const notification = document.createElement('div');
+                notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);';
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    <strong>${message}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+            
+            showError(message) {
+                this.showNotification(message, 'error');
+            }
+            
+            showLoading(show) {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.classList.toggle('d-none', !show);
+                }
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[FULL-HISTORY] DOM loaded, iniciando dashboard de histórico completo...');
+            window.fullHistoryDashboard = new FullHistorySignalsDashboard();
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.fullHistoryDashboard) {
+                window.fullHistoryDashboard.stopAutoUpdate();
+            }
+        });
+        
+        // Debug function
+        window.debugFullHistory = function() {
+            if (window.fullHistoryDashboard) {
+                console.log('[DEBUG] Full History Dashboard State:', {
+                    totalSignals: window.fullHistoryDashboard.allSignals.length,
+                    filteredSignals: window.fullHistoryDashboard.filteredSignals.length,
+                    currentFilter: window.fullHistoryDashboard.currentFilter,
+                    stats: window.fullHistoryDashboard.stats,
+                    rawData: window.fullHistoryDashboard.rawData,
+                    exampleSignal: window.fullHistoryDashboard.allSignals[0]
+                });
+                
+                // Mostrar resumo por status
+                const statusCount = {};
+                window.fullHistoryDashboard.allSignals.forEach(signal => {
+                    const status = signal.status || 'UNKNOWN';
+                    statusCount[status] = (statusCount[status] || 0) + 1;
+                });
+                console.log('[DEBUG] Sinais por status:', statusCount);
+            }
+        };
+    </script>
+</body>
+</html>

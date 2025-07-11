@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Strategy Trading Dashboard</title>
+    <title>Multi-Timeframe Trading Dashboard</title>
     
     <!-- Bootstrap 5 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -11,8 +11,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- Socket.IO -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     
     <style>
         body {
@@ -153,6 +151,13 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        .integration-status {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -163,7 +168,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <h1 class="text-white mb-0">
                         <i class="fas fa-chart-line me-3"></i>
-                        Multi-Strategy Trading Dashboard
+                        Multi-Timeframe Trading Dashboard
                     </h1>
                     
                     <div class="d-flex align-items-center gap-3">
@@ -192,6 +197,34 @@
             </div>
         </div>
         
+        <!-- Integration Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="integration-status text-white">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-2">
+                                <i class="fas fa-plug me-2"></i>
+                                Status da Integração
+                            </h6>
+                            <div id="integrationStatus">
+                                <div class="d-flex align-items-center">
+                                    <div class="loading-spinner me-2"></div>
+                                    <span>Verificando sistema multi-timeframe...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                Compatível com sistema atual • Fallback automático
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Current Price Display -->
         <div class="row mb-4">
             <div class="col-12">
@@ -200,6 +233,7 @@
                     <div id="currentPrice" class="price-display">$67,543.21</div>
                     <small class="text-muted">
                         Última atualização: <span id="lastUpdate">--:--:--</span>
+                        <span id="dataSource" class="ms-2 badge bg-secondary">Sistema Atual</span>
                     </small>
                 </div>
             </div>
@@ -220,11 +254,19 @@
                         </div>
                         <div class="text-end">
                             <div id="scalpSignal" class="signal-indicator signal-hold"></div>
-                            <span id="scalpAction" class="fw-bold">HOLD</span>
+                            <span id="scalpAction" class="fw-bold">AGUARDANDO</span>
                         </div>
                     </div>
                     
                     <div class="card-body">
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-cog me-1"></i>
+                                Status: <span id="scalpStatus">Inicializando...</span>
+                            </small>
+                        </div>
+                        
                         <!-- Confidence -->
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-1">
@@ -264,13 +306,8 @@
                         <div class="mb-3">
                             <small class="text-muted mb-1 d-block">Razões:</small>
                             <div id="scalpReasons" class="reasons-container">
-                                <span class="reason-tag">Aguardando sinal...</span>
+                                <span class="reason-tag">Aguardando dados...</span>
                             </div>
-                        </div>
-                        
-                        <!-- Mini Chart -->
-                        <div class="chart-container">
-                            <canvas id="scalpChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -284,16 +321,25 @@
                             <h5 class="mb-0">
                                 <i class="fas fa-chart-line text-primary me-2"></i>
                                 DAY TRADING
+                                <span class="badge bg-success ms-2">ATUAL</span>
                             </h5>
                             <span class="timeframe-badge">5 minutos</span>
                         </div>
                         <div class="text-end">
                             <div id="daySignal" class="signal-indicator signal-hold"></div>
-                            <span id="dayAction" class="fw-bold">HOLD</span>
+                            <span id="dayAction" class="fw-bold">AGUARDANDO</span>
                         </div>
                     </div>
                     
                     <div class="card-body">
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-check-circle me-1"></i>
+                                Status: <span id="dayStatus">Sistema Atual Ativo</span>
+                            </small>
+                        </div>
+                        
                         <!-- Confidence -->
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-1">
@@ -333,13 +379,8 @@
                         <div class="mb-3">
                             <small class="text-muted mb-1 d-block">Razões:</small>
                             <div id="dayReasons" class="reasons-container">
-                                <span class="reason-tag">Aguardando sinal...</span>
+                                <span class="reason-tag">Sistema atual ativo</span>
                             </div>
-                        </div>
-                        
-                        <!-- Mini Chart -->
-                        <div class="chart-container">
-                            <canvas id="dayChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -358,11 +399,19 @@
                         </div>
                         <div class="text-end">
                             <div id="swingSignal" class="signal-indicator signal-hold"></div>
-                            <span id="swingAction" class="fw-bold">HOLD</span>
+                            <span id="swingAction" class="fw-bold">AGUARDANDO</span>
                         </div>
                     </div>
                     
                     <div class="card-body">
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-cog me-1"></i>
+                                Status: <span id="swingStatus">Inicializando...</span>
+                            </small>
+                        </div>
+                        
                         <!-- Confidence -->
                         <div class="mb-3">
                             <div class="d-flex justify-content-between mb-1">
@@ -402,13 +451,8 @@
                         <div class="mb-3">
                             <small class="text-muted mb-1 d-block">Razões:</small>
                             <div id="swingReasons" class="reasons-container">
-                                <span class="reason-tag">Aguardando sinal...</span>
+                                <span class="reason-tag">Aguardando dados...</span>
                             </div>
-                        </div>
-                        
-                        <!-- Mini Chart -->
-                        <div class="chart-container">
-                            <canvas id="swingChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -421,27 +465,25 @@
                 <div class="strategy-card p-3">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h6 class="mb-2">Controles de Debug</h6>
+                            <h6 class="mb-2">Controles</h6>
                             <div class="btn-group" role="group">
-                                <button id="forceScalpSignal" class="btn btn-outline-warning btn-sm">
-                                    <i class="fas fa-bolt me-1"></i>Força Scalp
+                                <button id="testIntegration" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plug me-1"></i>Testar Integração
                                 </button>
-                                <button id="forceDaySignal" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-chart-line me-1"></i>Força Day
+                                <button id="refreshData" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-sync-alt me-1"></i>Atualizar
                                 </button>
-                                <button id="forceSwingSignal" class="btn btn-outline-info btn-sm">
-                                    <i class="fas fa-wave-square me-1"></i>Força Swing
+                                <button id="viewCurrentSystem" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>Sistema Atual
                                 </button>
                             </div>
                         </div>
                         
                         <div class="col-md-6 text-md-end">
-                            <button id="refreshData" class="btn btn-success">
-                                <i class="fas fa-sync-alt me-1"></i>Atualizar Dados
-                            </button>
-                            <button id="clearSignals" class="btn btn-secondary">
-                                <i class="fas fa-eraser me-1"></i>Limpar Sinais
-                            </button>
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Sistema atual preservado • Integração não-invasiva
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -451,11 +493,10 @@
     
     <!-- JavaScript -->
     <script>
-        class MultiStrategyDashboard {
+        class MultiTimeframeDashboard {
             constructor() {
                 this.currentAsset = 'BTC';
-                this.socket = null;
-                this.charts = {};
+                this.integrationActive = false;
                 this.autoRefreshInterval = null;
                 
                 this.init();
@@ -463,8 +504,7 @@
             
             init() {
                 this.setupEventListeners();
-                this.initializeCharts();
-                this.connectWebSocket();
+                this.testIntegration();
                 this.loadInitialData();
                 this.startAutoRefresh();
             }
@@ -487,132 +527,111 @@
                 });
                 
                 // Control buttons
-                document.getElementById('forceScalpSignal').addEventListener('click', () => {
-                    this.forceSignal('scalp');
-                });
-                
-                document.getElementById('forceDaySignal').addEventListener('click', () => {
-                    this.forceSignal('day_trade');
-                });
-                
-                document.getElementById('forceSwingSignal').addEventListener('click', () => {
-                    this.forceSignal('swing_trade');
+                document.getElementById('testIntegration').addEventListener('click', () => {
+                    this.testIntegration();
                 });
                 
                 document.getElementById('refreshData').addEventListener('click', () => {
                     this.loadInitialData();
                 });
                 
-                document.getElementById('clearSignals').addEventListener('click', () => {
-                    this.clearAllSignals();
+                document.getElementById('viewCurrentSystem').addEventListener('click', () => {
+                    window.open('/trading', '_blank');
                 });
             }
             
-            initializeCharts() {
-                const chartOptions = {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { display: false }
-                    }
-                };
+            async testIntegration() {
+                this.updateIntegrationStatus('Testando integração...', 'testing');
                 
-                // Initialize mini charts
-                ['scalp', 'day', 'swing'].forEach(strategy => {
-                    const ctx = document.getElementById(`${strategy}Chart`).getContext('2d');
-                    this.charts[strategy] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: [],
-                            datasets: [{
-                                data: [],
-                                borderColor: strategy === 'scalp' ? '#ffc107' : 
-                                           strategy === 'day' ? '#007bff' : '#17a2b8',
-                                borderWidth: 2,
-                                fill: false,
-                                tension: 0.1
-                            }]
-                        },
-                        options: chartOptions
-                    });
-                });
-            }
-            
-            connectWebSocket() {
                 try {
-                    this.socket = io();
+                    const response = await fetch('/api/multi-timeframe/test');
+                    const data = await response.json();
                     
-                    this.socket.on('connect', () => {
-                        this.updateConnectionStatus(true);
-                        this.socket.emit('subscribe_multi_signals', { asset: this.currentAsset });
-                    });
-                    
-                    this.socket.on('disconnect', () => {
-                        this.updateConnectionStatus(false);
-                    });
-                    
-                    this.socket.on('multi_strategy_update', (data) => {
-                        this.handleSignalUpdate(data);
-                    });
-                    
-                    this.socket.on('error', (error) => {
-                        console.error('WebSocket error:', error);
-                        this.updateConnectionStatus(false);
-                    });
+                    if (data.status === 'success') {
+                        this.integrationActive = true;
+                        this.updateIntegrationStatus('Multi-Timeframe Ativo', 'active');
+                        this.updateStrategyStatus('scalp', 'Ativo');
+                        this.updateStrategyStatus('swing', 'Ativo');
+                    } else {
+                        this.integrationActive = false;
+                        this.updateIntegrationStatus('Sistema Atual Apenas', 'fallback');
+                        this.updateStrategyStatus('scalp', 'Indisponível');
+                        this.updateStrategyStatus('swing', 'Indisponível');
+                    }
                 } catch (error) {
-                    console.warn('WebSocket not available, using polling mode');
-                    this.updateConnectionStatus(false);
+                    this.integrationActive = false;
+                    this.updateIntegrationStatus('Sistema Atual Apenas', 'fallback');
+                    this.updateStrategyStatus('scalp', 'Indisponível');
+                    this.updateStrategyStatus('swing', 'Indisponível');
                 }
             }
             
-            updateConnectionStatus(connected) {
-                const statusIcon = document.getElementById('connectionStatus');
-                const statusText = document.getElementById('connectionText');
+            updateIntegrationStatus(message, status) {
+                const statusElement = document.getElementById('integrationStatus');
                 
-                if (connected) {
-                    statusIcon.className = 'fas fa-circle status-connected';
-                    statusText.textContent = 'Conectado';
-                } else {
-                    statusIcon.className = 'fas fa-circle status-disconnected';
-                    statusText.textContent = 'Desconectado';
+                let icon = 'fas fa-cog';
+                let color = 'text-warning';
+                
+                if (status === 'active') {
+                    icon = 'fas fa-check-circle';
+                    color = 'text-success';
+                } else if (status === 'fallback') {
+                    icon = 'fas fa-exclamation-triangle';
+                    color = 'text-warning';
+                }
+                
+                statusElement.innerHTML = `
+                    <div class="d-flex align-items-center ${color}">
+                        <i class="${icon} me-2"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+            }
+            
+            updateStrategyStatus(strategy, status) {
+                const statusElement = document.getElementById(`${strategy}Status`);
+                if (statusElement) {
+                    statusElement.textContent = status;
                 }
             }
             
             async loadInitialData() {
                 try {
-                    const response = await fetch(`/api/multi/signals/${this.currentAsset}`);
+                    // Tentar carregar dados multi-timeframe
+                    if (this.integrationActive) {
+                        const response = await fetch(`/api/multi/signals/${this.currentAsset}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.updateSignalDisplays(data.data || data);
+                        }
+                    }
+                    
+                    // Sempre carregar preço atual do sistema existente
+                    this.loadCurrentPrice();
+                    
+                } catch (error) {
+                    console.warn('Erro ao carregar dados multi-timeframe, usando sistema atual:', error);
+                    this.loadCurrentPrice();
+                }
+            }
+            
+            async loadCurrentPrice() {
+                try {
+                    const response = await fetch('/api/bitcoin/current');
                     const data = await response.json();
                     
-                    if (data.success) {
-                        this.updateSignalDisplays(data.data);
+                    if (data.current_price) {
+                        this.updatePrice(data.current_price);
+                        document.getElementById('dataSource').textContent = 'Sistema Atual';
+                        document.getElementById('dataSource').className = 'ms-2 badge bg-success';
                     }
                 } catch (error) {
-                    console.error('Error loading initial data:', error);
+                    console.error('Erro ao obter preço atual:', error);
                 }
             }
             
             updateAssetDisplay() {
                 document.getElementById('currentAsset').textContent = `${this.currentAsset}/USDT`;
-                
-                if (this.socket) {
-                    this.socket.emit('subscribe_multi_signals', { asset: this.currentAsset });
-                }
-            }
-            
-            handleSignalUpdate(data) {
-                if (data.asset === this.currentAsset) {
-                    if (data.current_price) {
-                        this.updatePrice(data.current_price);
-                    }
-                    
-                    if (data.signals || data.data) {
-                        this.updateSignalDisplays(data.data || data);
-                    }
-                }
             }
             
             updatePrice(price) {
@@ -627,118 +646,75 @@
             updateSignalDisplays(data) {
                 const strategies = data.strategies || {};
                 
-                ['scalp', 'day_trade', 'swing_trade'].forEach(strategyKey => {
-                    const strategy = strategies[strategyKey];
-                    if (strategy && strategy.signal) {
-                        this.updateStrategyCard(strategyKey, strategy.signal);
-                    }
-                });
+                if (strategies.scalp && strategies.scalp.signal) {
+                    this.updateStrategyCard('scalp', strategies.scalp.signal);
+                }
+                
+                if (strategies.day_trade && strategies.day_trade.signal) {
+                    this.updateStrategyCard('day', strategies.day_trade.signal);
+                }
+                
+                if (strategies.swing_trade && strategies.swing_trade.signal) {
+                    this.updateStrategyCard('swing', strategies.swing_trade.signal);
+                }
             }
             
             updateStrategyCard(strategyKey, signal) {
-                const cardPrefix = strategyKey === 'day_trade' ? 'day' : strategyKey;
-                
                 // Update signal indicator and action
-                const signalElement = document.getElementById(`${cardPrefix}Signal`);
-                const actionElement = document.getElementById(`${cardPrefix}Action`);
+                const signalElement = document.getElementById(`${strategyKey}Signal`);
+                const actionElement = document.getElementById(`${strategyKey}Action`);
                 
-                signalElement.className = `signal-indicator signal-${signal.action.toLowerCase()}`;
-                actionElement.textContent = signal.action;
+                if (signalElement && actionElement) {
+                    signalElement.className = `signal-indicator signal-${signal.action.toLowerCase()}`;
+                    actionElement.textContent = signal.action;
+                }
                 
                 // Update confidence
-                const confidence = Math.round(signal.confidence);
-                document.getElementById(`${cardPrefix}Confidence`).textContent = `${confidence}%`;
+                const confidence = Math.round(signal.confidence || 0);
+                const confidenceElement = document.getElementById(`${strategyKey}Confidence`);
+                if (confidenceElement) {
+                    confidenceElement.textContent = `${confidence}%`;
+                }
                 
-                const confidenceBar = document.getElementById(`${cardPrefix}ConfidenceBar`);
-                confidenceBar.style.width = `${confidence}%`;
-                confidenceBar.className = `confidence-fill ${
-                    confidence >= 70 ? 'confidence-high' :
-                    confidence >= 40 ? 'confidence-medium' : 'confidence-low'
-                }`;
+                const confidenceBar = document.getElementById(`${strategyKey}ConfidenceBar`);
+                if (confidenceBar) {
+                    confidenceBar.style.width = `${confidence}%`;
+                    confidenceBar.className = `confidence-fill ${
+                        confidence >= 70 ? 'confidence-high' :
+                        confidence >= 40 ? 'confidence-medium' : 'confidence-low'
+                    }`;
+                }
                 
                 // Update targets and stop loss
                 if (signal.targets && signal.targets.length > 0) {
-                    document.getElementById(`${cardPrefix}Target`).textContent = 
-                        `$${signal.targets[0].toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+                    const targetElement = document.getElementById(`${strategyKey}Target`);
+                    if (targetElement) {
+                        targetElement.textContent = `$${signal.targets[0].toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+                    }
                 }
                 
                 if (signal.stop_loss) {
-                    document.getElementById(`${cardPrefix}Stop`).textContent = 
-                        `$${signal.stop_loss.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+                    const stopElement = document.getElementById(`${strategyKey}Stop`);
+                    if (stopElement) {
+                        stopElement.textContent = `$${signal.stop_loss.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+                    }
                 }
                 
                 // Update reasons
-                const reasonsContainer = document.getElementById(`${cardPrefix}Reasons`);
-                if (signal.reasons && signal.reasons.length > 0) {
+                const reasonsContainer = document.getElementById(`${strategyKey}Reasons`);
+                if (reasonsContainer && signal.reasons && signal.reasons.length > 0) {
                     reasonsContainer.innerHTML = signal.reasons
+                        .slice(0, 3) // Limitar a 3 razões
                         .map(reason => `<span class="reason-tag">${reason}</span>`)
                         .join('');
-                } else {
-                    reasonsContainer.innerHTML = '<span class="reason-tag">Sem razões específicas</span>';
                 }
-                
-                // Update chart if data available
-                this.updateMiniChart(cardPrefix, signal);
-            }
-            
-            updateMiniChart(strategy, signal) {
-                // Simplified chart update - in real implementation, fetch timeframe data
-                const chart = this.charts[strategy];
-                if (chart && signal.entry_price) {
-                    const currentTime = new Date().toLocaleTimeString();
-                    
-                    chart.data.labels.push(currentTime);
-                    chart.data.datasets[0].data.push(signal.entry_price);
-                    
-                    // Keep only last 20 points
-                    if (chart.data.labels.length > 20) {
-                        chart.data.labels.shift();
-                        chart.data.datasets[0].data.shift();
-                    }
-                    
-                    chart.update('none');
-                }
-            }
-            
-            async forceSignal(strategy) {
-                try {
-                    const response = await fetch(`/api/multi/force-signal/${this.currentAsset}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ strategy })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        console.log(`Forced signal for ${strategy}:`, data.data);
-                        // Update will come via WebSocket or next refresh
-                    }
-                } catch (error) {
-                    console.error('Error forcing signal:', error);
-                }
-            }
-            
-            clearAllSignals() {
-                ['scalp', 'day', 'swing'].forEach(strategy => {
-                    document.getElementById(`${strategy}Signal`).className = 'signal-indicator signal-hold';
-                    document.getElementById(`${strategy}Action`).textContent = 'HOLD';
-                    document.getElementById(`${strategy}Confidence`).textContent = '0%';
-                    document.getElementById(`${strategy}ConfidenceBar`).style.width = '0%';
-                    document.getElementById(`${strategy}Target`).textContent = '--';
-                    document.getElementById(`${strategy}Stop`).textContent = '--';
-                    document.getElementById(`${strategy}Reasons`).innerHTML = 
-                        '<span class="reason-tag">Aguardando sinal...</span>';
-                });
             }
             
             startAutoRefresh() {
                 this.stopAutoRefresh();
                 this.autoRefreshInterval = setInterval(() => {
                     this.loadInitialData();
-                }, 10000); // 10 seconds
+                }, 10000); // 10 segundos
             }
             
             stopAutoRefresh() {
@@ -751,7 +727,7 @@
         
         // Initialize dashboard when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            new MultiStrategyDashboard();
+            new MultiTimeframeDashboard();
         });
     </script>
     

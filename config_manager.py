@@ -1,4 +1,4 @@
-# config_manager.py - Gerenciador dinâmico de configurações
+# config_manager.py - Gerenciador dinâmico de configurações CORRIGIDO
 
 import os
 import json
@@ -35,8 +35,14 @@ class DynamicConfigManager:
             'system.enable_notifications'
         }
         
-        self.setup_database()
-        self.load_config()
+        try:
+            self.setup_database()
+            self.load_config()
+            logger.info("[CONFIG_MGR] DynamicConfigManager inicializado com sucesso")
+        except Exception as e:
+            logger.error(f"[CONFIG_MGR] Erro na inicialização: {e}")
+            # Usar configuração padrão em caso de erro
+            self.current_config = self.default_config.copy()
     
     def setup_database(self):
         """Configura banco de dados para configurações dinâmicas"""
@@ -106,9 +112,54 @@ class DynamicConfigManager:
             
         except Exception as e:
             logger.error(f"[CONFIG_MGR] Erro ao configurar banco: {e}")
+            
+    def safe_type_conversion(self, value, target_type, default=None):
+        """
+        Converte valor para o tipo alvo de forma segura
+        """
+        try:
+            if target_type == bool:
+                if isinstance(value, bool):
+                    return value
+                elif isinstance(value, str):
+                    return value.lower() in ('true', '1', 'yes', 'on')
+                elif isinstance(value, int):
+                    return bool(value)
+                else:
+                    return bool(value)
+                    
+            elif target_type == int:
+                if isinstance(value, bool):
+                    return int(value)  # True -> 1, False -> 0
+                elif isinstance(value, str):
+                    # Verificar se é string boolean first
+                    if value.lower() in ('true', 'false'):
+                        return int(value.lower() == 'true')
+                    else:
+                        return int(value)
+                else:
+                    return int(value)
+                    
+            elif target_type == float:
+                if isinstance(value, bool):
+                    return float(value)
+                elif isinstance(value, str):
+                    if value.lower() in ('true', 'false'):
+                        return float(value.lower() == 'true')
+                    else:
+                        return float(value)
+                else:
+                    return float(value)
+                    
+            else:
+                return target_type(value)
+                
+        except (ValueError, TypeError) as e:
+            logger.warning(f"[CONFIG_MGR] Conversão falhou para {value} -> {target_type}: {e}")
+            return default
     
     def load_config(self) -> Dict[str, Any]:
-        """Carrega configuração atual do banco de dados"""
+        """Carrega configuração atual do banco de dados com conversão segura"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -120,17 +171,32 @@ class DynamicConfigManager:
             for row in rows:
                 key, value, value_type = row
                 
-                # Converter valor baseado no tipo
-                if value_type == 'json':
-                    config[key] = json.loads(value)
-                elif value_type == 'int':
-                    config[key] = int(value)
-                elif value_type == 'float':
-                    config[key] = float(value)
-                elif value_type == 'bool':
-                    config[key] = value.lower() == 'true'
-                else:
-                    config[key] = value
+                try:
+                    # Converter valor baseado no tipo com tratamento de erro
+                    if value_type == 'json':
+                        config[key] = json.loads(value)
+                    elif value_type == 'int':
+                        config[key] = self.safe_type_conversion(value, int, 0)
+                    elif value_type == 'float':
+                        config[key] = self.safe_type_conversion(value, float, 0.0)
+                    elif value_type == 'bool':
+                        config[key] = self.safe_type_conversion(value, bool, False)
+                    else:
+                        config[key] = value
+                        
+                except Exception as e:
+                    logger.warning(f"[CONFIG_MGR] Erro ao converter {key}={value} ({value_type}): {e}")
+                    # Usar valor padrão baseado no tipo
+                    if value_type == 'int':
+                        config[key] = 0
+                    elif value_type == 'float':
+                        config[key] = 0.0
+                    elif value_type == 'bool':
+                        config[key] = False
+                    elif value_type == 'json':
+                        config[key] = {}
+                    else:
+                        config[key] = value
             
             conn.close()
             
@@ -146,10 +212,12 @@ class DynamicConfigManager:
             
         except Exception as e:
             logger.error(f"[CONFIG_MGR] Erro ao carregar configuração: {e}")
-            return self.default_config.copy()
+            # Em caso de erro, usar configuração padrão
+            self.current_config = self.default_config.copy()
+            return self.current_config
     
     def save_config(self, config: Dict[str, Any], changed_by: str = 'system', reason: str = None) -> bool:
-        """Salva configuração no banco de dados"""
+        """Salva configuração no banco de dados com detecção correta de tipos"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -157,19 +225,19 @@ class DynamicConfigManager:
             timestamp = datetime.now().isoformat()
             
             for key, value in self._flatten_config(config).items():
-                # Determinar tipo do valor
+                # Determinar tipo do valor de forma mais robusta
                 if isinstance(value, dict) or isinstance(value, list):
                     value_str = json.dumps(value)
                     value_type = 'json'
+                elif isinstance(value, bool):  # ✅ IMPORTANTE: bool antes de int!
+                    value_str = str(value)
+                    value_type = 'bool'
                 elif isinstance(value, int):
                     value_str = str(value)
                     value_type = 'int'
                 elif isinstance(value, float):
                     value_str = str(value)
                     value_type = 'float'
-                elif isinstance(value, bool):
-                    value_str = str(value)
-                    value_type = 'bool'
                 else:
                     value_str = str(value)
                     value_type = 'string'
@@ -502,172 +570,6 @@ class DynamicConfigManager:
         
         return errors
     
-    def create_config_profile(self, name: str, config: Dict[str, Any], description: str = None) -> bool:
-        """Cria um perfil de configuração"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            config_json = json.dumps(config, indent=2)
-            timestamp = datetime.now().isoformat()
-            
-            cursor.execute('''
-                INSERT OR REPLACE INTO config_profiles 
-                (profile_name, config_data, description, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (name, config_json, description, timestamp, timestamp))
-            
-            conn.commit()
-            conn.close()
-            
-            logger.info(f"[CONFIG_MGR] Perfil criado: {name}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"[CONFIG_MGR] Erro ao criar perfil: {e}")
-            return False
-    
-    def load_config_profile(self, name: str) -> Optional[Dict[str, Any]]:
-        """Carrega um perfil de configuração"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('SELECT config_data FROM config_profiles WHERE profile_name = ?', (name,))
-            result = cursor.fetchone()
-            
-            conn.close()
-            
-            if result:
-                return json.loads(result[0])
-            return None
-            
-        except Exception as e:
-            logger.error(f"[CONFIG_MGR] Erro ao carregar perfil: {e}")
-            return None
-    
-    def list_config_profiles(self) -> list:
-        """Lista todos os perfis de configuração"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute('''
-                SELECT profile_name, description, is_default, created_at, updated_at
-                FROM config_profiles
-                ORDER BY is_default DESC, created_at ASC
-            ''')
-            
-            profiles = []
-            for row in cursor.fetchall():
-                profiles.append({
-                    'name': row[0],
-                    'description': row[1],
-                    'is_default': bool(row[2]),
-                    'created_at': row[3],
-                    'updated_at': row[4]
-                })
-            
-            conn.close()
-            return profiles
-            
-        except Exception as e:
-            logger.error(f"[CONFIG_MGR] Erro ao listar perfis: {e}")
-            return []
-    
-    def get_config_history(self, config_key: str = None, limit: int = 50) -> list:
-        """Obtém histórico de mudanças de configuração"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            if config_key:
-                cursor.execute('''
-                    SELECT config_key, old_value, new_value, changed_by, changed_at, reason
-                    FROM config_history
-                    WHERE config_key = ?
-                    ORDER BY changed_at DESC
-                    LIMIT ?
-                ''', (config_key, limit))
-            else:
-                cursor.execute('''
-                    SELECT config_key, old_value, new_value, changed_by, changed_at, reason
-                    FROM config_history
-                    ORDER BY changed_at DESC
-                    LIMIT ?
-                ''', (limit,))
-            
-            history = []
-            for row in cursor.fetchall():
-                history.append({
-                    'config_key': row[0],
-                    'old_value': row[1],
-                    'new_value': row[2],
-                    'changed_by': row[3],
-                    'changed_at': row[4],
-                    'reason': row[5]
-                })
-            
-            conn.close()
-            return history
-            
-        except Exception as e:
-            logger.error(f"[CONFIG_MGR] Erro ao obter histórico: {e}")
-            return []
-    
-    def export_config(self, include_metadata: bool = True) -> Dict[str, Any]:
-        """Exporta configuração atual com metadados"""
-        export_data = {
-            'config': self.current_config.copy(),
-            'exported_at': datetime.now().isoformat(),
-            'version': '2.0.0'
-        }
-        
-        if include_metadata:
-            export_data['metadata'] = {
-                'profiles': self.list_config_profiles(),
-                'recent_history': self.get_config_history(limit=20),
-                'validation_summary': self.validate_config(self.current_config)
-            }
-        
-        return export_data
-    
-    def import_config(self, config_data: Dict[str, Any], validate: bool = True) -> Dict[str, Any]:
-        """Importa configuração de dados exportados"""
-        try:
-            if 'config' not in config_data:
-                return {'success': False, 'error': 'Formato de importação inválido'}
-            
-            imported_config = config_data['config']
-            
-            if validate:
-                validation = self.validate_config(imported_config)
-                if not validation['valid']:
-                    return {
-                        'success': False,
-                        'error': f"Configuração inválida: {'; '.join(validation['errors'])}"
-                    }
-            
-            # Salvar configuração importada
-            save_success = self.save_config(
-                imported_config,
-                changed_by='import',
-                reason='Configuração importada'
-            )
-            
-            if not save_success:
-                return {'success': False, 'error': 'Erro ao salvar configuração importada'}
-            
-            return {
-                'success': True,
-                'message': 'Configuração importada com sucesso',
-                'imported_at': datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"[CONFIG_MGR] Erro na importação: {e}")
-            return {'success': False, 'error': str(e)}
-    
     # ==================== HELPER METHODS ====================
     
     def _flatten_config(self, config: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
@@ -769,18 +671,36 @@ class DynamicConfigManager:
             }
         }
 
+
 # ==================== GLOBAL INSTANCE ====================
 
 # Instância global do gerenciador de configurações
-dynamic_config_manager = DynamicConfigManager()
+try:
+    dynamic_config_manager = DynamicConfigManager()
+    logger.info("[CONFIG_MGR] Instância global criada com sucesso")
+except Exception as e:
+    logger.error(f"[CONFIG_MGR] Erro ao criar instância global: {e}")
+    # Criar instância de emergência
+    dynamic_config_manager = None
 
 def get_dynamic_config() -> Dict[str, Any]:
     """Retorna configuração dinâmica atual"""
-    return dynamic_config_manager.current_config
+    if dynamic_config_manager:
+        return dynamic_config_manager.current_config
+    else:
+        # Retornar configuração padrão de emergência
+        return {
+            'system': {'enable_auto_signals': True},
+            'trading': {'ta_params': {'min_confidence': 60}}
+        }
 
 def update_dynamic_config(config: Dict[str, Any], app_instance=None) -> bool:
     """Atualiza configuração dinâmica e aplica ao sistema"""
     try:
+        if not dynamic_config_manager:
+            logger.error("[CONFIG] Gerenciador de configuração não disponível")
+            return False
+            
         # Validar configuração
         validation = dynamic_config_manager.validate_config(config)
         if not validation['valid']:
